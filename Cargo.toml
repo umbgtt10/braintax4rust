@@ -1,0 +1,20 @@
+[package]
+name = "braintax"
+version = "0.1.0"
+edition = "2024"
+description = "A minimal cognitive tax estimator — quantify how mentally taxing code patterns are."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/umbgtt10/braintax"
+homepage = "https://github.com/umbgtt10/braintax"
+documentation = "https://docs.rs/braintax"
+readme = "README.md"
+keywords = ["cognitive", "complexity", "tax", "nesting", "estimation"]
+categories = ["algorithms", "development-tools"]
+
+[lib]
+name = "braintax"
+path = "src/lib.rs"
+
+[[bin]]
+name = "braintax"
+path = "src/main.rs"
