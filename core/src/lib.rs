@@ -11,6 +11,7 @@ pub mod config;
 pub mod default_scorer;
 pub mod fs_walk;
 pub mod function_complexity;
+pub mod hidden_deps_counter;
 pub mod module_stats;
 pub mod overall_stats;
 pub mod stdout_reporter;

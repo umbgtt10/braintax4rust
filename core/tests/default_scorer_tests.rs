@@ -7,11 +7,15 @@ use braintax::function_complexity::FunctionComplexity;
 use braintax::traits::scorer::Scorer;
 
 fn make_fn(name: &str, module: &str, cyclomatic: u32) -> FunctionComplexity {
+    let braintax = cyclomatic as f64;
     FunctionComplexity {
         name: name.to_string(),
         file: format!("src/{}.rs", module),
         module: module.to_string(),
         cyclomatic,
+        cfg_gates: 0,
+        hidden_deps: 0,
+        braintax,
     }
 }
 

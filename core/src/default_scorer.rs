@@ -12,10 +12,24 @@ use crate::traits::scorer::Scorer;
 #[derive(Debug, Clone, Default)]
 pub struct DefaultScorer;
 
+pub fn compute_braintax_impl(cfg_gates: u32, cyclomatic: u32, hidden_deps: u32) -> f64 {
+    let cfg_factor = if cfg_gates > 0 {
+        2.0f64.powi(cfg_gates as i32)
+    } else {
+        1.0
+    };
+    let hidden_penalty = hidden_deps as f64 * 4.0;
+    cyclomatic as f64 * cfg_factor + hidden_penalty
+}
+
 impl DefaultScorer {
     #[must_use]
     pub const fn new() -> Self {
         Self
+    }
+
+    pub fn compute_braintax(func: &FunctionComplexity) -> f64 {
+        compute_braintax_impl(func.cfg_gates, func.cyclomatic, func.hidden_deps)
     }
 }
 
@@ -28,18 +42,29 @@ impl Scorer for DefaultScorer {
                 avg_cyclomatic: 0.0,
                 max_cyclomatic: 0,
                 total_cyclomatic: 0,
+                avg_braintax: 0.0,
+                max_braintax: 0.0,
             };
         }
 
-        let total: u32 = functions.iter().map(|f| f.cyclomatic).sum();
-        let max = functions.iter().map(|f| f.cyclomatic).max().unwrap_or(0);
-        let avg = total as f64 / count as f64;
+        let total_cc: u32 = functions.iter().map(|f| f.cyclomatic).sum();
+        let max_cc = functions.iter().map(|f| f.cyclomatic).max().unwrap_or(0);
+        let avg_cc = total_cc as f64 / count as f64;
+
+        let max_bt = functions
+            .iter()
+            .map(|f| f.braintax)
+            .max_by(|a, b| a.partial_cmp(b).unwrap())
+            .unwrap_or(0.0);
+        let avg_bt = functions.iter().map(|f| f.braintax).sum::<f64>() / count as f64;
 
         OverallStats {
             total_functions: count,
-            avg_cyclomatic: avg,
-            max_cyclomatic: max,
-            total_cyclomatic: total,
+            avg_cyclomatic: avg_cc,
+            max_cyclomatic: max_cc,
+            total_cyclomatic: total_cc,
+            avg_braintax: avg_bt,
+            max_braintax: max_bt,
         }
     }
 
@@ -56,18 +81,28 @@ impl Scorer for DefaultScorer {
             .into_iter()
             .map(|(path, funcs)| {
                 let count = funcs.len();
-                let total: u32 = funcs.iter().map(|f| f.cyclomatic).sum();
-                let max = funcs.iter().map(|f| f.cyclomatic).max().unwrap_or(0);
+                let total_cc: u32 = funcs.iter().map(|f| f.cyclomatic).sum();
+                let max_cc = funcs.iter().map(|f| f.cyclomatic).max().unwrap_or(0);
+                let avg_cc = if count > 0 {
+                    total_cc as f64 / count as f64
+                } else {
+                    0.0
+                };
+                let max_bt = funcs
+                    .iter()
+                    .map(|f| f.braintax)
+                    .max_by(|a, b| a.partial_cmp(b).unwrap())
+                    .unwrap_or(0.0);
+                let avg_bt = funcs.iter().map(|f| f.braintax).sum::<f64>() / count as f64;
+
                 ModuleStats {
                     path,
                     function_count: count,
-                    avg_cyclomatic: if count > 0 {
-                        total as f64 / count as f64
-                    } else {
-                        0.0
-                    },
-                    max_cyclomatic: max,
-                    total_cyclomatic: total,
+                    avg_cyclomatic: avg_cc,
+                    max_cyclomatic: max_cc,
+                    total_cyclomatic: total_cc,
+                    avg_braintax: avg_bt,
+                    max_braintax: max_bt,
                 }
             })
             .collect()

@@ -10,4 +10,7 @@ pub struct FunctionComplexity {
     pub file: String,
     pub module: String,
     pub cyclomatic: u32,
+    pub cfg_gates: u32,
+    pub hidden_deps: u32,
+    pub braintax: f64,
 }

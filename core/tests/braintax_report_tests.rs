@@ -18,6 +18,8 @@ fn report_serializes_to_json() {
             avg_cyclomatic: 3.5,
             max_cyclomatic: 5,
             total_cyclomatic: 7,
+            avg_braintax: 4.5,
+            max_braintax: 6.0,
         },
         modules: vec![ModuleStats {
             path: "src".to_string(),
@@ -25,6 +27,8 @@ fn report_serializes_to_json() {
             avg_cyclomatic: 3.5,
             max_cyclomatic: 5,
             total_cyclomatic: 7,
+            avg_braintax: 4.5,
+            max_braintax: 6.0,
         }],
         functions: vec![
             FunctionComplexity {
@@ -32,12 +36,18 @@ fn report_serializes_to_json() {
                 file: "src/lib.rs".to_string(),
                 module: "src".to_string(),
                 cyclomatic: 2,
+                cfg_gates: 0,
+                hidden_deps: 0,
+                braintax: 2.0,
             },
             FunctionComplexity {
                 name: "bar".to_string(),
                 file: "src/lib.rs".to_string(),
                 module: "src".to_string(),
                 cyclomatic: 5,
+                cfg_gates: 0,
+                hidden_deps: 0,
+                braintax: 5.0,
             },
         ],
     };
@@ -48,7 +58,7 @@ fn report_serializes_to_json() {
     // Assert
     assert!(json.contains("\"version\": \"0.2.0\""));
     assert!(json.contains("\"cyclomatic\": 5"));
-    assert!(json.contains("\"avg_cyclomatic\": 3.5"));
+    assert!(json.contains("\"avg_braintax\": 4.5"));
 }
 
 #[test]
@@ -61,7 +71,9 @@ fn report_deserializes_from_json() {
             "total_functions": 2,
             "avg_cyclomatic": 3.5,
             "max_cyclomatic": 5,
-            "total_cyclomatic": 7
+            "total_cyclomatic": 7,
+            "avg_braintax": 4.5,
+            "max_braintax": 6.0
         },
         "modules": [
             {
@@ -69,7 +81,9 @@ fn report_deserializes_from_json() {
                 "function_count": 2,
                 "avg_cyclomatic": 3.5,
                 "max_cyclomatic": 5,
-                "total_cyclomatic": 7
+                "total_cyclomatic": 7,
+                "avg_braintax": 4.5,
+                "max_braintax": 6.0
             }
         ],
         "functions": [
@@ -77,7 +91,10 @@ fn report_deserializes_from_json() {
                 "name": "foo",
                 "file": "src/lib.rs",
                 "module": "src",
-                "cyclomatic": 2
+                "cyclomatic": 2,
+                "cfg_gates": 0,
+                "hidden_deps": 0,
+                "braintax": 2.0
             }
         ]
     }"#;

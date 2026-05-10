@@ -12,6 +12,8 @@ fn overall_stats_serializes_to_json() {
         avg_cyclomatic: 3.2,
         max_cyclomatic: 8,
         total_cyclomatic: 32,
+        avg_braintax: 8.0,
+        max_braintax: 16.0,
     };
 
     // Act
@@ -19,5 +21,5 @@ fn overall_stats_serializes_to_json() {
 
     // Assert
     assert!(json.contains("\"total_functions\":10"));
-    assert!(json.contains("\"avg_cyclomatic\":3.2"));
+    assert!(json.contains("\"avg_braintax\":8.0"));
 }

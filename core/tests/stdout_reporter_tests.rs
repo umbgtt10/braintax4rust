@@ -18,6 +18,8 @@ fn sample_report() -> BraintaxReport {
             avg_cyclomatic: 3.5,
             max_cyclomatic: 5,
             total_cyclomatic: 7,
+            avg_braintax: 4.5,
+            max_braintax: 6.0,
         },
         modules: vec![ModuleStats {
             path: "lib".to_string(),
@@ -25,6 +27,8 @@ fn sample_report() -> BraintaxReport {
             avg_cyclomatic: 3.5,
             max_cyclomatic: 5,
             total_cyclomatic: 7,
+            avg_braintax: 4.5,
+            max_braintax: 6.0,
         }],
         functions: vec![
             FunctionComplexity {
@@ -32,12 +36,18 @@ fn sample_report() -> BraintaxReport {
                 file: "src/lib.rs".to_string(),
                 module: "lib".to_string(),
                 cyclomatic: 2,
+                cfg_gates: 0,
+                hidden_deps: 0,
+                braintax: 2.0,
             },
             FunctionComplexity {
                 name: "complex".to_string(),
                 file: "src/lib.rs".to_string(),
                 module: "lib".to_string(),
                 cyclomatic: 5,
+                cfg_gates: 0,
+                hidden_deps: 0,
+                braintax: 5.0,
             },
         ],
     }
@@ -69,7 +79,7 @@ fn reporter_renders_human_output() {
 
     // Assert
     assert!(rendered.contains("cargo-braintax4rust"));
-    assert!(rendered.contains("Overall cyclomatic complexity"));
+    assert!(rendered.contains("Overall braintax"));
     assert!(rendered.contains("braintax"));
     assert!(rendered.contains("Top"));
     assert!(rendered.contains("simple"));

@@ -9,6 +9,7 @@ use syn::visit::Visit;
 
 use crate::complexity_visitor::ComplexityVisitor;
 use crate::function_complexity::FunctionComplexity;
+use crate::hidden_deps_counter::HiddenDepsCounter;
 
 #[derive(Debug)]
 pub struct Collector {
@@ -73,19 +74,43 @@ impl<'ast> Visit<'ast> for Collector {
 }
 
 impl Collector {
-    fn push_fn(&mut self, name: String, block: &syn::Block) {
+    fn push_fn(&mut self, name: String, block: &syn::Block, attrs: &[syn::Attribute]) {
         let mut visitor = ComplexityVisitor::new();
         visitor.visit_block(block);
+        let mut hidden = HiddenDepsCounter::new();
+        hidden.visit_block(block);
+        let cfg_gates = Self::count_cfg_gates(attrs);
         self.functions.push(FunctionComplexity {
             name,
             file: self.current_file.clone(),
             module: self.current_module.clone(),
             cyclomatic: visitor.complexity,
+            cfg_gates,
+            hidden_deps: hidden.count,
+            braintax: crate::default_scorer::compute_braintax_impl(
+                cfg_gates,
+                visitor.complexity,
+                hidden.count,
+            ),
         });
     }
 
+    fn count_cfg_gates(attrs: &[syn::Attribute]) -> u32 {
+        attrs
+            .iter()
+            .filter(|attr| {
+                let ident = attr.path().get_ident().map(|i| i.to_string());
+                matches!(ident.as_deref(), Some("cfg") | Some("cfg_attr"))
+            })
+            .count() as u32
+    }
+
     fn visit_fn(&mut self, item_fn: &syn::ItemFn) {
-        self.push_fn(item_fn.sig.ident.to_string(), &item_fn.block);
+        self.push_fn(
+            item_fn.sig.ident.to_string(),
+            &item_fn.block,
+            &item_fn.attrs,
+        );
     }
 
     fn visit_mod(&mut self, item_mod: &syn::ItemMod) {
@@ -100,7 +125,11 @@ impl Collector {
         if let syn::ImplItem::Fn(item_fn) = item
             && !Self::has_test_attr(&item_fn.attrs)
         {
-            self.push_fn(item_fn.sig.ident.to_string(), &item_fn.block);
+            self.push_fn(
+                item_fn.sig.ident.to_string(),
+                &item_fn.block,
+                &item_fn.attrs,
+            );
         }
     }
 

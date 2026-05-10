@@ -13,12 +13,14 @@ fn module_stats_serializes_to_json() {
         avg_cyclomatic: 4.5,
         max_cyclomatic: 10,
         total_cyclomatic: 15,
+        avg_braintax: 10.0,
+        max_braintax: 20.0,
     };
 
     // Act
     let json = serde_json::to_string(&ms).unwrap();
 
     // Assert
-    assert!(json.contains("\"avg_cyclomatic\":4.5"));
-    assert!(json.contains("\"max_cyclomatic\":10"));
+    assert!(json.contains("\"avg_braintax\":10.0"));
+    assert!(json.contains("\"max_braintax\":20.0"));
 }

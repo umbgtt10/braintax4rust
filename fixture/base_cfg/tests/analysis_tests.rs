@@ -38,16 +38,17 @@ fn cfg_shows_both_functions() {
     // Assert
     assert_eq!(report.overall.total_functions, 2);
     assert_eq!(report.overall.max_cyclomatic, 18);
+    assert_eq!(report.overall.max_braintax, 36.0);
     assert!(
         report
             .functions
             .iter()
-            .any(|f| f.name == "compute" && f.cyclomatic == 18)
+            .any(|f| f.name == "compute" && f.cyclomatic == 18 && f.braintax == 36.0)
     );
     assert!(
         report
             .functions
             .iter()
-            .any(|f| f.name == "placeholder" && f.cyclomatic == 1)
+            .any(|f| f.name == "placeholder" && f.cyclomatic == 1 && f.braintax == 1.0)
     );
 }

@@ -51,7 +51,17 @@ impl StdoutReporter {
         ));
 
         let overall = &report.overall;
-        lines.push("\nOverall cyclomatic complexity:".to_string());
+        lines.push(String::new());
+        lines.push(format!(
+            "  Overall braintax:            {:.1}",
+            overall.avg_braintax
+        ));
+        lines.push(format!(
+            "  Maximum braintax:           {:.1}",
+            overall.max_braintax
+        ));
+        lines.push(String::new());
+        lines.push("Cyclomatic complexity:".to_string());
         lines.push(format!(
             "  Total functions:             {}",
             overall.total_functions
@@ -72,10 +82,10 @@ impl StdoutReporter {
         if !report.modules.is_empty() {
             lines.push("\nPer module:".to_string());
             lines.push(format!(
-                "  {:<30}  {:<6}  {:<6}  {:<5}",
-                "Module", "Funcs", "Avg", "Max"
+                "  {:<30}  {:<6}  {:<8}  {:<5}",
+                "Module", "Funcs", "Avg BT", "Max"
             ));
-            lines.push(format!("  {:-<30}  {:-<6}  {:-<6}  {:-<5}", "", "", "", ""));
+            lines.push(format!("  {:-<30}  {:-<6}  {:-<8}  {:-<5}", "", "", "", ""));
             for module in &report.modules {
                 lines.push(self.render_module_line(module));
             }
@@ -88,10 +98,13 @@ impl StdoutReporter {
                 self.top.min(top_n.len())
             ));
             lines.push(format!(
-                "  {:<50}  {:<12}  {:>4}",
-                "Function", "Module", "CC"
+                "  {:<50}  {:<12}  {:>5}  {:>6}",
+                "Function", "Module", "CC", "BT"
             ));
-            lines.push(format!("  {:-<50}  {:-<12}  {:-<4}", "", "", ""));
+            lines.push(format!(
+                "  {:-<50}  {:-<12}  {:-<5}  {:-<6}",
+                "", "", "", ""
+            ));
             for func in &top_n {
                 let location = if func.module == "." {
                     func.file.clone()
@@ -99,8 +112,8 @@ impl StdoutReporter {
                     format!("{}::{}", func.module, func.name)
                 };
                 lines.push(format!(
-                    "  {:<50}  {:<12}  {:>4}",
-                    location, func.module, func.cyclomatic
+                    "  {:<50}  {:<12}  {:>5}  {:>6.1}",
+                    location, func.module, func.cyclomatic, func.braintax
                 ));
             }
         }
@@ -110,8 +123,8 @@ impl StdoutReporter {
 
     fn render_module_line(&self, module: &ModuleStats) -> String {
         format!(
-            "  {:<30}  {:<6}  {:<6.1}  {:<5}",
-            module.path, module.function_count, module.avg_cyclomatic, module.max_cyclomatic,
+            "  {:<30}  {:<6}  {:<8.1}  {:<5}",
+            module.path, module.function_count, module.avg_braintax, module.max_braintax,
         )
     }
 

@@ -11,4 +11,6 @@ pub struct ModuleStats {
     pub avg_cyclomatic: f64,
     pub max_cyclomatic: u32,
     pub total_cyclomatic: u32,
+    pub avg_braintax: f64,
+    pub max_braintax: f64,
 }

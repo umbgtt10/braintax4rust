@@ -6,6 +6,7 @@ use syn::visit::Visit;
 
 pub struct ComplexityVisitor {
     pub complexity: u32,
+    pub cfg_body_gates: u32,
 }
 
 impl ComplexityVisitor {
@@ -17,11 +18,21 @@ impl ComplexityVisitor {
 
 impl Default for ComplexityVisitor {
     fn default() -> Self {
-        Self { complexity: 1 }
+        Self {
+            complexity: 1,
+            cfg_body_gates: 0,
+        }
     }
 }
 
 impl<'ast> Visit<'ast> for ComplexityVisitor {
+    fn visit_attribute(&mut self, attr: &'ast syn::Attribute) {
+        let ident = attr.path().get_ident().map(|i| i.to_string());
+        if matches!(ident.as_deref(), Some("cfg") | Some("cfg_attr")) {
+            self.cfg_body_gates += 1;
+        }
+    }
+
     fn visit_expr_if(&mut self, expr: &'ast syn::ExprIf) {
         self.complexity += 1;
         self.visit_expr(&expr.cond);
