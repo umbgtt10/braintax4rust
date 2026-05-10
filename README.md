@@ -10,12 +10,12 @@ The **total price, in mental effort, that a reader pays to understand what a fun
 does, why it does it, and what it interacts with** — including everything the reader
 must travel to outside the function itself to form a complete mental model.
 
-## Current phase (v0.5.0)
+## Current phase (v0.6.0)
 
 The current release computes a composite `braintax` score:
 
 ```
-braintax = cyclomatic × cfg × depth × trait + hidden + name_opacity
+braintax = cyclomatic × cfg × depth × trait + hidden + name + macros
 ```
 
 ### Cyclomatic complexity (base)
@@ -154,7 +154,7 @@ braintax = base × depth × cfg × trait + hidden + args + assoc + ...
 | 2 | `cfg` | Feature gate multipliers, hidden dependency density ✅ |
 | 3 | `depth` | Dependency travel distance, trait contract cost ✅ |
 | 4 | Name opacity | Semantic distance between names and meaning ✅ |
-| 5 | Macro density | Opaque macro invocations in productive code |
+| 5 | Macro density | Opaque macro invocations in productive code ✅ |
 | 6 | Grip integration | Git history tracking, ratio diagnostics |
 
 Complexity compounds. A function that is internally complex, buried deep,

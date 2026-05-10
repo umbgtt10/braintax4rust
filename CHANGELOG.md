@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.6.0] - 2026-05-10
+
+### Added
+- Phase 5: user-defined macro density scoring (+3 per unknown macro)
+- `MacroCounter` visitor: detects custom macros, excludes known std macros and derives
+- `base_macros` fixture with custom `custom_add!` macro (CC=3, braintax=9.0)
+
+### Changed
+- Braintax formula: `braintax = base × cfg × depth × trait + hidden + name + macros`
+- Known std macros/derives cost 0 — only user-defined macros add cognitive load
+- Bumped version to 0.6.0
+
 ## [0.5.0] - 2026-05-10
 
 ### Added

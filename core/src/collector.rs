@@ -11,6 +11,7 @@ use syn::visit::Visit;
 use crate::complexity_visitor::ComplexityVisitor;
 use crate::function_complexity::FunctionComplexity;
 use crate::hidden_deps_counter::HiddenDepsCounter;
+use crate::macro_counter::MacroCounter;
 use crate::name_opacity_counter::NameOpacityCounter;
 
 #[derive(Debug)]
@@ -132,6 +133,8 @@ impl Collector {
         let mut names = NameOpacityCounter::new();
         names.visit_block(block);
         let name_opacity = param_opacity + names.score;
+        let mut macros = MacroCounter::new();
+        macros.visit_block(block);
         let cfg_gates = Self::count_cfg_gates(attrs);
         let depth = self.current_depth;
         self.functions.push(FunctionComplexity {
@@ -150,6 +153,7 @@ impl Collector {
                 depth,
                 trait_factor,
                 name_opacity,
+                macros.count,
             ),
         });
     }
