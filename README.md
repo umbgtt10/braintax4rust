@@ -10,12 +10,12 @@ The **total price, in mental effort, that a reader pays to understand what a fun
 does, why it does it, and what it interacts with** — including everything the reader
 must travel to outside the function itself to form a complete mental model.
 
-## Current phase (v0.3.0)
+## Current phase (v0.4.0)
 
 The current release computes a composite `braintax` score:
 
 ```
-braintax = cyclomatic × cfg_factor + hidden_deps_penalty
+braintax = cyclomatic × cfg_factor × depth_factor × trait_factor + hidden_deps_penalty
 ```
 
 ### Cyclomatic complexity (base)
@@ -37,6 +37,32 @@ cfg_factor = 2.0 ^ number_of_cfg_gates
 
 A function with one `#[cfg(feature = "...")]` gate has `cfg_factor = 2.0`.
 Two gates → `4.0`, three → `8.0`.
+
+### Depth factor
+
+Each level of module nesting multiplies the score:
+
+```
+depth_factor = 1.0 + (module_depth - 1) × 0.15
+```
+
+A function at the crate surface: `depth_factor = 1.0`.
+A function 3 modules deep: `depth_factor = 1.3`.
+
+### Trait factor (non-monotonic)
+
+Well-designed trait boundaries can *reduce* cognitive load:
+
+| Trait type | Factor | Condition |
+|---|---|---|
+| Cheap trait | **0.8** | ≤3 methods, precise name |
+| Inherent impl | **1.0** | No trait |
+| Expensive trait | **1.3** | >3 methods or abstract name |
+
+A cheap trait boundary (≤3 methods, single-word name) lets the reader
+stop at the boundary — cognitive load goes *down*. An expensive trait
+(abstract name, many methods) increases load because the reader must
+track more mental context.
 
 ### Hidden dependencies
 
@@ -126,7 +152,7 @@ braintax = base × depth × cfg × trait + hidden + args + assoc + ...
 | 0.1 | Skeleton | Walk → Collector → Scorer → Reporter pipeline ✅ |
 | 1 | `base` | Cyclomatic complexity, boolean chains, match arms, closures ✅ |
 | 2 | `cfg` | Feature gate multipliers, hidden dependency density ✅ |
-| 3 | `depth` | Dependency travel distance, trait contract cost |
+| 3 | `depth` | Dependency travel distance, trait contract cost ✅ |
 | 4 | Name opacity | Semantic distance between names and meaning |
 | 5 | Macro density | Opaque macro invocations in productive code |
 | 6 | Grip integration | Git history tracking, ratio diagnostics |

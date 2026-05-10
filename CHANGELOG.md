@@ -15,6 +15,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.4.0] - 2026-05-10
+
+### Added
+- Phase 3: `depth_factor = 1.0 + (module_depth - 1) × 0.15`
+- Phase 3: `trait_factor` — cheap (0.8), inherent (1.0), expensive (1.3)
+- Depth tracked per function (module hierarchy depth)
+- Trait definitions collected per file to assign method-count-based factors
+- Functions inside `impl` blocks now receive the correct trait factor
+
+### Changed
+- Braintax formula now multiplies all four factors:
+  `braintax = base × cfg × depth × trait + hidden`
+- Fixture tests assert distinct values: flat 18.0, depth1 20.7, cfg 36.0, trait 14.4
+- Bumped version to 0.4.0
+
 ## [0.3.0] - 2026-05-10
 
 ### Added
