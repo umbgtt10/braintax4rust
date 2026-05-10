@@ -10,4 +10,4 @@ complex = []
 [dependencies]
 braintax = { path = "../../core", package = "cargo-braintax4rust" }
 braintax-test-utils = { path = "../../test-utils" }
-serde_json = "1"
+serde_json.workspace = true

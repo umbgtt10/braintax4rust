@@ -5,5 +5,5 @@ edition = "2024"
 
 [dependencies]
 braintax = { path = "../core", package = "cargo-braintax4rust" }
-anyhow = "1"
-serde_json = "1"
+anyhow.workspace = true
+serde_json.workspace = true
