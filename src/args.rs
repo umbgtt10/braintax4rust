@@ -8,8 +8,9 @@ use std::path::PathBuf;
 use clap::Parser;
 
 #[derive(Debug, Clone, Parser)]
-#[command(name = "cargo-braintax4rust", version = "0.2.0")]
-#[command(about = "Compute cyclomatic complexity of Rust code")]
+#[command(name = "cargo-braintax4rust")]
+#[command(version = concat!("v", env!("CARGO_PKG_VERSION")))]
+#[command(about = "Estimate the cognitive tax of Rust code")]
 pub struct Args {
     #[arg(default_value = ".")]
     pub path: PathBuf,

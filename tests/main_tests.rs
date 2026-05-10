@@ -14,7 +14,7 @@ fn binary_prints_help() {
 
     // Assert
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("Compute cyclomatic complexity"));
+    assert!(stdout.contains("Estimate the cognitive tax of Rust code"));
     assert!(stdout.contains("--json"));
     assert!(stdout.contains("--threshold"));
     assert!(stdout.contains("--top"));

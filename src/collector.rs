@@ -4,7 +4,6 @@
 
 use std::path::Path;
 
-use quote::ToTokens;
 use syn::Attribute;
 use syn::visit::Visit;
 
@@ -74,24 +73,9 @@ impl<'ast> Visit<'ast> for Collector {
 }
 
 impl Collector {
-    fn visit_item_fn(&mut self, item_fn: &syn::ItemFn) {
-        let name = item_fn.sig.ident.to_string();
+    fn push_fn(&mut self, name: String, block: &syn::Block) {
         let mut visitor = ComplexityVisitor::new();
-        visitor.visit_block(&item_fn.block);
-
-        self.functions.push(FunctionComplexity {
-            name,
-            file: self.current_file.clone(),
-            module: self.current_module.clone(),
-            cyclomatic: visitor.complexity,
-        });
-    }
-
-    fn visit_impl_item_fn(&mut self, item_fn: &syn::ImplItemFn) {
-        let name = item_fn.sig.ident.to_string();
-        let mut visitor = ComplexityVisitor::new();
-        visitor.visit_block(&item_fn.block);
-
+        visitor.visit_block(block);
         self.functions.push(FunctionComplexity {
             name,
             file: self.current_file.clone(),
@@ -101,7 +85,7 @@ impl Collector {
     }
 
     fn visit_fn(&mut self, item_fn: &syn::ItemFn) {
-        self.visit_item_fn(item_fn);
+        self.push_fn(item_fn.sig.ident.to_string(), &item_fn.block);
     }
 
     fn visit_mod(&mut self, item_mod: &syn::ItemMod) {
@@ -116,7 +100,7 @@ impl Collector {
         if let syn::ImplItem::Fn(item_fn) = item
             && !Self::has_test_attr(&item_fn.attrs)
         {
-            self.visit_impl_item_fn(item_fn);
+            self.push_fn(item_fn.sig.ident.to_string(), &item_fn.block);
         }
     }
 
@@ -129,7 +113,7 @@ impl Collector {
                     .meta
                     .require_list()
                     .ok()
-                    .map(|list| list.to_token_stream().to_string().contains("test"))
+                    .map(|list| format!("{}", list.tokens).contains("test"))
                     .unwrap_or(false),
                 _ => false,
             }

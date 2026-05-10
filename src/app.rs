@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: MIT
 
 use std::ffi::OsString;
-use std::path::Path;
 use std::process::ExitCode;
 
 use anyhow::Result;
@@ -13,7 +12,6 @@ use crate::braintax_report::BraintaxReport;
 use crate::collector::Collector;
 use crate::config::Config;
 use crate::function_complexity::FunctionComplexity;
-
 use crate::traits::reporter::Reporter;
 use crate::traits::scorer::Scorer;
 use crate::traits::walk::Walk;
@@ -114,18 +112,6 @@ impl<W: Walk, S: Scorer, R: Reporter> App<W, S, R> {
         }
         self.reporter.write(report)?;
         Ok(ExitCode::SUCCESS)
-    }
-
-    #[allow(dead_code)]
-    fn module_from_path(&self, path: &Path) -> String {
-        let relative = path.strip_prefix(&self.config.path).unwrap_or(path);
-        let s = relative.to_string_lossy().replace('\\', "/");
-        let without_src = s.strip_prefix("src/").map(|s| s.to_string()).unwrap_or(s);
-        if let Some(pos) = without_src.rfind('/') {
-            without_src[..pos].to_string()
-        } else {
-            ".".to_string()
-        }
     }
 }
 

@@ -21,7 +21,7 @@ impl Config {
             path: args.path,
             json: args.json,
             threshold: args.threshold,
-            top: args.top,
+            top: args.top.max(1),
         }
     }
 }

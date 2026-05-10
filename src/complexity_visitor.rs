@@ -6,8 +6,6 @@ use syn::visit::Visit;
 
 pub struct ComplexityVisitor {
     pub complexity: u32,
-    if_depth: u32,
-    in_else: bool,
 }
 
 impl ComplexityVisitor {
@@ -19,30 +17,18 @@ impl ComplexityVisitor {
 
 impl Default for ComplexityVisitor {
     fn default() -> Self {
-        Self {
-            complexity: 1,
-            if_depth: 0,
-            in_else: false,
-        }
+        Self { complexity: 1 }
     }
 }
 
 impl<'ast> Visit<'ast> for ComplexityVisitor {
     fn visit_expr_if(&mut self, expr: &'ast syn::ExprIf) {
         self.complexity += 1;
-        self.if_depth += 1;
-
         self.visit_expr(&expr.cond);
-
         self.visit_block(&expr.then_branch);
-
         if let Some((_, else_branch)) = &expr.else_branch {
-            self.in_else = true;
             self.visit_expr(else_branch);
-            self.in_else = false;
         }
-
-        self.if_depth -= 1;
     }
 
     fn visit_expr_while(&mut self, expr: &'ast syn::ExprWhile) {
