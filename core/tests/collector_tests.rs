@@ -183,3 +183,84 @@ fn collect_module_path_uses_root() {
     // Assert
     assert_eq!(functions[0].module, "bar");
 }
+
+#[test]
+fn collect_cfg_gated_fn_has_cfg_gates_1() {
+    // Arrange
+    let source = "#[cfg(feature = \"foo\")]\nfn gated() {}";
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].cfg_gates, 1);
+}
+
+#[test]
+fn collect_fn_with_two_cfg_gates_has_cfg_gates_2() {
+    // Arrange
+    let source =
+        "#[cfg(feature = \"a\")]\n#[cfg_attr(feature = \"b\", doc(hidden))]\nfn gated() {}";
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].cfg_gates, 2);
+}
+
+#[test]
+fn collect_fn_with_unsafe_block_has_hidden_deps_1() {
+    // Arrange
+    let source = "fn foo() { unsafe { let p = std::ptr::null(); } }";
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].hidden_deps, 1);
+}
+
+#[test]
+fn collect_fn_with_println_has_hidden_deps_1() {
+    // Arrange
+    let source = "fn foo() { println!(\"hi\"); }";
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].hidden_deps, 1);
+}
+
+#[test]
+fn collect_fn_with_inline_cfg_has_cfg_body_gates() {
+    // Arrange
+    let source = r#"
+fn foo() {
+    #[cfg(target_os = "linux")]
+    if true { }
+}
+"#;
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].name, "foo");
+}

@@ -17,6 +17,21 @@ impl HiddenDepsCounter {
 }
 
 impl<'ast> Visit<'ast> for HiddenDepsCounter {
+    fn visit_stmt(&mut self, stmt: &'ast syn::Stmt) {
+        if let syn::Stmt::Macro(stmt_macro) = stmt {
+            let mac_name = stmt_macro
+                .mac
+                .path
+                .require_ident()
+                .map(|i| i.to_string())
+                .unwrap_or_default();
+            if Self::is_hidden_macro(&mac_name) {
+                self.count += 1;
+            }
+        }
+        syn::visit::visit_stmt(self, stmt);
+    }
+
     fn visit_expr_call(&mut self, expr: &'ast syn::ExprCall) {
         if Self::is_hidden_call(&expr.func) {
             self.count += 1;

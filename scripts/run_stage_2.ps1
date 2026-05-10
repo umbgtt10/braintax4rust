@@ -24,6 +24,12 @@ Invoke-Step "cargo-braintax self-analysis" {
     cargo run --package cargo-braintax4rust -- --json | Out-Null
 }
 
+# ---------------------------------------------------------------------------
+# CRAP gate
+# ---------------------------------------------------------------------------
+
+Invoke-Crap4RustGate "CRAP core" @("core") -ExcludePaths @("tests/fixtures")
+
 Write-Host "`nbraintax Stage 2 passed!" -ForegroundColor Green
 Pop-Location
 exit 0
