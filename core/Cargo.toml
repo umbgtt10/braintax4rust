@@ -1,6 +1,6 @@
 [package]
 name = "cargo-braintax4rust"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 description = "A cognitive tax estimator for Rust code -- quantify the mental effort required to understand a function"
 authors = ["Umberto Gotti <umberto.gotti@umbertogotti.dev>"]

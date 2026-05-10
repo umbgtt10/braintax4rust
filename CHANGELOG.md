@@ -15,6 +15,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.3.0] - 2026-05-10
+
+### Added
+- Phase 2: `cfg_factor = 2.0 ^ gates` on `#[cfg]`-attributed functions
+- Hidden dependency detection: `unsafe`, `println!`, `eprintln!`, `Instant::now`,
+  `SystemTime::now`, `rand::random`, `thread_rng`, `File::open`, `std::fs::read/write`,
+  `std::env::var`, `std::process::exit`, `abort`, `std::thread::sleep`
+- `HiddenDepsCounter` visitor for detecting hidden deps in function bodies
+- `cfg_body_gates` tracking in `ComplexityVisitor` for `#[cfg]` blocks inside bodies
+- Composite `braintax` score: `cyclomatic × cfg_factor + hidden_deps_penalty`
+- `FunctionComplexity.cfg_gates`, `.hidden_deps`, `.braintax` fields
+- `ModuleStats` and `OverallStats` with `avg_braintax` / `max_braintax`
+- Human output now shows braintax alongside cyclomatic complexity
+- Separate `HiddenDepsCounter` tester with 7 tests
+- Collector tests for `cfg_gates` counting and `unsafe`/`println!` detection
+
+### Changed
+- Bumped version to 0.3.0
+
 ## [0.2.0] - 2026-05-10
 
 ### Added
