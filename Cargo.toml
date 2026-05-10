@@ -6,7 +6,7 @@ description = "A cognitive tax estimator for Rust code -- quantify the mental ef
 authors = ["Umberto Gotti <umberto.gotti@umbertogotti.dev>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/umbgtt10/braintax"
+repository = "https://github.com/umbgtt10/braintax4rust"
 keywords = ["cargo", "subcommand", "complexity", "cognitive", "cli"]
 categories = ["development-tools::cargo-plugins", "command-line-utilities"]
 
