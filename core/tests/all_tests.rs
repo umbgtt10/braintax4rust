@@ -13,6 +13,7 @@ mod derive_attr_scorer_tests;
 mod fs_walk_tests;
 mod function_complexity_tests;
 mod hidden_deps_counter_tests;
+mod macro_counter_tests;
 mod main_tests;
 mod module_stats_tests;
 mod name_opacity_counter_tests;
