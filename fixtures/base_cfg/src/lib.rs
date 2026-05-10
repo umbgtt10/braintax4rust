@@ -3,5 +3,4 @@
 // SPDX-License-Identifier: MIT
 
 pub mod compute;
-
-fn placeholder() -> i32 { 0 }
+pub mod placeholder;

@@ -2,4 +2,6 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-pub mod compute;
+fn placeholder() -> i32 {
+    0
+}
