@@ -19,6 +19,22 @@ name = "braintax"
 name = "all_tests"
 path = "tests/all_tests.rs"
 
+[[test]]
+name = "base_flat_tests"
+path = "fixtures/base_flat/tests/analysis_tests.rs"
+
+[[test]]
+name = "base_depth1_tests"
+path = "fixtures/base_depth1/tests/analysis_tests.rs"
+
+[[test]]
+name = "base_cfg_tests"
+path = "fixtures/base_cfg/tests/analysis_tests.rs"
+
+[[test]]
+name = "base_trait_tests"
+path = "fixtures/base_trait/tests/analysis_tests.rs"
+
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }

@@ -63,13 +63,18 @@ impl<'ast> Visit<'ast> for Collector {
             syn::Item::Mod(item_mod) if !Self::has_test_attr(&item_mod.attrs) => {
                 self.visit_mod(item_mod);
             }
+            syn::Item::Impl(item_impl) => {
+                for inner in &item_impl.items {
+                    self.visit_impl_item(inner);
+                }
+            }
             _ => {}
         }
     }
 }
 
 impl Collector {
-    fn visit_fn(&mut self, item_fn: &syn::ItemFn) {
+    fn visit_item_fn(&mut self, item_fn: &syn::ItemFn) {
         let name = item_fn.sig.ident.to_string();
         let mut visitor = ComplexityVisitor::new();
         visitor.visit_block(&item_fn.block);
@@ -82,11 +87,36 @@ impl Collector {
         });
     }
 
+    fn visit_impl_item_fn(&mut self, item_fn: &syn::ImplItemFn) {
+        let name = item_fn.sig.ident.to_string();
+        let mut visitor = ComplexityVisitor::new();
+        visitor.visit_block(&item_fn.block);
+
+        self.functions.push(FunctionComplexity {
+            name,
+            file: self.current_file.clone(),
+            module: self.current_module.clone(),
+            cyclomatic: visitor.complexity,
+        });
+    }
+
+    fn visit_fn(&mut self, item_fn: &syn::ItemFn) {
+        self.visit_item_fn(item_fn);
+    }
+
     fn visit_mod(&mut self, item_mod: &syn::ItemMod) {
         if let Some((_, items)) = &item_mod.content {
             for inner in items {
                 self.visit_item(inner);
             }
+        }
+    }
+
+    fn visit_impl_item(&mut self, item: &syn::ImplItem) {
+        if let syn::ImplItem::Fn(item_fn) = item
+            && !Self::has_test_attr(&item_fn.attrs)
+        {
+            self.visit_impl_item_fn(item_fn);
         }
     }
 
