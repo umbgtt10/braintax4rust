@@ -98,25 +98,34 @@ impl<'ast> Visit<'ast> for MacroCounter {
         if let Some(ident) = attr.path().get_ident() {
             let name = ident.to_string();
             if name == "derive" {
-                if let Ok(meta_list) = attr.meta.require_list() {
-                    let s = format!("{}", meta_list.tokens);
-                    for derive_name in s.trim_start_matches('(').trim_end_matches(')').split(',') {
-                        let cleaned = derive_name.trim();
-                        if !cleaned.is_empty() && !Self::is_known_derive(cleaned) {
-                            self.count += 3;
-                        }
-                    }
-                }
-            } else if !Self::is_known_macro(&name)
-                && name != "cfg"
-                && name != "cfg_attr"
-                && name != "allow"
-                && name != "deny"
-                && name != "warn"
-            {
+                Self::score_derive_attr(self, attr);
+            } else if !Self::is_known_attr(&name) {
                 self.count += 3;
             }
         }
         syn::visit::visit_attribute(self, attr);
+    }
+}
+
+impl MacroCounter {
+    fn score_derive_attr(&mut self, attr: &syn::Attribute) {
+        if let Ok(meta_list) = attr.meta.require_list() {
+            let s = format!("{}", meta_list.tokens);
+            for derive_name in s.trim_start_matches('(').trim_end_matches(')').split(',') {
+                let cleaned = derive_name.trim();
+                if !cleaned.is_empty() && !Self::is_known_derive(cleaned) {
+                    self.count += 3;
+                }
+            }
+        }
+    }
+
+    fn is_known_attr(name: &str) -> bool {
+        Self::is_known_macro(name)
+            || name == "cfg"
+            || name == "cfg_attr"
+            || name == "allow"
+            || name == "deny"
+            || name == "warn"
     }
 }
