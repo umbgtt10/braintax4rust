@@ -1,20 +1,32 @@
 [package]
-name = "braintax"
-version = "0.1.0"
+name = "cargo-braintax4rust"
+version = "0.2.0"
 edition = "2024"
-description = "A minimal cognitive tax estimator — quantify how mentally taxing code patterns are."
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/umbgtt10/braintax"
-homepage = "https://github.com/umbgtt10/braintax"
-documentation = "https://docs.rs/braintax"
+description = "A cargo subcommand for computing cyclomatic complexity of Rust code"
+authors = ["Umberto Gotti <umberto.gotti@umbertogotti.dev>"]
+license = "MIT"
 readme = "README.md"
-keywords = ["cognitive", "complexity", "tax", "nesting", "estimation"]
-categories = ["algorithms", "development-tools"]
+repository = "https://github.com/umbgtt10/braintax"
+keywords = ["cargo", "subcommand", "complexity", "cyclomatic", "cli"]
+categories = ["development-tools::cargo-plugins", "command-line-utilities"]
+
+autotests = false
 
 [lib]
 name = "braintax"
-path = "src/lib.rs"
 
-[[bin]]
-name = "braintax"
-path = "src/main.rs"
+[[test]]
+name = "all_tests"
+path = "tests/all_tests.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+quote = "1"
+syn = { version = "2", features = ["full", "visit"] }
+walkdir = "2"
+
+[dev-dependencies]
+tempfile = "3"
