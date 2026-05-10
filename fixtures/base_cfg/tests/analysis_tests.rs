@@ -26,7 +26,7 @@ impl Reporter for CaptureReporter {
     }
 }
 
-fn analyze() -> serde_json::Value {
+fn analyze() -> BraintaxReport {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("fixtures")
         .join("base_cfg");
@@ -55,6 +55,18 @@ fn cfg_shows_both_functions() {
     let report = analyze();
 
     // Assert
-    assert_eq!(report["overall"]["total_functions"].as_u64().unwrap(), 2);
-    assert_eq!(report["overall"]["max_cyclomatic"].as_u64().unwrap(), 18);
+    assert_eq!(report.overall.total_functions, 2);
+    assert_eq!(report.overall.max_cyclomatic, 18);
+    assert!(
+        report
+            .functions
+            .iter()
+            .any(|f| f.name == "compute" && f.cyclomatic == 18)
+    );
+    assert!(
+        report
+            .functions
+            .iter()
+            .any(|f| f.name == "placeholder" && f.cyclomatic == 1)
+    );
 }
