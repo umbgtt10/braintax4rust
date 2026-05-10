@@ -2,12 +2,12 @@
 name = "cargo-braintax4rust"
 version = "0.2.0"
 edition = "2024"
-description = "A cargo subcommand for computing cyclomatic complexity of Rust code"
+description = "A cognitive tax estimator for Rust code -- quantify the mental effort required to understand a function"
 authors = ["Umberto Gotti <umberto.gotti@umbertogotti.dev>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/umbgtt10/braintax"
-keywords = ["cargo", "subcommand", "complexity", "cyclomatic", "cli"]
+keywords = ["cargo", "subcommand", "complexity", "cognitive", "cli"]
 categories = ["development-tools::cargo-plugins", "command-line-utilities"]
 
 autotests = false
