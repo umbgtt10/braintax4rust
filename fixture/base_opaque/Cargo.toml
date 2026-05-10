@@ -1,0 +1,10 @@
+[package]
+name = "fixture-base_opaque"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+braintax.workspace = true
+braintax-test-utils.workspace = true
+serde_json.workspace = true

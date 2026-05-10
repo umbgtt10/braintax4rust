@@ -6,6 +6,7 @@ members = [
     "fixture/base_depth1",
     "fixture/base_cfg",
     "fixture/base_trait",
+    "fixture/base_opaque",
 ]
 resolver = "2"
 

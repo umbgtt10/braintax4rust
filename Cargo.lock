@@ -189,6 +189,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fixture-base_opaque"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
 name = "fixture-base_trait"
 version = "0.0.0"
 dependencies = [
