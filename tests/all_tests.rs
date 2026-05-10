@@ -9,6 +9,7 @@ mod collector_tests;
 mod complexity_visitor_tests;
 mod config_tests;
 mod default_scorer_tests;
+mod fixture_tests;
 mod fs_walk_tests;
 mod function_complexity_tests;
 mod main_tests;
