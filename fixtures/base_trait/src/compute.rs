@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: MIT
 
 use crate::computer::Computer;
-use crate::my_computer::MyComputer;
+
+pub struct MyComputer;
 
 impl Computer for MyComputer {
     fn compute(&self, x: i32) -> i32 {

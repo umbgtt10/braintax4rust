@@ -10,9 +10,10 @@ use braintax::config::Config;
 use braintax::default_scorer::DefaultScorer;
 use braintax::fs_walk::FsWalk;
 use braintax::traits::reporter::Reporter;
+use std::sync::Mutex;
 
 struct CaptureReporter {
-    captured: std::sync::Mutex<String>,
+    captured: Mutex<String>,
 }
 
 impl Reporter for CaptureReporter {
@@ -31,7 +32,7 @@ fn analyze() -> BraintaxReport {
         .join("fixtures")
         .join("base_cfg");
     let reporter = CaptureReporter {
-        captured: std::sync::Mutex::new(String::new()),
+        captured: Mutex::new(String::new()),
     };
     let app = App::with_deps(
         FsWalk::new(&path),

@@ -10,6 +10,7 @@ use braintax::default_scorer::DefaultScorer;
 use braintax::traits::reporter::Reporter;
 use braintax::traits::walk::Walk;
 use std::path::PathBuf;
+use std::sync::Mutex;
 
 #[derive(Debug, Clone)]
 struct TestWalk {
@@ -24,13 +25,13 @@ impl Walk for TestWalk {
 
 #[derive(Debug)]
 struct CaptureReporter {
-    captured: std::sync::Mutex<Option<String>>,
+    captured: Mutex<Option<String>>,
 }
 
 impl CaptureReporter {
     fn new() -> Self {
         Self {
-            captured: std::sync::Mutex::new(None),
+            captured: Mutex::new(None),
         }
     }
 }
