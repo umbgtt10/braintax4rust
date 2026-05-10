@@ -464,16 +464,15 @@ When combined with `grip` history: `TI(t) = grip_score(t) / braintax_score(t)`
 
 ## Timeline summary
 
-| Phase | Deliverable | Key addition | Target | Status |
-|---|---|---|---|---|
-| 0 | v0.1.0 | Placeholder | — | ✅ Complete |
-| 0.1 | v0.1.1 | Architecture skeleton | 1–2h | Planned |
-| 1 | v0.2.0 | Internal complexity (base) | 12–16h | In progress |
-| 2 | v0.3.0 | cfg factor + composite score | 10–14h | Planned |
-| 3 | v0.4.0 | depth + trait (non-monotonic) | 8–12h | Planned |
-| 4 | v0.5.0 | Name opacity | 4–6h | Planned |
-| 5 | v0.6.0 | Macro density + final composite | 4–6h | Planned |
-| 6 | v1.0.0 | Git history + grip integration | 6–8h | Planned |
+| Phase | Deliverable | Key addition | Status |
+|---|---|---|---|
+| 0 | v0.1.0 | Placeholder | ✅ Complete |
+| 0.1-1 | v0.2.0 | Architecture skeleton + cyclomatic complexity (base) | ✅ Complete |
+| 2 | v0.3.0 | cfg factor + hidden dependencies | ✅ Complete |
+| 3 | v0.4.0 | depth factor + trait factor (non-monotonic) | ✅ Complete |
+| 4 | v0.5.0 | Name opacity | ✅ Complete |
+| 5 | v0.6.0 | Macro density (user-defined macros) | ✅ Complete |
+| 6 | v1.0.0 | Git history + grip integration | Planned |
 
 ---
 
