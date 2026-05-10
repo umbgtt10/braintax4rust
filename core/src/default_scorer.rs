@@ -18,6 +18,7 @@ pub fn compute_braintax_impl(
     hidden_deps: u32,
     depth: u32,
     trait_factor: f64,
+    name_opacity: u32,
 ) -> f64 {
     let cfg_factor = if cfg_gates > 0 {
         2.0f64.powi(cfg_gates as i32)
@@ -26,7 +27,9 @@ pub fn compute_braintax_impl(
     };
     let depth_factor = 1.0 + (depth.saturating_sub(1) as f64) * 0.15;
     let hidden_penalty = hidden_deps as f64 * 4.0;
-    cyclomatic as f64 * cfg_factor * depth_factor * trait_factor + hidden_penalty
+    cyclomatic as f64 * cfg_factor * depth_factor * trait_factor
+        + hidden_penalty
+        + name_opacity as f64
 }
 
 impl DefaultScorer {
@@ -42,6 +45,7 @@ impl DefaultScorer {
             func.hidden_deps,
             func.depth,
             func.trait_factor,
+            0,
         )
     }
 }

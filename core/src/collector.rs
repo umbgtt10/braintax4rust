@@ -11,6 +11,7 @@ use syn::visit::Visit;
 use crate::complexity_visitor::ComplexityVisitor;
 use crate::function_complexity::FunctionComplexity;
 use crate::hidden_deps_counter::HiddenDepsCounter;
+use crate::name_opacity_counter::NameOpacityCounter;
 
 #[derive(Debug)]
 pub struct Collector {
@@ -122,11 +123,15 @@ impl Collector {
         block: &syn::Block,
         attrs: &[syn::Attribute],
         trait_factor: f64,
+        param_opacity: u32,
     ) {
         let mut visitor = ComplexityVisitor::new();
         visitor.visit_block(block);
         let mut hidden = HiddenDepsCounter::new();
         hidden.visit_block(block);
+        let mut names = NameOpacityCounter::new();
+        names.visit_block(block);
+        let name_opacity = param_opacity + names.score;
         let cfg_gates = Self::count_cfg_gates(attrs);
         let depth = self.current_depth;
         self.functions.push(FunctionComplexity {
@@ -144,6 +149,7 @@ impl Collector {
                 hidden.count,
                 depth,
                 trait_factor,
+                name_opacity,
             ),
         });
     }
@@ -159,11 +165,14 @@ impl Collector {
     }
 
     fn visit_fn(&mut self, item_fn: &syn::ItemFn) {
+        let mut names = NameOpacityCounter::new();
+        names.visit_params(&item_fn.sig.inputs);
         self.push_fn(
             item_fn.sig.ident.to_string(),
             &item_fn.block,
             &item_fn.attrs,
             1.0,
+            names.score,
         );
     }
 
@@ -179,11 +188,14 @@ impl Collector {
         if let syn::ImplItem::Fn(item_fn) = item
             && !Self::has_test_attr(&item_fn.attrs)
         {
+            let mut names = NameOpacityCounter::new();
+            names.visit_params(&item_fn.sig.inputs);
             self.push_fn(
                 item_fn.sig.ident.to_string(),
                 &item_fn.block,
                 &item_fn.attrs,
                 trait_factor,
+                names.score,
             );
         }
     }
