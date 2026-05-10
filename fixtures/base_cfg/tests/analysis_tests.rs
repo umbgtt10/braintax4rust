@@ -9,31 +9,13 @@ use braintax::braintax_report::BraintaxReport;
 use braintax::config::Config;
 use braintax::default_scorer::DefaultScorer;
 use braintax::fs_walk::FsWalk;
-use braintax::traits::reporter::Reporter;
-use std::sync::Mutex;
-
-struct CaptureReporter {
-    captured: Mutex<String>,
-}
-
-impl Reporter for CaptureReporter {
-    fn render(&self, report: &BraintaxReport) -> Result<String, anyhow::Error> {
-        Ok(serde_json::to_string_pretty(report)?)
-    }
-    fn write(&self, report: &BraintaxReport) -> Result<(), anyhow::Error> {
-        let json = serde_json::to_string_pretty(report)?;
-        *self.captured.lock().unwrap() = json;
-        Ok(())
-    }
-}
+use braintax_test_utils::capture_reporter::CaptureReporter;
 
 fn analyze() -> BraintaxReport {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("fixtures")
         .join("base_cfg");
-    let reporter = CaptureReporter {
-        captured: Mutex::new(String::new()),
-    };
+    let reporter = CaptureReporter::new();
     let app = App::with_deps(
         FsWalk::new(&path),
         DefaultScorer::new(),

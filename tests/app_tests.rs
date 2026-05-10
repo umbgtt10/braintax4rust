@@ -2,15 +2,15 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use std::path::PathBuf;
+use std::process::ExitCode;
+
 use anyhow::Result;
 use braintax::app::App;
-use braintax::braintax_report::BraintaxReport;
 use braintax::config::Config;
 use braintax::default_scorer::DefaultScorer;
-use braintax::traits::reporter::Reporter;
 use braintax::traits::walk::Walk;
-use std::path::PathBuf;
-use std::sync::Mutex;
+use braintax_test_utils::capture_reporter::CaptureReporter;
 
 #[derive(Debug, Clone)]
 struct TestWalk {
@@ -20,32 +20,6 @@ struct TestWalk {
 impl Walk for TestWalk {
     fn rust_files(&self) -> Result<Vec<(PathBuf, String)>> {
         Ok(self.files.clone())
-    }
-}
-
-#[derive(Debug)]
-struct CaptureReporter {
-    captured: Mutex<Option<String>>,
-}
-
-impl CaptureReporter {
-    fn new() -> Self {
-        Self {
-            captured: Mutex::new(None),
-        }
-    }
-}
-
-impl Reporter for CaptureReporter {
-    fn render(&self, _report: &BraintaxReport) -> Result<String> {
-        Ok(String::new())
-    }
-
-    fn write(&self, report: &BraintaxReport) -> Result<()> {
-        let json = serde_json::to_string_pretty(report)?;
-        let mut guard = self.captured.lock().unwrap();
-        *guard = Some(json);
-        Ok(())
     }
 }
 
@@ -143,7 +117,6 @@ fn complex(a: bool, b: bool) {
     let app_fail = App::with_deps(walk, DefaultScorer::new(), reporter2, config_fail);
     let result_fail = app_fail.run();
 
-    use std::process::ExitCode;
     assert_eq!(result_ok.unwrap(), ExitCode::SUCCESS);
     assert_eq!(result_fail.unwrap(), ExitCode::FAILURE);
 }
