@@ -10,21 +10,48 @@ The **total price, in mental effort, that a reader pays to understand what a fun
 does, why it does it, and what it interacts with** — including everything the reader
 must travel to outside the function itself to form a complete mental model.
 
-## Current phase (v0.2.0)
+## Current phase (v0.3.0)
 
-The current release computes **cyclomatic complexity** as the base dimension:
+The current release computes a composite `braintax` score:
+
+```
+braintax = cyclomatic × cfg_factor + hidden_deps_penalty
+```
+
+### Cyclomatic complexity (base)
 
 ```
 M = 1 + number of decision points
 ```
 
-Where decision points include:
-- `if` / `else if` expressions
-- `while`, `for`, `loop` loops
-- `match` arms (each arm beyond the first)
-- `&&` and `||` boolean operators
-- `?` (try) operators
-- `return`, `break`, `continue` statements
+Decision points: `if`, `else if`, `while`, `for`, `loop`, `match` arms,
+`&&`, `||`, `?`, `return`, `break`, `continue`.
+
+### `cfg` factor
+
+Each `#[cfg(...)]` gate on a function multiplies its score:
+
+```
+cfg_factor = 2.0 ^ number_of_cfg_gates
+```
+
+A function with one `#[cfg(feature = "...")]` gate has `cfg_factor = 2.0`.
+Two gates → `4.0`, three → `8.0`.
+
+### Hidden dependencies
+
+The tool detects side-effecting calls inside function bodies:
+
+| Pattern | Penalty |
+|---|---|
+| `unsafe` block | +8 |
+| `std::process::exit()`, `abort()` | +6 |
+| `std::fs::read`, `File::open`, etc. | +5 |
+| `Instant::now()`, `SystemTime::now()` | +4 |
+| `rand::random()`, `thread_rng()` | +4 |
+| `std::env::var()`, `env::args()` | +3 |
+| `std::thread::sleep()` | +3 |
+| `println!`, `eprintln!` | +2 |
 
 ### Usage
 
@@ -51,33 +78,35 @@ cargo braintax4rust --json --threshold 10 --top 5
 ### Output
 
 ```
-cargo-braintax4rust 0.2.0 -- my-crate
-══════════════════════════════════════════════
+cargo-braintax4rust 0.3.0 -- my-crate
 
-Overall cyclomatic complexity:
+  Overall braintax:            13.2
+  Maximum braintax:            36.0
+
+Cyclomatic complexity:
   Total functions:             42
   Average complexity:         3.2
   Maximum complexity:         15
   Total complexity:           134
 
 Per module:
-  Module                          Funcs   Avg     Max
-  ------------------------------  ------  ------  -----
-  lib                              15      2.3     7
-  parser                           10      4.1     15
-  utils                            8       1.5     3
+  Module                          Funcs   Avg BT    Max
+  ------------------------------  ------  --------  -----
+  lib                              15      8.5      12
+  parser                           10     21.0      36
+  utils                            8       3.0       8
 
 Top 10 most complex functions:
-  Function                                            Module          CC
-  --------------------------------------------------  ------------  ----
-  parser/src/parser.rs::parse_expression              parser          15
-  lib/src/evaluator.rs::eval_deep                     lib             12
+  Function                                            Module          CC     BT
+  --------------------------------------------------  ------------  -----  ------
+  parser/src/parser.rs::parse_expression              parser          15    36.0
+  lib/src/evaluator.rs::eval_deep                     lib             12    12.0
 ```
 
 ### CI Gate
 
 Use `--threshold N` to exit with code 1 if any function exceeds the maximum
-complexity:
+cyclomatic complexity:
 
 ```bash
 cargo braintax4rust --threshold 10
@@ -96,7 +125,7 @@ braintax = base × depth × cfg × trait + hidden + args + assoc + ...
 |-------|-----------|-------------|
 | 0.1 | Skeleton | Walk → Collector → Scorer → Reporter pipeline ✅ |
 | 1 | `base` | Cyclomatic complexity, boolean chains, match arms, closures ✅ |
-| 2 | `cfg` | Feature gate multipliers, hidden dependency density |
+| 2 | `cfg` | Feature gate multipliers, hidden dependency density ✅ |
 | 3 | `depth` | Dependency travel distance, trait contract cost |
 | 4 | Name opacity | Semantic distance between names and meaning |
 | 5 | Macro density | Opaque macro invocations in productive code |
