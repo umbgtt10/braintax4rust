@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.5.0] - 2026-05-10
+
+### Added
+- Phase 4: name opacity scoring — single-letter identifiers add cognitive cost
+- `NameOpacityCounter` visitor: scores params, locals, for-vars, match bindings
+- `base_opaque` fixture demonstrating poor naming (braintax 24.0 vs flat 18.0)
+
+### Changed
+- Braintax formula: `braintax = base × cfg × depth × trait + hidden + name_opacity`
+- Existing fixtures use perfect naming (value, result, index) — no assertion changes
+- Bumped version to 0.5.0
+
 ## [0.4.0] - 2026-05-10
 
 ### Added
