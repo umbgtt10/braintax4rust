@@ -9,6 +9,7 @@ pub mod collector;
 pub mod complexity_visitor;
 pub mod config;
 pub mod default_scorer;
+pub mod derive_attr_scorer;
 pub mod fs_walk;
 pub mod function_complexity;
 pub mod hidden_deps_counter;

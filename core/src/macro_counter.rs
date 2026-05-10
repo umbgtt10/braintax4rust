@@ -4,6 +4,8 @@
 
 use syn::visit::Visit;
 
+use crate::derive_attr_scorer::DeriveAttrScorer;
+
 #[derive(Default)]
 pub struct MacroCounter {
     pub count: u32,
@@ -17,10 +19,6 @@ impl MacroCounter {
 
     fn is_known_macro(name: &str) -> bool {
         KNOWN_STD_MACROS.contains(&name)
-    }
-
-    fn is_known_derive(name: &str) -> bool {
-        KNOWN_DERIVES.contains(&name)
     }
 }
 
@@ -53,18 +51,6 @@ const KNOWN_STD_MACROS: &[&str] = &[
     "compile_error",
     "env",
     "option_env",
-];
-
-const KNOWN_DERIVES: &[&str] = &[
-    "Debug",
-    "Clone",
-    "Copy",
-    "Default",
-    "Eq",
-    "PartialEq",
-    "Ord",
-    "PartialOrd",
-    "Hash",
 ];
 
 impl<'ast> Visit<'ast> for MacroCounter {
@@ -109,15 +95,7 @@ impl<'ast> Visit<'ast> for MacroCounter {
 
 impl MacroCounter {
     fn score_derive_attr(&mut self, attr: &syn::Attribute) {
-        if let Ok(meta_list) = attr.meta.require_list() {
-            let s = format!("{}", meta_list.tokens);
-            for derive_name in s.trim_start_matches('(').trim_end_matches(')').split(',') {
-                let cleaned = derive_name.trim();
-                if !cleaned.is_empty() && !Self::is_known_derive(cleaned) {
-                    self.count += 3;
-                }
-            }
-        }
+        self.count += DeriveAttrScorer::new().score(attr);
     }
 
     fn is_known_attr(name: &str) -> bool {
