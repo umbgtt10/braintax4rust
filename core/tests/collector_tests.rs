@@ -264,3 +264,33 @@ fn foo() {
     assert_eq!(functions.len(), 1);
     assert_eq!(functions[0].name, "foo");
 }
+
+#[test]
+fn collect_fn_with_single_letter_names_has_opacity() {
+    // Arrange
+    let source = "fn f(x: i32) { let y = x; }";
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert!(functions[0].braintax > functions[0].cyclomatic as f64);
+}
+
+#[test]
+fn collect_fn_with_long_names_has_no_opacity() {
+    // Arrange
+    let source = "fn compute(value: i32) { let result = value; }";
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].braintax, functions[0].cyclomatic as f64);
+}
