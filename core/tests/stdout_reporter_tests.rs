@@ -38,6 +38,8 @@ fn sample_report() -> BraintaxReport {
                 cyclomatic: 2,
                 cfg_gates: 0,
                 hidden_deps: 0,
+                depth: 1,
+                trait_factor: 1.0,
                 braintax: 2.0,
             },
             FunctionComplexity {
@@ -47,6 +49,8 @@ fn sample_report() -> BraintaxReport {
                 cyclomatic: 5,
                 cfg_gates: 0,
                 hidden_deps: 0,
+                depth: 1,
+                trait_factor: 1.0,
                 braintax: 5.0,
             },
         ],

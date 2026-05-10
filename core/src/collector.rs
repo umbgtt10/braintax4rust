@@ -2,6 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use std::collections::HashMap;
 use std::path::Path;
 
 use syn::Attribute;
@@ -16,14 +17,19 @@ pub struct Collector {
     functions: Vec<FunctionComplexity>,
     current_file: String,
     current_module: String,
+    current_depth: u32,
+    traits: HashMap<String, u32>,
 }
 
 impl Collector {
     fn new(file: String, module: String) -> Self {
+        let depth = Self::module_depth(&module);
         Self {
             functions: Vec::new(),
             current_file: file,
             current_module: module,
+            current_depth: depth,
+            traits: HashMap::new(),
         }
     }
 
@@ -42,6 +48,14 @@ impl Collector {
         collector.functions
     }
 
+    fn module_depth(module: &str) -> u32 {
+        if module == "." {
+            1
+        } else {
+            module.split('/').count() as u32 + 1
+        }
+    }
+
     fn module_from_path(path: &Path, root: &Path) -> String {
         let relative = path.strip_prefix(root).unwrap_or(path);
         let s = relative.to_string_lossy().replace('\\', "/");
@@ -51,6 +65,14 @@ impl Collector {
         } else {
             ".".to_string()
         }
+    }
+
+    fn trait_method_count(trait_item: &syn::ItemTrait) -> u32 {
+        trait_item
+            .items
+            .iter()
+            .filter(|i| matches!(i, syn::TraitItem::Fn(_)))
+            .count() as u32
     }
 }
 
@@ -63,9 +85,29 @@ impl<'ast> Visit<'ast> for Collector {
             syn::Item::Mod(item_mod) if !Self::has_test_attr(&item_mod.attrs) => {
                 self.visit_mod(item_mod);
             }
+            syn::Item::Trait(trait_item) => {
+                let name = trait_item.ident.to_string();
+                let count = Self::trait_method_count(trait_item);
+                self.traits.insert(name, count);
+            }
             syn::Item::Impl(item_impl) => {
+                let trait_factor = if let Some((_, path, _)) = &item_impl.trait_ {
+                    let name = path
+                        .segments
+                        .last()
+                        .map(|s| s.ident.to_string())
+                        .unwrap_or_default();
+                    let method_count = self.traits.get(&name).copied().unwrap_or(0);
+                    if method_count <= 3 && !name.contains('_') {
+                        0.8
+                    } else {
+                        1.3
+                    }
+                } else {
+                    1.0
+                };
                 for inner in &item_impl.items {
-                    self.visit_impl_item(inner);
+                    self.visit_impl_item(inner, trait_factor);
                 }
             }
             _ => {}
@@ -74,12 +116,19 @@ impl<'ast> Visit<'ast> for Collector {
 }
 
 impl Collector {
-    fn push_fn(&mut self, name: String, block: &syn::Block, attrs: &[syn::Attribute]) {
+    fn push_fn(
+        &mut self,
+        name: String,
+        block: &syn::Block,
+        attrs: &[syn::Attribute],
+        trait_factor: f64,
+    ) {
         let mut visitor = ComplexityVisitor::new();
         visitor.visit_block(block);
         let mut hidden = HiddenDepsCounter::new();
         hidden.visit_block(block);
         let cfg_gates = Self::count_cfg_gates(attrs);
+        let depth = self.current_depth;
         self.functions.push(FunctionComplexity {
             name,
             file: self.current_file.clone(),
@@ -87,10 +136,14 @@ impl Collector {
             cyclomatic: visitor.complexity,
             cfg_gates,
             hidden_deps: hidden.count,
+            depth,
+            trait_factor,
             braintax: crate::default_scorer::compute_braintax_impl(
                 cfg_gates,
                 visitor.complexity,
                 hidden.count,
+                depth,
+                trait_factor,
             ),
         });
     }
@@ -110,6 +163,7 @@ impl Collector {
             item_fn.sig.ident.to_string(),
             &item_fn.block,
             &item_fn.attrs,
+            1.0,
         );
     }
 
@@ -121,7 +175,7 @@ impl Collector {
         }
     }
 
-    fn visit_impl_item(&mut self, item: &syn::ImplItem) {
+    fn visit_impl_item(&mut self, item: &syn::ImplItem, trait_factor: f64) {
         if let syn::ImplItem::Fn(item_fn) = item
             && !Self::has_test_attr(&item_fn.attrs)
         {
@@ -129,6 +183,7 @@ impl Collector {
                 item_fn.sig.ident.to_string(),
                 &item_fn.block,
                 &item_fn.attrs,
+                trait_factor,
             );
         }
     }

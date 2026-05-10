@@ -14,6 +14,8 @@ fn function_complexity_serializes_to_json() {
         cyclomatic: 5,
         cfg_gates: 0,
         hidden_deps: 0,
+        depth: 1,
+        trait_factor: 1.0,
         braintax: 5.0,
     };
 
@@ -27,7 +29,7 @@ fn function_complexity_serializes_to_json() {
 #[test]
 fn function_complexity_deserializes_from_json() {
     // Arrange
-    let json = r#"{"name":"bar","file":"src/main.rs","module":"","cyclomatic":3,"cfg_gates":0,"hidden_deps":0,"braintax":3.0}"#;
+    let json = r#"{"name":"bar","file":"src/main.rs","module":"","cyclomatic":3,"cfg_gates":0,"hidden_deps":0,"depth":1,"trait_factor":1.0,"braintax":3.0}"#;
 
     // Act
     let fc: FunctionComplexity = serde_json::from_str(json).unwrap();

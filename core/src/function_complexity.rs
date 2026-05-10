@@ -12,5 +12,7 @@ pub struct FunctionComplexity {
     pub cyclomatic: u32,
     pub cfg_gates: u32,
     pub hidden_deps: u32,
+    pub depth: u32,
+    pub trait_factor: f64,
     pub braintax: f64,
 }

@@ -15,6 +15,8 @@ fn make_fn(name: &str, module: &str, cyclomatic: u32) -> FunctionComplexity {
         cyclomatic,
         cfg_gates: 0,
         hidden_deps: 0,
+        depth: 1,
+        trait_factor: 1.0,
         braintax,
     }
 }

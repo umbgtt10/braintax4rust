@@ -38,9 +38,9 @@ fn depth1_cc_is_18() {
     // Assert
     assert_eq!(report.overall.total_functions, 1);
     assert_eq!(report.overall.max_cyclomatic, 18);
-    assert_eq!(report.overall.max_braintax, 18.0);
+    assert_eq!(report.overall.max_braintax, 20.7);
     assert_eq!(report.functions[0].name, "compute");
     assert_eq!(report.functions[0].module, "deep");
     assert_eq!(report.functions[0].cyclomatic, 18);
-    assert_eq!(report.functions[0].braintax, 18.0);
+    assert!((report.functions[0].braintax - 20.7).abs() < 0.01);
 }

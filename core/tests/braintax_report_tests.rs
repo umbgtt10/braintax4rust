@@ -38,6 +38,8 @@ fn report_serializes_to_json() {
                 cyclomatic: 2,
                 cfg_gates: 0,
                 hidden_deps: 0,
+                depth: 1,
+                trait_factor: 1.0,
                 braintax: 2.0,
             },
             FunctionComplexity {
@@ -47,6 +49,8 @@ fn report_serializes_to_json() {
                 cyclomatic: 5,
                 cfg_gates: 0,
                 hidden_deps: 0,
+                depth: 1,
+                trait_factor: 1.0,
                 braintax: 5.0,
             },
         ],
@@ -94,6 +98,8 @@ fn report_deserializes_from_json() {
                 "cyclomatic": 2,
                 "cfg_gates": 0,
                 "hidden_deps": 0,
+                "depth": 1,
+                "trait_factor": 1.0,
                 "braintax": 2.0
             }
         ]
