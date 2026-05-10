@@ -21,7 +21,7 @@ function Invoke-Step {
 # ---------------------------------------------------------------------------
 
 Invoke-Step "cargo-braintax self-analysis" {
-    cargo run -- --json | Out-Null
+    cargo run --package cargo-braintax4rust -- --json | Out-Null
 }
 
 Write-Host "`nbraintax Stage 2 passed!" -ForegroundColor Green

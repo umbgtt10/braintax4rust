@@ -12,9 +12,7 @@ use braintax::fs_walk::FsWalk;
 use braintax_test_utils::capture_reporter::CaptureReporter;
 
 fn analyze() -> BraintaxReport {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("fixtures")
-        .join("base_depth1");
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let reporter = CaptureReporter::new();
     let app = App::with_deps(
         FsWalk::new(&path),
@@ -33,7 +31,7 @@ fn analyze() -> BraintaxReport {
 }
 
 #[test]
-fn depth1_cc_is_18() {
+fn flat_cc_is_18() {
     // Arrange & Act
     let report = analyze();
 
@@ -41,6 +39,6 @@ fn depth1_cc_is_18() {
     assert_eq!(report.overall.total_functions, 1);
     assert_eq!(report.overall.max_cyclomatic, 18);
     assert_eq!(report.functions[0].name, "compute");
-    assert_eq!(report.functions[0].module, "deep");
+    assert_eq!(report.functions[0].module, ".");
     assert_eq!(report.functions[0].cyclomatic, 18);
 }

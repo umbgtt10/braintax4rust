@@ -1,52 +1,10 @@
 [workspace]
-members = [".", "test-utils"]
+members = [
+    "core",
+    "test-utils",
+    "fixture/base_flat",
+    "fixture/base_depth1",
+    "fixture/base_cfg",
+    "fixture/base_trait",
+]
 resolver = "2"
-
-[package]
-name = "cargo-braintax4rust"
-version = "0.2.0"
-edition = "2024"
-description = "A cognitive tax estimator for Rust code -- quantify the mental effort required to understand a function"
-authors = ["Umberto Gotti <umberto.gotti@umbertogotti.dev>"]
-license = "MIT"
-readme = "README.md"
-repository = "https://github.com/umbgtt10/braintax4rust"
-keywords = ["cargo", "subcommand", "complexity", "cognitive", "cli"]
-categories = ["development-tools::cargo-plugins", "command-line-utilities"]
-
-autotests = false
-
-[lib]
-name = "braintax"
-
-[[test]]
-name = "all_tests"
-path = "tests/all_tests.rs"
-
-[[test]]
-name = "base_flat_tests"
-path = "fixtures/base_flat/tests/analysis_tests.rs"
-
-[[test]]
-name = "base_depth1_tests"
-path = "fixtures/base_depth1/tests/analysis_tests.rs"
-
-[[test]]
-name = "base_cfg_tests"
-path = "fixtures/base_cfg/tests/analysis_tests.rs"
-
-[[test]]
-name = "base_trait_tests"
-path = "fixtures/base_trait/tests/analysis_tests.rs"
-
-[dependencies]
-anyhow = "1"
-clap = { version = "4", features = ["derive"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-syn = { version = "2", features = ["full", "visit"] }
-walkdir = "2"
-
-[dev-dependencies]
-braintax-test-utils = { path = "test-utils" }
-tempfile = "3"

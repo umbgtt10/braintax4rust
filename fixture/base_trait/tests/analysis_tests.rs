@@ -12,9 +12,7 @@ use braintax::fs_walk::FsWalk;
 use braintax_test_utils::capture_reporter::CaptureReporter;
 
 fn analyze() -> BraintaxReport {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("fixtures")
-        .join("base_trait");
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let reporter = CaptureReporter::new();
     let app = App::with_deps(
         FsWalk::new(&path),

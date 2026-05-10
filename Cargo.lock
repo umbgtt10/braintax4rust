@@ -162,6 +162,42 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f1f227452a390804cdb637b74a86990f2a7d7ba4b7d5693aac9b4dd6defd8d6"
 
 [[package]]
+name = "fixture-base_cfg"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
+name = "fixture-base_depth1"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
+name = "fixture-base_flat"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
+name = "fixture-base_trait"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
 name = "foldhash"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
