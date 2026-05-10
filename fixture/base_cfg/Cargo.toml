@@ -8,6 +8,6 @@ publish = false
 complex = []
 
 [dependencies]
-braintax = { path = "../../core", package = "cargo-braintax4rust" }
-braintax-test-utils = { path = "../../test-utils" }
+braintax.workspace = true
+braintax-test-utils.workspace = true
 serde_json.workspace = true

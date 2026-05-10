@@ -10,6 +10,8 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
+braintax = { path = "core", package = "cargo-braintax4rust" }
+braintax-test-utils = { path = "test-utils" }
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
