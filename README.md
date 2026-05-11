@@ -156,6 +156,8 @@ braintax = base × depth × cfg × trait + hidden + args + assoc + ...
 | 4 | Name opacity | Semantic distance between names and meaning ✅ |
 | 5 | Macro density | Opaque macro invocations in productive code ✅ |
 | 6 | Grip integration | Git history tracking, ratio diagnostics |
+| 7 | Generics | Generic params and trait bounds cognitive cost |
+| 8 | Trait refinement | Associated types, supertraits, method generics |
 
 Complexity compounds. A function that is internally complex, buried deep,
 gated behind cfg flags, and implementing an expensive trait is not "complex
