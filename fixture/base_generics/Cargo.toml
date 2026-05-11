@@ -1,10 +1,10 @@
 [package]
-name = "braintax-test-utils"
-version = "0.7.0"
+name = "fixture-base_generics"
+version = "0.0.0"
 edition = "2024"
 publish = false
 
 [dependencies]
 braintax.workspace = true
-anyhow.workspace = true
+braintax-test-utils.workspace = true
 serde_json.workspace = true

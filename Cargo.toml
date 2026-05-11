@@ -8,6 +8,7 @@ members = [
     "fixture/base_trait",
     "fixture/base_opaque",
     "fixture/base_macros",
+    "fixture/base_generics",
 ]
 resolver = "2"
 

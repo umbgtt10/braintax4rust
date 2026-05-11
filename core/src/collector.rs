@@ -10,6 +10,7 @@ use syn::visit::Visit;
 
 use crate::complexity_visitor::ComplexityVisitor;
 use crate::function_complexity::FunctionComplexity;
+use crate::generics_counter::GenericsCounter;
 use crate::hidden_deps_counter::HiddenDepsCounter;
 use crate::macro_counter::MacroCounter;
 use crate::name_opacity_counter::NameOpacityCounter;
@@ -125,6 +126,7 @@ impl Collector {
         attrs: &[syn::Attribute],
         trait_factor: f64,
         param_opacity: u32,
+        generics: u32,
     ) {
         let mut visitor = ComplexityVisitor::new();
         visitor.visit_block(block);
@@ -137,6 +139,16 @@ impl Collector {
         macros.visit_block(block);
         let cfg_gates = Self::count_cfg_gates(attrs);
         let depth = self.current_depth;
+        let components = crate::default_scorer::BraintaxComponents {
+            cfg_gates,
+            cyclomatic: visitor.complexity,
+            hidden_deps: hidden.count,
+            depth,
+            trait_factor,
+            name_opacity,
+            macro_density: macros.count,
+            generics,
+        };
         self.functions.push(FunctionComplexity {
             name,
             file: self.current_file.clone(),
@@ -146,15 +158,7 @@ impl Collector {
             hidden_deps: hidden.count,
             depth,
             trait_factor,
-            braintax: crate::default_scorer::compute_braintax_impl(
-                cfg_gates,
-                visitor.complexity,
-                hidden.count,
-                depth,
-                trait_factor,
-                name_opacity,
-                macros.count,
-            ),
+            braintax: crate::default_scorer::compute_braintax(&components),
         });
     }
 
@@ -171,12 +175,17 @@ impl Collector {
     fn visit_fn(&mut self, item_fn: &syn::ItemFn) {
         let mut names = NameOpacityCounter::new();
         names.visit_params(&item_fn.sig.inputs);
+        let generics = GenericsCounter::score_generics(
+            &item_fn.sig.generics.params,
+            &item_fn.sig.generics.where_clause,
+        );
         self.push_fn(
             item_fn.sig.ident.to_string(),
             &item_fn.block,
             &item_fn.attrs,
             1.0,
             names.score,
+            generics,
         );
     }
 
@@ -194,12 +203,17 @@ impl Collector {
         {
             let mut names = NameOpacityCounter::new();
             names.visit_params(&item_fn.sig.inputs);
+            let generics = GenericsCounter::score_generics(
+                &item_fn.sig.generics.params,
+                &item_fn.sig.generics.where_clause,
+            );
             self.push_fn(
                 item_fn.sig.ident.to_string(),
                 &item_fn.block,
                 &item_fn.attrs,
                 trait_factor,
                 names.score,
+                generics,
             );
         }
     }

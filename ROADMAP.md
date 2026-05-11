@@ -472,10 +472,9 @@ When combined with `grip` history: `TI(t) = grip_score(t) / braintax_score(t)`
 | 3 | v0.4.0 | depth factor + trait factor (non-monotonic) | ✅ Complete |
 | 4 | v0.5.0 | Name opacity | ✅ Complete |
 | 5 | v0.6.0 | Macro density (user-defined macros) | ✅ Complete |
-| 6 | v1.0.0 | Git history + grip integration | Planned |
-| 7 | v0.7.0 | Generics — generic params and trait bounds add cognitive cost | Planned |
-| 8 | v0.8.0 | Trait refinement — associated types, supertraits, method generics | Planned |
-
+| 6 | v0.7.0 | Generics — generic params and trait bounds add cognitive cost | Planned |
+| 7 | v0.8.0 | Trait refinement — associated types, supertraits, method generics | Planned |
+| 8 | v1.0.0 | Git history + grip integration | Planned |
 ---
 
 ## Hard rules

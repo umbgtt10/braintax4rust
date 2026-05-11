@@ -15,6 +15,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.7.0] - 2026-05-10
+
+### Added
+- Phase 7: generics scoring — type params (+2), trait bounds (+1), const generics (+3)
+- `GenericsCounter` with where-clause support
+- `BraintaxComponents` struct bundling all score dimensions
+- `base_generics` fixture (CC=3, generics=9, braintax=12.0)
+- 9 direct tests for generics scoring
+
+### Changed
+- Formula: `braintax = base × cfg × depth × trait + hidden + name + macros + generics`
+- `compute_braintax_impl` refactored into `compute_braintax(&BraintaxComponents)`
+- Bumped version to 0.7.0
+
 ## [0.6.0] - 2026-05-10
 
 ### Added

@@ -9,30 +9,35 @@ use crate::module_stats::ModuleStats;
 use crate::overall_stats::OverallStats;
 use crate::traits::scorer::Scorer;
 
-#[derive(Debug, Clone, Default)]
-pub struct DefaultScorer;
+#[derive(Debug, Clone)]
+pub struct BraintaxComponents {
+    pub cfg_gates: u32,
+    pub cyclomatic: u32,
+    pub hidden_deps: u32,
+    pub depth: u32,
+    pub trait_factor: f64,
+    pub name_opacity: u32,
+    pub macro_density: u32,
+    pub generics: u32,
+}
 
-pub fn compute_braintax_impl(
-    cfg_gates: u32,
-    cyclomatic: u32,
-    hidden_deps: u32,
-    depth: u32,
-    trait_factor: f64,
-    name_opacity: u32,
-    macro_density: u32,
-) -> f64 {
-    let cfg_factor = if cfg_gates > 0 {
-        2.0f64.powi(cfg_gates as i32)
+pub fn compute_braintax(c: &BraintaxComponents) -> f64 {
+    let cfg_factor = if c.cfg_gates > 0 {
+        2.0f64.powi(c.cfg_gates as i32)
     } else {
         1.0
     };
-    let depth_factor = 1.0 + (depth.saturating_sub(1) as f64) * 0.15;
-    let hidden_penalty = hidden_deps as f64 * 4.0;
-    cyclomatic as f64 * cfg_factor * depth_factor * trait_factor
+    let depth_factor = 1.0 + (c.depth.saturating_sub(1) as f64) * 0.15;
+    let hidden_penalty = c.hidden_deps as f64 * 4.0;
+    c.cyclomatic as f64 * cfg_factor * depth_factor * c.trait_factor
         + hidden_penalty
-        + name_opacity as f64
-        + macro_density as f64
+        + c.name_opacity as f64
+        + c.macro_density as f64
+        + c.generics as f64
 }
+
+#[derive(Debug, Clone, Default)]
+pub struct DefaultScorer;
 
 impl DefaultScorer {
     #[must_use]
@@ -41,15 +46,16 @@ impl DefaultScorer {
     }
 
     pub fn compute_braintax(func: &FunctionComplexity) -> f64 {
-        compute_braintax_impl(
-            func.cfg_gates,
-            func.cyclomatic,
-            func.hidden_deps,
-            func.depth,
-            func.trait_factor,
-            0,
-            0,
-        )
+        compute_braintax(&BraintaxComponents {
+            cfg_gates: func.cfg_gates,
+            cyclomatic: func.cyclomatic,
+            hidden_deps: func.hidden_deps,
+            depth: func.depth,
+            trait_factor: func.trait_factor,
+            name_opacity: 0,
+            macro_density: 0,
+            generics: 0,
+        })
     }
 }
 
