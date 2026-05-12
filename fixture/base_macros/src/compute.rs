@@ -5,11 +5,38 @@
 use crate::custom_add;
 
 fn compute(value: i32) -> i32 {
-    let result = 0;
+    let mut result = 0;
     for index in 0..10 {
-        let _sum = custom_add!(result, index);
         if index % 2 == 0 {
-            let _ = custom_add!(result, 1);
+            if index % 3 == 0 {
+                result = custom_add!(result, index * 2);
+            } else if index % 3 == 1 {
+                result += index;
+            } else {
+                result -= index;
+            }
+        }
+        let _ = custom_add!(result, 0);
+        match index {
+            0 | 1 => result += 1,
+            2 | 3 => result += 2,
+            4 | 5 => result += 3,
+            _ => {
+                if result > 0 {
+                    return result;
+                }
+            }
+        }
+        if index > 5 && index < 8 {
+            loop {
+                result += 1;
+                if result > 20 {
+                    break;
+                }
+                if result == 15 {
+                    continue;
+                }
+            }
         }
     }
     result

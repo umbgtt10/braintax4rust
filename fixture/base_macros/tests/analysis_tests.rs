@@ -31,12 +31,13 @@ fn analyze() -> BraintaxReport {
 }
 
 #[test]
-fn macros_braintax_uses_9_plus_6() {
+fn macros_braintax_reflects_macro_penalty() {
     // Arrange & Act
     let report = analyze();
 
     // Assert
+    // CC=18 (same body as base_flat), 2 custom_add! × 3 = 6
     assert_eq!(report.overall.total_functions, 1);
-    assert_eq!(report.functions[0].cyclomatic, 3);
-    assert_eq!(report.functions[0].braintax, 9.0);
+    assert_eq!(report.functions[0].cyclomatic, 18);
+    assert_eq!(report.functions[0].braintax, 24.0);
 }

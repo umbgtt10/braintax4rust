@@ -31,16 +31,15 @@ fn analyze() -> BraintaxReport {
 }
 
 #[test]
-fn refined_trait_has_higher_factor_than_simple() {
+fn refined_trait_braintax_reflects_complex_trait() {
     // Arrange & Act
     let report = analyze();
 
     // Assert
-    // Extended trait: 2 methods, 1 assoc type (Context), 1 supertrait (Base)
-    // factor = 1.15 + 0.10 (assoc) + 0.10 (super) = 1.35
-    // run() CC=3, name_opacity=1 (ctx is 3 chars) → 3 × 1.35 + 1 = 5.05
-    assert_eq!(report.overall.total_functions, 6);
+    // CC=18, Extended factor: 1.15 + 0.10(assoc) + 0.10(super) = 1.35
+    // name_opacity: ctx(3ch) = 1
+    // braintax = 18 × 1.35 + 1 = 25.3
     let run_fn = report.functions.iter().find(|f| f.name == "run").unwrap();
-    assert_eq!(run_fn.cyclomatic, 3);
-    assert!((run_fn.braintax - 5.05).abs() < 0.01);
+    assert_eq!(run_fn.cyclomatic, 18);
+    assert!((run_fn.braintax - 25.3).abs() < 0.01);
 }

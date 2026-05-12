@@ -36,7 +36,34 @@ impl Extended for Engine {
         let mut result = ctx;
         for index in 0..10 {
             if index % 2 == 0 {
-                result += index;
+                if index % 3 == 0 {
+                    result += index * 2;
+                } else if index % 3 == 1 {
+                    result += index;
+                } else {
+                    result -= index;
+                }
+            }
+            match index {
+                0 | 1 => result += 1,
+                2 | 3 => result += 2,
+                4 | 5 => result += 3,
+                _ => {
+                    if result > 0 {
+                        return result;
+                    }
+                }
+            }
+            if index > 5 && index < 8 {
+                loop {
+                    result += 1;
+                    if result > 20 {
+                        break;
+                    }
+                    if result == 15 {
+                        continue;
+                    }
+                }
             }
         }
         result
