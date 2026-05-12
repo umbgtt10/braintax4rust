@@ -162,6 +162,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f1f227452a390804cdb637b74a86990f2a7d7ba4b7d5693aac9b4dd6defd8d6"
 
 [[package]]
+name = "fixture-base_assoc_only"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
 name = "fixture-base_cfg"
 version = "0.0.0"
 dependencies = [
@@ -198,7 +207,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "fixture-base_inherent"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
+name = "fixture-base_known_trait"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
 name = "fixture-base_macros"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
+name = "fixture-base_many_methods"
 version = "0.0.0"
 dependencies = [
  "braintax-test-utils",
@@ -216,7 +252,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "fixture-base_super_only"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
 name = "fixture-base_trait"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
+name = "fixture-base_trait_assoc_dispatch"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
+name = "fixture-base_trait_four_impls"
 version = "0.0.0"
 dependencies = [
  "braintax-test-utils",
@@ -235,6 +298,15 @@ dependencies = [
 
 [[package]]
 name = "fixture-base_trait_refined"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
+name = "fixture-base_trait_two_impls"
 version = "0.0.0"
 dependencies = [
  "braintax-test-utils",

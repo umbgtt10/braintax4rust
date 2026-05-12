@@ -11,6 +11,14 @@ members = [
     "fixture/base_generics",
     "fixture/base_trait_refined",
     "fixture/base_trait_multi",
+    "fixture/base_trait_two_impls",
+    "fixture/base_trait_four_impls",
+    "fixture/base_trait_assoc_dispatch",
+    "fixture/base_assoc_only",
+    "fixture/base_super_only",
+    "fixture/base_many_methods",
+    "fixture/base_inherent",
+    "fixture/base_known_trait",
 ]
 resolver = "2"
 
