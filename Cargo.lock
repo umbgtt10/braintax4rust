@@ -225,6 +225,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fixture-base_trait_multi"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
 name = "fixture-base_trait_refined"
 version = "0.0.0"
 dependencies = [

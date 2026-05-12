@@ -2,7 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-#![allow(dead_code, unused_variables)]
+#![allow(dead_code, unused_variables, clippy::assign_op_pattern)]
 
 pub mod compute;
 

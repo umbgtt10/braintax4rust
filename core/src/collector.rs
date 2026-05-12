@@ -20,6 +20,7 @@ pub struct TraitInfo {
     pub methods: u32,
     pub assoc_types: u32,
     pub supertraits: u32,
+    pub impl_count: u32,
 }
 
 #[derive(Debug)]
@@ -52,6 +53,29 @@ impl Collector {
         };
 
         let mut collector = Self::new(file, module);
+
+        // First pass: collect trait definitions and count impls
+        for item in &syntax.items {
+            if let syn::Item::Trait(trait_item) = item {
+                let name = trait_item.ident.to_string();
+                let info = Self::trait_info(trait_item);
+                collector.traits.insert(name, info);
+            }
+            if let syn::Item::Impl(item_impl) = item
+                && let Some((_, path, _)) = &item_impl.trait_
+            {
+                let name = path
+                    .segments
+                    .last()
+                    .map(|s| s.ident.to_string())
+                    .unwrap_or_default();
+                if let Some(info) = collector.traits.get_mut(&name) {
+                    info.impl_count += 1;
+                }
+            }
+        }
+
+        // Second pass: visit items with accurate trait info
         for item in &syntax.items {
             collector.visit_item(item);
         }
@@ -93,6 +117,7 @@ impl Collector {
             methods,
             assoc_types,
             supertraits,
+            impl_count: 0,
         }
     }
 
@@ -126,7 +151,14 @@ impl Collector {
         };
         let assoc_penalty = if info.assoc_types > 0 { 0.10 } else { 0.0 };
         let super_penalty = if info.supertraits > 0 { 0.10 } else { 0.0 };
-        base + assoc_penalty + super_penalty
+        let dispatch_penalty = if info.impl_count > 3 {
+            0.15
+        } else if info.impl_count > 1 {
+            0.08
+        } else {
+            0.0
+        };
+        base + assoc_penalty + super_penalty + dispatch_penalty
     }
 }
 
@@ -139,11 +171,6 @@ impl<'ast> Visit<'ast> for Collector {
             syn::Item::Mod(item_mod) if !Self::has_test_attr(&item_mod.attrs) => {
                 self.visit_mod(item_mod);
             }
-            syn::Item::Trait(trait_item) => {
-                let name = trait_item.ident.to_string();
-                let info = Self::trait_info(trait_item);
-                self.traits.insert(name, info);
-            }
             syn::Item::Impl(item_impl) => {
                 let trait_factor = if let Some((_, path, _)) = &item_impl.trait_ {
                     let name = path
@@ -155,6 +182,7 @@ impl<'ast> Visit<'ast> for Collector {
                         methods: 0,
                         assoc_types: 0,
                         supertraits: 0,
+                        impl_count: 0,
                     });
                     Self::compute_trait_factor(&name, &info)
                 } else {

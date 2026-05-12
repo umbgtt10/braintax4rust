@@ -2,4 +2,6 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+#![allow(dead_code, unused_variables)]
 
+pub mod compute;

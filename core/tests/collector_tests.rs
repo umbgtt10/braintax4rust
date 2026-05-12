@@ -294,3 +294,258 @@ fn collect_fn_with_long_names_has_no_opacity() {
     assert_eq!(functions.len(), 1);
     assert_eq!(functions[0].braintax, functions[0].cyclomatic as f64);
 }
+
+#[test]
+fn simple_trait_one_impl_has_factor_0_90() {
+    // Arrange
+    let source = r#"
+trait MyTrait {
+    fn compute(&self) -> i32;
+}
+struct MyStruct;
+impl MyTrait for MyStruct {
+    fn compute(&self) -> i32 { 42 }
+}
+"#;
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    // MyTrait: 1 method, no assoc, no super, 1 impl → 0.90
+    assert_eq!(functions.len(), 1);
+    assert!((functions[0].trait_factor - 0.90).abs() < 0.001);
+}
+
+#[test]
+fn known_std_trait_has_factor_0_80() {
+    // Arrange
+    let source = r#"
+struct MyStruct;
+impl std::fmt::Debug for MyStruct {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "MyStruct")
+    }
+}
+"#;
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    // Debug is in the known-std list → 0.80
+    assert_eq!(functions.len(), 1);
+    assert!((functions[0].trait_factor - 0.80).abs() < 0.001);
+}
+
+#[test]
+fn simple_trait_three_impls_has_factor_0_98() {
+    // Arrange
+    let source = r#"
+trait MyTrait {
+    fn compute(&self) -> i32;
+}
+struct A; struct B; struct C;
+impl MyTrait for A { fn compute(&self) -> i32 { 1 } }
+impl MyTrait for B { fn compute(&self) -> i32 { 2 } }
+impl MyTrait for C { fn compute(&self) -> i32 { 3 } }
+"#;
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    // MyTrait: 1 method, no assoc, no super, 3 impls → 0.90 + 0.08 = 0.98
+    assert_eq!(functions.len(), 3);
+    for f in &functions {
+        assert!((f.trait_factor - 0.98).abs() < 0.001);
+    }
+}
+
+#[test]
+fn simple_trait_four_impls_has_factor_1_05() {
+    // Arrange
+    let source = r#"
+trait MyTrait {
+    fn compute(&self) -> i32;
+}
+struct A; struct B; struct C; struct D;
+impl MyTrait for A { fn compute(&self) -> i32 { 1 } }
+impl MyTrait for B { fn compute(&self) -> i32 { 2 } }
+impl MyTrait for C { fn compute(&self) -> i32 { 3 } }
+impl MyTrait for D { fn compute(&self) -> i32 { 4 } }
+"#;
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    // MyTrait: 1 method, no assoc, no super, 4 impls → 0.90 + 0.15 = 1.05
+    assert_eq!(functions.len(), 4);
+    for f in &functions {
+        assert!((f.trait_factor - 1.05).abs() < 0.001);
+    }
+}
+
+#[test]
+fn trait_with_assoc_type_has_factor_1_25() {
+    // Arrange
+    let source = r#"
+trait MyTrait {
+    type Output;
+    fn compute(&self) -> Self::Output;
+}
+struct MyStruct;
+impl MyTrait for MyStruct {
+    type Output = i32;
+    fn compute(&self) -> i32 { 42 }
+}
+"#;
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    // MyTrait: 1 method, 1 assoc_type, no super, 1 impl
+    // base = 1.15, assoc_penalty = 0.10 → 1.25
+    assert_eq!(functions.len(), 1);
+    assert!((functions[0].trait_factor - 1.25).abs() < 0.001);
+}
+
+#[test]
+fn trait_with_supertrait_has_factor_1_25() {
+    // Arrange
+    let source = r#"
+trait Base {
+    fn base_method(&self);
+}
+trait Derived: Base {
+    fn compute(&self) -> i32;
+}
+struct MyStruct;
+impl Base for MyStruct { fn base_method(&self) {} }
+impl Derived for MyStruct { fn compute(&self) -> i32 { 42 } }
+"#;
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    // Derived: 1 method, no assoc, 1 supertrait, 1 impl
+    // base = 1.15, super_penalty = 0.10 → 1.25
+    let derived_fn = functions.iter().find(|f| f.name == "compute").unwrap();
+    assert!((derived_fn.trait_factor - 1.25).abs() < 0.001);
+
+    // Base: 1 method, no assoc, no super, 1 impl → 0.90
+    let base_fn = functions.iter().find(|f| f.name == "base_method").unwrap();
+    assert!((base_fn.trait_factor - 0.90).abs() < 0.001);
+}
+
+#[test]
+fn trait_with_assoc_and_super_has_factor_1_35() {
+    // Arrange
+    let source = r#"
+trait Base {
+    type Output;
+    fn process(&self) -> Self::Output;
+}
+trait Derived: Base {
+    type Context;
+    fn run(&self, ctx: Self::Context) -> Self::Output;
+}
+struct MyStruct;
+impl Base for MyStruct {
+    type Output = i32;
+    fn process(&self) -> i32 { 0 }
+}
+impl Derived for MyStruct {
+    type Context = i32;
+    fn run(&self, ctx: i32) -> i32 { ctx }
+}
+"#;
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    // Derived: 1 method, 1 assoc, 1 super, 1 impl
+    // base = 1.15, assoc = 0.10, super = 0.10 → 1.35
+    let derived_fn = functions.iter().find(|f| f.name == "run").unwrap();
+    assert!((derived_fn.trait_factor - 1.35).abs() < 0.001);
+}
+
+#[test]
+fn trait_with_many_methods_has_method_penalty() {
+    // Arrange
+    let source = r#"
+trait MyTrait {
+    fn one(&self);
+    fn two(&self);
+    fn three(&self);
+    fn four(&self);
+    fn five(&self);
+}
+struct MyStruct;
+impl MyTrait for MyStruct {
+    fn one(&self) {}
+    fn two(&self) {}
+    fn three(&self) {}
+    fn four(&self) {}
+    fn five(&self) {}
+}
+"#;
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    // MyTrait: 5 methods, no assoc, no super, 1 impl
+    // method_penalty = (5-3) * 0.02 = 0.04
+    // factor = 0.90 + 0.04 = 0.94
+    assert_eq!(functions.len(), 5);
+    for f in &functions {
+        assert!(
+            (f.trait_factor - 0.94).abs() < 0.001,
+            "expected 0.94, got {} for fn {}",
+            f.trait_factor,
+            f.name
+        );
+    }
+}
+
+#[test]
+fn inherent_impl_has_trait_factor_1_0() {
+    // Arrange
+    let source = r#"
+struct MyStruct;
+impl MyStruct {
+    fn compute(&self) -> i32 { 42 }
+}
+"#;
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = Collector::collect(source, path, root);
+
+    // Assert
+    // Inherent impl (no trait) → factor = 1.0
+    assert_eq!(functions.len(), 1);
+    assert!((functions[0].trait_factor - 1.0).abs() < 0.001);
+}

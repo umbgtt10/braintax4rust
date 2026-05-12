@@ -10,6 +10,7 @@ members = [
     "fixture/base_macros",
     "fixture/base_generics",
     "fixture/base_trait_refined",
+    "fixture/base_trait_multi",
 ]
 resolver = "2"
 
