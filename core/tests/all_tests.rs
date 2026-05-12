@@ -18,5 +18,6 @@ mod macro_counter_tests;
 mod main_tests;
 mod module_stats_tests;
 mod name_opacity_counter_tests;
+mod ordinal_ranking_tests;
 mod overall_stats_tests;
 mod stdout_reporter_tests;

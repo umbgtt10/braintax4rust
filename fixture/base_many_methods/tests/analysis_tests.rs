@@ -42,7 +42,11 @@ fn many_methods_has_method_penalty() {
     // compute fn: CC=18, &self=0.5 → 18 × 0.92 + 0.5 = 17.06
     // extra fns: CC=1, &self=0.5 → 1 × 0.92 + 0.5 = 1.42
     assert_eq!(report.overall.total_functions, 5);
-    let compute_fn = report.functions.iter().find(|f| f.name == "compute").unwrap();
+    let compute_fn = report
+        .functions
+        .iter()
+        .find(|f| f.name == "compute")
+        .unwrap();
     assert_eq!(compute_fn.cyclomatic, 18);
     assert!((compute_fn.braintax - 17.06).abs() < 0.01);
     for func in &report.functions {
