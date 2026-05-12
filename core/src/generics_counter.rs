@@ -2,14 +2,15 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use syn::GenericParam;
+use syn::punctuated::Punctuated;
+use syn::{GenericParam, WhereClause};
 
 pub struct GenericsCounter;
 
 impl GenericsCounter {
     pub fn score_generics(
-        params: &syn::punctuated::Punctuated<GenericParam, syn::Token![,]>,
-        where_clause: &Option<syn::WhereClause>,
+        params: &Punctuated<GenericParam, syn::Token![,]>,
+        where_clause: &Option<WhereClause>,
     ) -> u32 {
         let mut total = 0;
         for param in params {

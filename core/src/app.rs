@@ -11,7 +11,10 @@ use crate::args::Args;
 use crate::braintax_report::BraintaxReport;
 use crate::collector::Collector;
 use crate::config::Config;
+use crate::default_scorer::DefaultScorer;
+use crate::fs_walk::FsWalk;
 use crate::function_complexity::FunctionComplexity;
+use crate::stdout_reporter::StdoutReporter;
 use crate::traits::reporter::Reporter;
 use crate::traits::scorer::Scorer;
 use crate::traits::walk::Walk;
@@ -24,19 +27,13 @@ pub struct App<W: Walk, S: Scorer, R: Reporter> {
     config: Config,
 }
 
-impl
-    App<
-        crate::fs_walk::FsWalk,
-        crate::default_scorer::DefaultScorer,
-        crate::stdout_reporter::StdoutReporter,
-    >
-{
+impl App<FsWalk, DefaultScorer, StdoutReporter> {
     #[must_use]
     pub fn new(config: Config) -> Self {
         Self {
-            walker: crate::fs_walk::FsWalk::new(&config.path),
-            scorer: crate::default_scorer::DefaultScorer::new(),
-            reporter: crate::stdout_reporter::StdoutReporter::new(config.json, config.top),
+            walker: FsWalk::new(&config.path),
+            scorer: DefaultScorer::new(),
+            reporter: StdoutReporter::new(config.json, config.top),
             config,
         }
     }

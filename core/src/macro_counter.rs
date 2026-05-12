@@ -2,7 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use syn::visit::Visit;
+use syn::visit::{Visit, visit_attribute, visit_expr_macro, visit_stmt_macro};
 
 use crate::derive_attr_scorer::DeriveAttrScorer;
 
@@ -64,7 +64,7 @@ impl<'ast> Visit<'ast> for MacroCounter {
         if !Self::is_known_macro(&name) {
             self.count += 3;
         }
-        syn::visit::visit_expr_macro(self, expr);
+        visit_expr_macro(self, expr);
     }
 
     fn visit_stmt_macro(&mut self, stmt: &'ast syn::StmtMacro) {
@@ -77,7 +77,7 @@ impl<'ast> Visit<'ast> for MacroCounter {
         if !Self::is_known_macro(&name) {
             self.count += 3;
         }
-        syn::visit::visit_stmt_macro(self, stmt);
+        visit_stmt_macro(self, stmt);
     }
 
     fn visit_attribute(&mut self, attr: &'ast syn::Attribute) {
@@ -89,7 +89,7 @@ impl<'ast> Visit<'ast> for MacroCounter {
                 self.count += 3;
             }
         }
-        syn::visit::visit_attribute(self, attr);
+        visit_attribute(self, attr);
     }
 }
 

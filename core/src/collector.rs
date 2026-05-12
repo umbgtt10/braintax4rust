@@ -9,6 +9,7 @@ use syn::Attribute;
 use syn::visit::Visit;
 
 use crate::complexity_visitor::ComplexityVisitor;
+use crate::default_scorer::{BraintaxComponents, compute_braintax};
 use crate::function_complexity::FunctionComplexity;
 use crate::generics_counter::GenericsCounter;
 use crate::hidden_deps_counter::HiddenDepsCounter;
@@ -54,7 +55,6 @@ impl Collector {
 
         let mut collector = Self::new(file, module);
 
-        // First pass: collect trait definitions and count impls
         for item in &syntax.items {
             if let syn::Item::Trait(trait_item) = item {
                 let name = trait_item.ident.to_string();
@@ -75,7 +75,6 @@ impl Collector {
             }
         }
 
-        // Second pass: visit items with accurate trait info
         for item in &syntax.items {
             collector.visit_item(item);
         }
@@ -149,14 +148,12 @@ impl Collector {
         } else {
             0.90 + method_penalty
         };
-        // Diminishing penalty: first extra dimension costs 0.15, second costs 0.05
         let extra_dims = (info.assoc_types > 0) as u32 + (info.supertraits > 0) as u32;
         let dim_penalty = match extra_dims {
             0 => 0.0,
             1 => 0.15,
             _ => 0.20,
         };
-        // Dispatch × assoc interaction: when assoc types exist, dispatch is amplified
         let dispatch_base = ((info.impl_count.saturating_sub(1)) as f64 * 0.06).min(0.18);
         let dispatch_amplifier = if info.assoc_types > 0 { 1.5 } else { 1.0 };
         let dispatch_penalty = (dispatch_base * dispatch_amplifier).min(0.27);
@@ -167,9 +164,9 @@ impl Collector {
         match inputs.first() {
             Some(syn::FnArg::Receiver(recv)) => {
                 if recv.mutability.is_some() {
-                    1.0 // &mut self — mutation implications
+                    1.0
                 } else {
-                    0.5 // &self or self — lightweight
+                    0.5
                 }
             }
             _ => 0.0,
@@ -189,11 +186,9 @@ impl Collector {
             syn::Type::TraitObject(_) => 1.0,
             syn::Type::Path(type_path) => {
                 let mut cost = 0.0;
-                // Qualified path like <Self as Trait>::Output
                 if type_path.qself.is_some() {
                     cost += 1.0;
                 }
-                // Check for Self:: prefix (associated type resolution)
                 if type_path
                     .path
                     .segments
@@ -203,7 +198,6 @@ impl Collector {
                 {
                     cost += 1.0;
                 }
-                // Count non-empty generic args
                 for seg in &type_path.path.segments {
                     if let syn::PathArguments::AngleBracketed(args) = &seg.arguments {
                         cost += args.args.len() as f64 * 0.3;
@@ -278,7 +272,7 @@ impl Collector {
         macros.visit_block(block);
         let cfg_gates = Self::count_cfg_gates(attrs);
         let depth = self.current_depth;
-        let components = crate::default_scorer::BraintaxComponents {
+        let components = BraintaxComponents {
             cfg_gates,
             cyclomatic: visitor.complexity,
             hidden_deps: hidden.count,
@@ -299,7 +293,7 @@ impl Collector {
             hidden_deps: hidden.count,
             depth,
             trait_factor: input.trait_factor,
-            braintax: crate::default_scorer::compute_braintax(&components),
+            braintax: compute_braintax(&components),
         });
     }
 

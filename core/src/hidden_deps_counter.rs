@@ -2,7 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use syn::visit::Visit;
+use syn::visit::{Visit, visit_expr_call, visit_expr_macro, visit_stmt};
 
 #[derive(Default)]
 pub struct HiddenDepsCounter {
@@ -29,14 +29,14 @@ impl<'ast> Visit<'ast> for HiddenDepsCounter {
                 self.count += 1;
             }
         }
-        syn::visit::visit_stmt(self, stmt);
+        visit_stmt(self, stmt);
     }
 
     fn visit_expr_call(&mut self, expr: &'ast syn::ExprCall) {
         if Self::is_hidden_call(&expr.func) {
             self.count += 1;
         }
-        syn::visit::visit_expr_call(self, expr);
+        visit_expr_call(self, expr);
     }
 
     fn visit_expr_unsafe(&mut self, _expr: &'ast syn::ExprUnsafe) {
@@ -53,7 +53,7 @@ impl<'ast> Visit<'ast> for HiddenDepsCounter {
         if Self::is_hidden_macro(&mac_name) {
             self.count += 1;
         }
-        syn::visit::visit_expr_macro(self, expr);
+        visit_expr_macro(self, expr);
     }
 }
 

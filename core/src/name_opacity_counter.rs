@@ -2,7 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use syn::visit::Visit;
+use syn::visit::{Visit, visit_pat};
 
 #[derive(Default)]
 pub struct NameOpacityCounter {
@@ -42,6 +42,6 @@ impl<'ast> Visit<'ast> for NameOpacityCounter {
         if let syn::Pat::Ident(pat_ident) = pat {
             self.score += Self::score_ident(&pat_ident.ident.to_string());
         }
-        syn::visit::visit_pat(self, pat);
+        visit_pat(self, pat);
     }
 }

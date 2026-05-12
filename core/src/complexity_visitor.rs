@@ -2,7 +2,10 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use syn::visit::Visit;
+use syn::visit::{
+    Visit, visit_expr_binary, visit_expr_for_loop, visit_expr_loop, visit_expr_match,
+    visit_expr_while,
+};
 
 pub struct ComplexityVisitor {
     pub complexity: u32,
@@ -44,17 +47,17 @@ impl<'ast> Visit<'ast> for ComplexityVisitor {
 
     fn visit_expr_while(&mut self, expr: &'ast syn::ExprWhile) {
         self.complexity += 1;
-        syn::visit::visit_expr_while(self, expr);
+        visit_expr_while(self, expr);
     }
 
     fn visit_expr_for_loop(&mut self, expr: &'ast syn::ExprForLoop) {
         self.complexity += 1;
-        syn::visit::visit_expr_for_loop(self, expr);
+        visit_expr_for_loop(self, expr);
     }
 
     fn visit_expr_loop(&mut self, expr: &'ast syn::ExprLoop) {
         self.complexity += 1;
-        syn::visit::visit_expr_loop(self, expr);
+        visit_expr_loop(self, expr);
     }
 
     fn visit_expr_match(&mut self, expr: &'ast syn::ExprMatch) {
@@ -68,14 +71,14 @@ impl<'ast> Visit<'ast> for ComplexityVisitor {
                 self.complexity += 1;
             }
         }
-        syn::visit::visit_expr_match(self, expr);
+        visit_expr_match(self, expr);
     }
 
     fn visit_expr_binary(&mut self, expr: &'ast syn::ExprBinary) {
         if matches!(expr.op, syn::BinOp::And(_) | syn::BinOp::Or(_)) {
             self.complexity += 1;
         }
-        syn::visit::visit_expr_binary(self, expr);
+        visit_expr_binary(self, expr);
     }
 
     fn visit_expr_try(&mut self, _expr: &'ast syn::ExprTry) {
