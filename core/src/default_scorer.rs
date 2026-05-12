@@ -19,6 +19,8 @@ pub struct BraintaxComponents {
     pub name_opacity: u32,
     pub macro_density: u32,
     pub generics: u32,
+    pub self_ref_cost: f64,
+    pub return_complexity: f64,
 }
 
 pub fn compute_braintax(c: &BraintaxComponents) -> f64 {
@@ -34,6 +36,8 @@ pub fn compute_braintax(c: &BraintaxComponents) -> f64 {
         + c.name_opacity as f64
         + c.macro_density as f64
         + c.generics as f64
+        + c.self_ref_cost
+        + c.return_complexity
 }
 
 #[derive(Debug, Clone, Default)]
@@ -55,6 +59,8 @@ impl DefaultScorer {
             name_opacity: 0,
             macro_density: 0,
             generics: 0,
+            self_ref_cost: 0.0,
+            return_complexity: 0.0,
         })
     }
 }

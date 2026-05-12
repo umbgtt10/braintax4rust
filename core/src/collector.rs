@@ -143,22 +143,76 @@ impl Collector {
         if known.contains(&name) {
             return 0.80;
         }
-        let method_penalty = (info.methods.saturating_sub(3)) as f64 * 0.02;
+        let method_penalty = (info.methods.saturating_sub(3)) as f64 * 0.01;
         let base = if info.assoc_types > 0 || info.supertraits > 0 {
             1.15 + method_penalty
         } else {
             0.90 + method_penalty
         };
-        let assoc_penalty = if info.assoc_types > 0 { 0.10 } else { 0.0 };
-        let super_penalty = if info.supertraits > 0 { 0.10 } else { 0.0 };
-        let dispatch_penalty = if info.impl_count > 3 {
-            0.15
-        } else if info.impl_count > 1 {
-            0.08
-        } else {
-            0.0
+        // Diminishing penalty: first extra dimension costs 0.15, second costs 0.05
+        let extra_dims = (info.assoc_types > 0) as u32 + (info.supertraits > 0) as u32;
+        let dim_penalty = match extra_dims {
+            0 => 0.0,
+            1 => 0.15,
+            _ => 0.20,
         };
-        base + assoc_penalty + super_penalty + dispatch_penalty
+        // Dispatch × assoc interaction: when assoc types exist, dispatch is amplified
+        let dispatch_base = ((info.impl_count.saturating_sub(1)) as f64 * 0.06).min(0.18);
+        let dispatch_amplifier = if info.assoc_types > 0 { 1.5 } else { 1.0 };
+        let dispatch_penalty = (dispatch_base * dispatch_amplifier).min(0.27);
+        base + dim_penalty + dispatch_penalty
+    }
+
+    fn self_ref_cost(inputs: &syn::punctuated::Punctuated<syn::FnArg, syn::Token![,]>) -> f64 {
+        match inputs.first() {
+            Some(syn::FnArg::Receiver(recv)) => {
+                if recv.mutability.is_some() {
+                    1.0 // &mut self — mutation implications
+                } else {
+                    0.5 // &self or self — lightweight
+                }
+            }
+            _ => 0.0,
+        }
+    }
+
+    fn return_complexity(return_type: &syn::ReturnType) -> f64 {
+        match return_type {
+            syn::ReturnType::Default => 0.0,
+            syn::ReturnType::Type(_, ty) => Self::type_complexity(ty),
+        }
+    }
+
+    fn type_complexity(ty: &syn::Type) -> f64 {
+        match ty {
+            syn::Type::ImplTrait(_) => 1.5,
+            syn::Type::TraitObject(_) => 1.0,
+            syn::Type::Path(type_path) => {
+                let mut cost = 0.0;
+                // Qualified path like <Self as Trait>::Output
+                if type_path.qself.is_some() {
+                    cost += 1.0;
+                }
+                // Check for Self:: prefix (associated type resolution)
+                if type_path
+                    .path
+                    .segments
+                    .first()
+                    .map(|s| s.ident == "Self")
+                    .unwrap_or(false)
+                {
+                    cost += 1.0;
+                }
+                // Count non-empty generic args
+                for seg in &type_path.path.segments {
+                    if let syn::PathArguments::AngleBracketed(args) = &seg.arguments {
+                        cost += args.args.len() as f64 * 0.3;
+                    }
+                }
+                cost
+            }
+            _ => 0.0,
+        }
     }
 }
 
@@ -186,7 +240,7 @@ impl<'ast> Visit<'ast> for Collector {
                     });
                     Self::compute_trait_factor(&name, &info)
                 } else {
-                    1.0
+                    0.95
                 };
                 for inner in &item_impl.items {
                     self.visit_impl_item(inner, trait_factor);
@@ -197,15 +251,21 @@ impl<'ast> Visit<'ast> for Collector {
     }
 }
 
+struct FnInput {
+    trait_factor: f64,
+    param_opacity: u32,
+    generics: u32,
+    self_ref_cost: f64,
+    return_complexity: f64,
+}
+
 impl Collector {
     fn push_fn(
         &mut self,
         name: String,
         block: &syn::Block,
         attrs: &[syn::Attribute],
-        trait_factor: f64,
-        param_opacity: u32,
-        generics: u32,
+        input: FnInput,
     ) {
         let mut visitor = ComplexityVisitor::new();
         visitor.visit_block(block);
@@ -213,7 +273,7 @@ impl Collector {
         hidden.visit_block(block);
         let mut names = NameOpacityCounter::new();
         names.visit_block(block);
-        let name_opacity = param_opacity + names.score;
+        let name_opacity = input.param_opacity + names.score;
         let mut macros = MacroCounter::new();
         macros.visit_block(block);
         let cfg_gates = Self::count_cfg_gates(attrs);
@@ -223,10 +283,12 @@ impl Collector {
             cyclomatic: visitor.complexity,
             hidden_deps: hidden.count,
             depth,
-            trait_factor,
+            trait_factor: input.trait_factor,
             name_opacity,
             macro_density: macros.count,
-            generics,
+            generics: input.generics,
+            self_ref_cost: input.self_ref_cost,
+            return_complexity: input.return_complexity,
         };
         self.functions.push(FunctionComplexity {
             name,
@@ -236,7 +298,7 @@ impl Collector {
             cfg_gates,
             hidden_deps: hidden.count,
             depth,
-            trait_factor,
+            trait_factor: input.trait_factor,
             braintax: crate::default_scorer::compute_braintax(&components),
         });
     }
@@ -258,13 +320,18 @@ impl Collector {
             &item_fn.sig.generics.params,
             &item_fn.sig.generics.where_clause,
         );
+        let ret_complexity = Self::return_complexity(&item_fn.sig.output);
         self.push_fn(
             item_fn.sig.ident.to_string(),
             &item_fn.block,
             &item_fn.attrs,
-            1.0,
-            names.score,
-            generics,
+            FnInput {
+                trait_factor: 1.0,
+                param_opacity: names.score,
+                generics,
+                self_ref_cost: 0.0,
+                return_complexity: ret_complexity,
+            },
         );
     }
 
@@ -286,13 +353,19 @@ impl Collector {
                 &item_fn.sig.generics.params,
                 &item_fn.sig.generics.where_clause,
             );
+            let self_cost = Self::self_ref_cost(&item_fn.sig.inputs);
+            let ret_complexity = Self::return_complexity(&item_fn.sig.output);
             self.push_fn(
                 item_fn.sig.ident.to_string(),
                 &item_fn.block,
                 &item_fn.attrs,
-                trait_factor,
-                names.score,
-                generics,
+                FnInput {
+                    trait_factor,
+                    param_opacity: names.score,
+                    generics,
+                    self_ref_cost: self_cost,
+                    return_complexity: ret_complexity,
+                },
             );
         }
     }

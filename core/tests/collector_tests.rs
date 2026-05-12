@@ -361,10 +361,10 @@ impl MyTrait for C { fn compute(&self) -> i32 { 3 } }
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // MyTrait: 1 method, no assoc, no super, 3 impls → 0.90 + 0.08 = 0.98
+    // MyTrait: 1 method, no assoc, no super, 3 impls → 0.90 + (3-1)*0.06 = 1.02
     assert_eq!(functions.len(), 3);
     for f in &functions {
-        assert!((f.trait_factor - 0.98).abs() < 0.001);
+        assert!((f.trait_factor - 1.02).abs() < 0.001);
     }
 }
 
@@ -388,10 +388,10 @@ impl MyTrait for D { fn compute(&self) -> i32 { 4 } }
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // MyTrait: 1 method, no assoc, no super, 4 impls → 0.90 + 0.15 = 1.05
+    // MyTrait: 1 method, no assoc, no super, 4 impls → 0.90 + min((4-1)*0.06, 0.18) = 1.08
     assert_eq!(functions.len(), 4);
     for f in &functions {
-        assert!((f.trait_factor - 1.05).abs() < 0.001);
+        assert!((f.trait_factor - 1.08).abs() < 0.001);
     }
 }
 
@@ -417,9 +417,9 @@ impl MyTrait for MyStruct {
 
     // Assert
     // MyTrait: 1 method, 1 assoc_type, no super, 1 impl
-    // base = 1.15, assoc_penalty = 0.10 → 1.25
+    // base = 1.15, assoc_penalty = 0.15 → 1.30
     assert_eq!(functions.len(), 1);
-    assert!((functions[0].trait_factor - 1.25).abs() < 0.001);
+    assert!((functions[0].trait_factor - 1.30).abs() < 0.001);
 }
 
 #[test]
@@ -444,9 +444,9 @@ impl Derived for MyStruct { fn compute(&self) -> i32 { 42 } }
 
     // Assert
     // Derived: 1 method, no assoc, 1 supertrait, 1 impl
-    // base = 1.15, super_penalty = 0.10 → 1.25
+    // base = 1.15, super_penalty = 0.15 → 1.30
     let derived_fn = functions.iter().find(|f| f.name == "compute").unwrap();
-    assert!((derived_fn.trait_factor - 1.25).abs() < 0.001);
+    assert!((derived_fn.trait_factor - 1.30).abs() < 0.001);
 
     // Base: 1 method, no assoc, no super, 1 impl → 0.90
     let base_fn = functions.iter().find(|f| f.name == "base_method").unwrap();
@@ -483,7 +483,7 @@ impl Derived for MyStruct {
 
     // Assert
     // Derived: 1 method, 1 assoc, 1 super, 1 impl
-    // base = 1.15, assoc = 0.10, super = 0.10 → 1.35
+    // base = 1.15, extra_dims = 2 → dim_penalty = 0.20 → 1.35
     let derived_fn = functions.iter().find(|f| f.name == "run").unwrap();
     assert!((derived_fn.trait_factor - 1.35).abs() < 0.001);
 }
@@ -516,13 +516,13 @@ impl MyTrait for MyStruct {
 
     // Assert
     // MyTrait: 5 methods, no assoc, no super, 1 impl
-    // method_penalty = (5-3) * 0.02 = 0.04
-    // factor = 0.90 + 0.04 = 0.94
+    // method_penalty = (5-3) * 0.01 = 0.02
+    // factor = 0.90 + 0.02 = 0.92
     assert_eq!(functions.len(), 5);
     for f in &functions {
         assert!(
-            (f.trait_factor - 0.94).abs() < 0.001,
-            "expected 0.94, got {} for fn {}",
+            (f.trait_factor - 0.92).abs() < 0.001,
+            "expected 0.92, got {} for fn {}",
             f.trait_factor,
             f.name
         );
@@ -545,7 +545,7 @@ impl MyStruct {
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // Inherent impl (no trait) → factor = 1.0
+    // Inherent impl (no trait) → factor = 0.95
     assert_eq!(functions.len(), 1);
-    assert!((functions[0].trait_factor - 1.0).abs() < 0.001);
+    assert!((functions[0].trait_factor - 0.95).abs() < 0.001);
 }
