@@ -15,6 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.8.0] - 2026-05-10
+
+### Added
+- Phase 8: refined trait factor — associated types, supertraits, method methods count
+- `TraitInfo` struct tracking methods, assoc types, supertraits
+- `compute_trait_factor` with known-std discount (0.80) and custom trait model
+- `base_trait_refined` fixture with `Extended: Base` (supertrait + assoc type)
+
+### Changed
+- Trait factor now accounts for: base (1.15), assoc types (+0.10), supertraits (+0.10), both (+0.10), extra methods (+0.02 each after 3rd)
+- Known std traits (Debug, Clone, Iterator, etc.) get 0.80
+- Bumped version to 0.8.0
+
 ## [0.7.0] - 2026-05-10
 
 ### Added

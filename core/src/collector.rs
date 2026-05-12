@@ -15,13 +15,20 @@ use crate::hidden_deps_counter::HiddenDepsCounter;
 use crate::macro_counter::MacroCounter;
 use crate::name_opacity_counter::NameOpacityCounter;
 
+#[derive(Debug, Clone)]
+pub struct TraitInfo {
+    pub methods: u32,
+    pub assoc_types: u32,
+    pub supertraits: u32,
+}
+
 #[derive(Debug)]
 pub struct Collector {
     functions: Vec<FunctionComplexity>,
     current_file: String,
     current_module: String,
     current_depth: u32,
-    traits: HashMap<String, u32>,
+    traits: HashMap<String, TraitInfo>,
 }
 
 impl Collector {
@@ -70,12 +77,56 @@ impl Collector {
         }
     }
 
-    fn trait_method_count(trait_item: &syn::ItemTrait) -> u32 {
-        trait_item
+    fn trait_info(trait_item: &syn::ItemTrait) -> TraitInfo {
+        let methods = trait_item
             .items
             .iter()
             .filter(|i| matches!(i, syn::TraitItem::Fn(_)))
-            .count() as u32
+            .count() as u32;
+        let assoc_types = trait_item
+            .items
+            .iter()
+            .filter(|i| matches!(i, syn::TraitItem::Type(_)))
+            .count() as u32;
+        let supertraits = trait_item.supertraits.len() as u32;
+        TraitInfo {
+            methods,
+            assoc_types,
+            supertraits,
+        }
+    }
+
+    fn compute_trait_factor(name: &str, info: &TraitInfo) -> f64 {
+        let known = [
+            "Debug",
+            "Clone",
+            "Copy",
+            "Default",
+            "Eq",
+            "PartialEq",
+            "Ord",
+            "PartialOrd",
+            "Hash",
+            "Display",
+            "Iterator",
+            "Into",
+            "From",
+            "Send",
+            "Sync",
+            "Drop",
+        ];
+        if known.contains(&name) {
+            return 0.80;
+        }
+        let method_penalty = (info.methods.saturating_sub(3)) as f64 * 0.02;
+        let base = if info.assoc_types > 0 || info.supertraits > 0 {
+            1.15 + method_penalty
+        } else {
+            0.90 + method_penalty
+        };
+        let assoc_penalty = if info.assoc_types > 0 { 0.10 } else { 0.0 };
+        let super_penalty = if info.supertraits > 0 { 0.10 } else { 0.0 };
+        base + assoc_penalty + super_penalty
     }
 }
 
@@ -90,8 +141,8 @@ impl<'ast> Visit<'ast> for Collector {
             }
             syn::Item::Trait(trait_item) => {
                 let name = trait_item.ident.to_string();
-                let count = Self::trait_method_count(trait_item);
-                self.traits.insert(name, count);
+                let info = Self::trait_info(trait_item);
+                self.traits.insert(name, info);
             }
             syn::Item::Impl(item_impl) => {
                 let trait_factor = if let Some((_, path, _)) = &item_impl.trait_ {
@@ -100,12 +151,12 @@ impl<'ast> Visit<'ast> for Collector {
                         .last()
                         .map(|s| s.ident.to_string())
                         .unwrap_or_default();
-                    let method_count = self.traits.get(&name).copied().unwrap_or(0);
-                    if method_count <= 3 && !name.contains('_') {
-                        0.8
-                    } else {
-                        1.3
-                    }
+                    let info = self.traits.get(&name).cloned().unwrap_or(TraitInfo {
+                        methods: 0,
+                        assoc_types: 0,
+                        supertraits: 0,
+                    });
+                    Self::compute_trait_factor(&name, &info)
                 } else {
                     1.0
                 };
