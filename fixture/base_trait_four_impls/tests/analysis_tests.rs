@@ -36,9 +36,6 @@ fn four_impls_cost_more_than_two() {
     let report = analyze();
 
     // Assert
-    // Processor: 4 impls → dispatch = min((4-1) × 0.06, 0.18) = 0.18
-    // factor = 0.90 + 0.18 = 1.08
-    // Each impl fn: CC=18, &self=0.5 → 18 × 1.08 + 0.5 = 19.94
     assert!(report.overall.total_functions >= 4);
     for func in &report.functions {
         assert_eq!(func.cyclomatic, 18);

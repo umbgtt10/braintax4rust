@@ -36,8 +36,6 @@ fn inherent_impl_cheaper_than_simple_trait() {
     let report = analyze();
 
     // Assert
-    // Inherent impl → factor = 0.95
-    // CC=18, &self=0.5 → 18 × 0.95 + 0.5 = 17.6
     assert_eq!(report.overall.total_functions, 1);
     assert_eq!(report.functions[0].cyclomatic, 18);
     assert!((report.functions[0].braintax - 17.6).abs() < 0.01);

@@ -36,11 +36,6 @@ fn many_methods_has_method_penalty() {
     let report = analyze();
 
     // Assert
-    // Processor: 5 methods, 0 assoc, 0 super, 1 impl
-    // base = 0.90, method_penalty = (5-3) × 0.01 = 0.02
-    // factor = 0.90 + 0.02 = 0.92
-    // compute fn: CC=18, &self=0.5 → 18 × 0.92 + 0.5 = 17.06
-    // extra fns: CC=1, &self=0.5 → 1 × 0.92 + 0.5 = 1.42
     assert_eq!(report.overall.total_functions, 5);
     let compute_fn = report
         .functions

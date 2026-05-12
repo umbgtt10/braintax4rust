@@ -36,9 +36,6 @@ fn super_only_costs_more_than_simple_trait() {
     let report = analyze();
 
     // Assert
-    // Processor: 1 method, 0 assoc, 1 super, 1 impl
-    // base = 1.15, dim_penalty = 0.15 → factor = 1.30
-    // CC=18, &self=0.5 → 18 × 1.30 + 0.5 = 23.9
     assert_eq!(report.overall.total_functions, 2);
     assert_eq!(report.functions[0].cyclomatic, 1);
     assert_eq!(report.functions[1].cyclomatic, 18);

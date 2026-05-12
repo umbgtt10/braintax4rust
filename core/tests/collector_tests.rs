@@ -47,7 +47,6 @@ fn collect_fn_with_if_else_returns_cc_2() {
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // if-else is still 1 decision point => CC = 2
     assert_eq!(functions.len(), 1);
     assert_eq!(functions[0].cyclomatic, 2);
 }
@@ -63,7 +62,6 @@ fn collect_fn_with_while_returns_cc_2() {
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // while: +1, break: +1, base: 1 => total: 3
     assert_eq!(functions[0].cyclomatic, 3);
 }
 
@@ -100,7 +98,6 @@ fn foo(x: u32) -> u32 {
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // match: +1, 2 extra arms: +2 => base 1 + 3 = 4
     assert_eq!(functions[0].cyclomatic, 4);
 }
 
@@ -115,7 +112,6 @@ fn collect_fn_with_boolean_ops_returns_correct_cc() {
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // if: +1, &&: +1, base: 1 => total: 3
     assert_eq!(functions[0].cyclomatic, 3);
 }
 
@@ -130,7 +126,6 @@ fn collect_fn_with_try_operator_returns_correct_cc() {
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // ?: +1, base: 1 => total: 2
     assert_eq!(functions[0].cyclomatic, 2);
 }
 
@@ -314,7 +309,6 @@ impl MyTrait for MyStruct {
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // MyTrait: 1 method, no assoc, no super, 1 impl → 0.90
     assert_eq!(functions.len(), 1);
     assert!((functions[0].trait_factor - 0.90).abs() < 0.001);
 }
@@ -337,7 +331,6 @@ impl std::fmt::Debug for MyStruct {
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // Debug is in the known-std list → 0.80
     assert_eq!(functions.len(), 1);
     assert!((functions[0].trait_factor - 0.80).abs() < 0.001);
 }
@@ -361,7 +354,6 @@ impl MyTrait for C { fn compute(&self) -> i32 { 3 } }
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // MyTrait: 1 method, no assoc, no super, 3 impls → 0.90 + (3-1)*0.06 = 1.02
     assert_eq!(functions.len(), 3);
     for f in &functions {
         assert!((f.trait_factor - 1.02).abs() < 0.001);
@@ -388,7 +380,6 @@ impl MyTrait for D { fn compute(&self) -> i32 { 4 } }
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // MyTrait: 1 method, no assoc, no super, 4 impls → 0.90 + min((4-1)*0.06, 0.18) = 1.08
     assert_eq!(functions.len(), 4);
     for f in &functions {
         assert!((f.trait_factor - 1.08).abs() < 0.001);
@@ -416,8 +407,6 @@ impl MyTrait for MyStruct {
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // MyTrait: 1 method, 1 assoc_type, no super, 1 impl
-    // base = 1.15, assoc_penalty = 0.15 → 1.30
     assert_eq!(functions.len(), 1);
     assert!((functions[0].trait_factor - 1.30).abs() < 0.001);
 }
@@ -443,12 +432,9 @@ impl Derived for MyStruct { fn compute(&self) -> i32 { 42 } }
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // Derived: 1 method, no assoc, 1 supertrait, 1 impl
-    // base = 1.15, super_penalty = 0.15 → 1.30
     let derived_fn = functions.iter().find(|f| f.name == "compute").unwrap();
     assert!((derived_fn.trait_factor - 1.30).abs() < 0.001);
 
-    // Base: 1 method, no assoc, no super, 1 impl → 0.90
     let base_fn = functions.iter().find(|f| f.name == "base_method").unwrap();
     assert!((base_fn.trait_factor - 0.90).abs() < 0.001);
 }
@@ -482,8 +468,6 @@ impl Derived for MyStruct {
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // Derived: 1 method, 1 assoc, 1 super, 1 impl
-    // base = 1.15, extra_dims = 2 → dim_penalty = 0.20 → 1.35
     let derived_fn = functions.iter().find(|f| f.name == "run").unwrap();
     assert!((derived_fn.trait_factor - 1.35).abs() < 0.001);
 }
@@ -515,9 +499,6 @@ impl MyTrait for MyStruct {
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // MyTrait: 5 methods, no assoc, no super, 1 impl
-    // method_penalty = (5-3) * 0.01 = 0.02
-    // factor = 0.90 + 0.02 = 0.92
     assert_eq!(functions.len(), 5);
     for f in &functions {
         assert!(
@@ -545,7 +526,6 @@ impl MyStruct {
     let functions = Collector::collect(source, path, root);
 
     // Assert
-    // Inherent impl (no trait) → factor = 0.95
     assert_eq!(functions.len(), 1);
     assert!((functions[0].trait_factor - 0.95).abs() < 0.001);
 }

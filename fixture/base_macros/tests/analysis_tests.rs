@@ -36,7 +36,6 @@ fn macros_braintax_reflects_macro_penalty() {
     let report = analyze();
 
     // Assert
-    // CC=18 (same body as base_flat), 2 custom_add! × 3 = 6
     assert_eq!(report.overall.total_functions, 1);
     assert_eq!(report.functions[0].cyclomatic, 18);
     assert_eq!(report.functions[0].braintax, 24.0);

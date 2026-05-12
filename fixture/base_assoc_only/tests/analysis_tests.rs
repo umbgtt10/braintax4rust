@@ -36,9 +36,6 @@ fn assoc_only_costs_more_than_simple_trait() {
     let report = analyze();
 
     // Assert
-    // Processor: 1 method, 1 assoc, 0 super, 1 impl
-    // base = 1.15, dim_penalty = 0.15 → factor = 1.30
-    // CC=18, &self=0.5 → 18 × 1.30 + 0.5 = 23.9
     assert_eq!(report.overall.total_functions, 1);
     assert_eq!(report.functions[0].cyclomatic, 18);
     assert!((report.functions[0].braintax - 23.9).abs() < 0.01);

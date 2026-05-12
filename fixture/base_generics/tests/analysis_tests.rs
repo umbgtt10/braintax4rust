@@ -36,8 +36,6 @@ fn generics_braintax_reflects_generic_penalty() {
     let report = analyze();
 
     // Assert
-    // CC=18, generics: A(2+1+1) + B(2+1) + E(2) = 9, name_opacity: _a+_b+_e = 3
-    // braintax = 18 + 9 + 3 = 30.0
     assert_eq!(report.overall.total_functions, 1);
     assert_eq!(report.functions[0].cyclomatic, 18);
     assert_eq!(report.functions[0].braintax, 30.0);

@@ -36,13 +36,6 @@ fn assoc_type_amplifies_dispatch_penalty() {
     let report = analyze();
 
     // Assert
-    // Processor: 1 method, 1 assoc, 0 super, 3 impls
-    // base = 1.15, dim_penalty = 0.15 (assoc only)
-    // dispatch_base = min((3-1) × 0.06, 0.18) = 0.12
-    // dispatch_amplifier = 1.5 (assoc present)
-    // dispatch = min(0.12 × 1.5, 0.27) = 0.18
-    // factor = 1.15 + 0.15 + 0.18 = 1.48
-    // braintax = 18 × 1.48 + 0.5 = 27.14
     assert!(report.overall.total_functions >= 3);
     for func in &report.functions {
         assert_eq!(func.cyclomatic, 18);

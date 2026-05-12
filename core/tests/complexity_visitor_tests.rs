@@ -64,7 +64,6 @@ fn if_else_if_adds_3() {
     visitor.visit_block(&block);
 
     // Assert
-    // first if: +1, else if: +1 => total: 3
     assert_eq!(visitor.complexity, 3);
 }
 
@@ -82,7 +81,6 @@ fn while_loop_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    // while: +1, break: +1 => total: 3
     assert_eq!(visitor.complexity, 3);
 }
 
@@ -113,7 +111,6 @@ fn loop_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    // loop: +1, break: +1 => total: 3
     assert_eq!(visitor.complexity, 3);
 }
 
@@ -133,7 +130,6 @@ fn match_with_three_arms_adds_3() {
     visitor.visit_block(&block);
 
     // Assert
-    // match: +1, 2 extra arms: +2 => total: 4
     assert_eq!(visitor.complexity, 4);
 }
 
@@ -147,7 +143,6 @@ fn boolean_and_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    // if: +1, &&: +1 => total: 3
     assert_eq!(visitor.complexity, 3);
 }
 
@@ -195,7 +190,6 @@ fn break_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    // loop: +1, break: +1 => total: 3
     assert_eq!(visitor.complexity, 3);
 }
 
@@ -213,6 +207,5 @@ fn continue_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    // loop: +1, continue: +1 => total: 3
     assert_eq!(visitor.complexity, 3);
 }

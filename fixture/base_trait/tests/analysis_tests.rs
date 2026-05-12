@@ -41,7 +41,5 @@ fn trait_cc_is_18() {
     assert_eq!(report.overall.max_braintax, 16.7);
     assert_eq!(report.functions[0].name, "compute");
     assert_eq!(report.functions[0].cyclomatic, 18);
-    // Computer: simple custom trait, 1 method, no assoc, no super → 0.90
-    // CC=18, depth=1, name_opacity=0, &self=0.5 → 18 × 0.90 + 0.5 = 16.7
     assert!((report.functions[0].braintax - 16.7).abs() < 0.01);
 }

@@ -36,9 +36,6 @@ fn two_impls_higher_than_one() {
     let report = analyze();
 
     // Assert
-    // Processor: 2 impls → dispatch = (2-1) × 0.06 = 0.06
-    // factor = 0.90 + 0.06 = 0.96
-    // Each impl fn: CC=18, &self=0.5 → 18 × 0.96 + 0.5 = 17.78
     assert!(report.overall.total_functions >= 2);
     for func in &report.functions {
         assert_eq!(func.cyclomatic, 18);

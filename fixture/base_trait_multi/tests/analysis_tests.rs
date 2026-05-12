@@ -36,9 +36,6 @@ fn multi_impl_trait_costs_more_than_single() {
     let report = analyze();
 
     // Assert
-    // Processor: 3 impls → dispatch_penalty = (3-1) * 0.06 = 0.12
-    // factor = 0.90 + 0.12 = 1.02
-    // Each impl fn: CC=18, &self=0.5 → 18 × 1.02 + 0.5 = 18.86
     assert!(report.overall.total_functions >= 3);
     for func in &report.functions {
         assert_eq!(func.cyclomatic, 18);

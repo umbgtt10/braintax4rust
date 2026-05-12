@@ -36,9 +36,6 @@ fn known_std_trait_costs_least() {
     let report = analyze();
 
     // Assert
-    // Debug is known std → factor = 0.80
-    // CC=18, &self=0.5, name_opacity: f(1ch)=2
-    // 18 × 0.80 + 0.5 + 2 = 16.9
     assert_eq!(report.overall.total_functions, 1);
     assert_eq!(report.functions[0].cyclomatic, 18);
     assert!((report.functions[0].braintax - 16.9).abs() < 0.01);

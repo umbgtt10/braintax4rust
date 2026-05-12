@@ -36,11 +36,6 @@ fn refined_trait_braintax_reflects_complex_trait() {
     let report = analyze();
 
     // Assert
-    // CC=18, Extended factor: 1.15 + 0.20(dim) = 1.35
-    // name_opacity: ctx(3ch) = 1
-    // self_ref_cost: &self = 0.5
-    // return_complexity: impl uses concrete i32 → 0.0
-    // braintax = 18 × 1.35 + 1 + 0.5 + 0.0 = 25.8
     let run_fn = report.functions.iter().find(|f| f.name == "run").unwrap();
     assert_eq!(run_fn.cyclomatic, 18);
     assert!((run_fn.braintax - 25.8).abs() < 0.01);
