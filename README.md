@@ -10,12 +10,12 @@ The **total price, in mental effort, that a reader pays to understand what a fun
 does, why it does it, and what it interacts with** — including everything the reader
 must travel to outside the function itself to form a complete mental model.
 
-## Current phase (v0.6.0)
+## Current phase (v0.8.0)
 
 The current release computes a composite `braintax` score:
 
 ```
-braintax = cyclomatic × cfg × depth × trait + hidden + name + macros
+braintax = base × cfg × depth × trait + hidden + name + macros + generics
 ```
 
 ### Cyclomatic complexity (base)
@@ -51,18 +51,50 @@ A function 3 modules deep: `depth_factor = 1.3`.
 
 ### Trait factor (non-monotonic)
 
-Well-designed trait boundaries can *reduce* cognitive load:
+Well-designed trait boundaries can *reduce* cognitive load; sprawling ones increase it:
 
-| Trait type | Factor | Condition |
-|---|---|---|
-| Cheap trait | **0.8** | ≤3 methods, precise name |
-| Inherent impl | **1.0** | No trait |
-| Expensive trait | **1.3** | >3 methods or abstract name |
+- **Known standard traits** (`Debug`, `Clone`, `Iterator`, `From`, `Send`, `Sync`, `Drop`, …):
+  flat **0.80** — the reader already knows the contract.
+- **Inherent impls** (no trait): flat **0.95**.
+- **Custom traits**: a `base` of **0.90** (no associated types or supertraits) or **1.15**
+  (has either), plus **0.01** per method beyond the third. On top of `base`:
+  - a **dimension penalty** of 0.15 (associated types *or* supertraits) or 0.20 (both) — more
+    surface the reader must hold in mind at once;
+  - a **dispatch penalty**, up to 0.18 for multiple `impl` blocks (0.06 each beyond the first),
+    amplified ×1.5 and capped at 0.27 when associated types are also in play — more places the
+    reader must check for the "real" behavior.
 
-A cheap trait boundary (≤3 methods, single-word name) lets the reader
-stop at the boundary — cognitive load goes *down*. An expensive trait
-(abstract name, many methods) increases load because the reader must
-track more mental context.
+A cheap, well-known trait boundary lets the reader stop at the boundary — cognitive load goes
+*down*. A custom trait with associated types, supertraits, and several `impl` blocks increases
+load because the reader must track more mental context to know which implementation applies.
+
+### Name opacity
+
+Single- and double-letter identifiers cost more to hold in mind than descriptive ones. Scored
+per parameter, local binding, `for`-loop variable, and `match` binding:
+
+| Identifier length | Penalty |
+|---|---|
+| 1 char (e.g. `x`) | +2 |
+| 2-3 chars (e.g. `tmp`) | +1 |
+| 4+ chars | 0 |
+
+### Macro density
+
+Each macro invocation or attribute — including `derive`s — outside a small well-known list
+(`println!`, `assert_eq!`, `vec!`, `Debug`/`Clone`/`Copy`/`Default`/`Eq`/`PartialEq`/`Ord`/
+`PartialOrd`/`Hash` derives, `#[cfg]`, and similar) adds **+3**. Opaque, unfamiliar macros force
+the reader to go look up what they expand to before they can trust what the code does.
+
+### Generics
+
+```
+generics = Σ (2 + trait_bounds) per type param  +  3 per const generic
+```
+
+Each generic type parameter costs **+2**, plus **+1** per trait bound on it (inline or in a
+`where` clause). Const generics cost **+3** each. Lifetime parameters are free — they don't add
+runtime behavior to reason about.
 
 ### Hidden dependencies
 
@@ -104,7 +136,7 @@ cargo braintax4rust --json --threshold 10 --top 5
 ### Output
 
 ```
-cargo-braintax4rust 0.3.0 -- my-crate
+cargo-braintax4rust 0.8.0 -- my-crate
 
   Overall braintax:            13.2
   Maximum braintax:            36.0
@@ -155,9 +187,8 @@ braintax = base × depth × cfg × trait + hidden + args + assoc + ...
 | 3 | `depth` | Dependency travel distance, trait contract cost ✅ |
 | 4 | Name opacity | Semantic distance between names and meaning ✅ |
 | 5 | Macro density | Opaque macro invocations in productive code ✅ |
-| 6 | Grip integration | Git history tracking, ratio diagnostics |
-| 7 | Generics | Generic params and trait bounds cognitive cost |
-| 8 | Trait refinement | Associated types, supertraits, method generics |
+| 7 | Generics | Generic params and trait bounds cognitive cost ✅ |
+| 8 | Trait refinement | Associated types, supertraits, method generics ✅ |
 
 Complexity compounds. A function that is internally complex, buried deep,
 gated behind cfg flags, and implementing an expensive trait is not "complex

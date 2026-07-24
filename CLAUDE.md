@@ -1,10 +1,12 @@
-# Braintax — Copilot Instructions
+# Braintax
 
 ## Meaning
 
-`Braintax` is self-contained.
+`braintax` is a cargo subcommand that measures the cognitive load required to
+understand a piece of Rust code — a composite score across complexity, cfg gating,
+nesting depth, trait boundaries, hidden dependencies, naming, macros, and generics.
 
-Do not assume or rely on any other sibling repository or crate.
+It is self-contained.
 
 ## Boundary Rule
 
@@ -26,7 +28,9 @@ Run gates:
 `powershell -File scripts\run_stage_1.ps1`
 `powershell -File scripts\run_stage_2.ps1`
 
-### Orthogonality, trait surface and cognitive complexity
+If either gate is not green, the work is not complete.
+
+## Orthogonality, trait surface and cognitive complexity
 
 **When changing productive code, always maximize orthogonality and testable surface through traits, and minimize cognitive complexity.**
 
@@ -41,7 +45,7 @@ Specifically:
 - ALL dependencies are injected through the SINGLE constructor and stored in the struct
 - apply the same split recursively to nested dependencies: trait first, state/data model second, concrete implementation third
 
-### User coding standards
+## User coding standards
 
 - one struct per file
 - no unnecessary comments in code
