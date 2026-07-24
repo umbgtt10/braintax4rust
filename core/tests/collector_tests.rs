@@ -3,7 +3,13 @@
 // SPDX-License-Identifier: MIT
 
 use braintax::collector::Collector;
-use std::path::Path;
+use braintax::function_complexity::FunctionComplexity;
+use std::path::{Path, PathBuf};
+
+fn collect(source: &str, path: &Path, root: &Path) -> Vec<FunctionComplexity> {
+    let traits = Collector::build_trait_registry(&[(path.to_path_buf(), source.to_string())]);
+    Collector::collect(source, path, root, &traits)
+}
 
 #[test]
 fn collect_trivial_fn_returns_cc_1() {
@@ -13,7 +19,7 @@ fn collect_trivial_fn_returns_cc_1() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -29,7 +35,7 @@ fn collect_fn_with_if_returns_cc_2() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -44,7 +50,7 @@ fn collect_fn_with_if_else_returns_cc_2() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -59,7 +65,7 @@ fn collect_fn_with_while_returns_cc_2() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions[0].cyclomatic, 3);
@@ -73,7 +79,7 @@ fn collect_fn_with_for_loop_returns_cc_2() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions[0].cyclomatic, 2);
@@ -95,7 +101,7 @@ fn foo(x: u32) -> u32 {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions[0].cyclomatic, 4);
@@ -109,7 +115,7 @@ fn collect_fn_with_boolean_ops_returns_correct_cc() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions[0].cyclomatic, 3);
@@ -123,7 +129,7 @@ fn collect_fn_with_try_operator_returns_correct_cc() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions[0].cyclomatic, 2);
@@ -144,7 +150,7 @@ fn real() { }
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -159,7 +165,7 @@ fn collect_invalid_syntax_returns_empty() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert!(functions.is_empty());
@@ -173,7 +179,7 @@ fn collect_module_path_uses_root() {
     let root = Path::new("/project");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions[0].module, "bar");
@@ -187,7 +193,7 @@ fn collect_cfg_gated_fn_has_cfg_gates_1() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -203,7 +209,7 @@ fn collect_fn_with_two_cfg_gates_has_cfg_gates_2() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -218,7 +224,7 @@ fn collect_fn_with_unsafe_block_has_hidden_deps_1() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -233,7 +239,7 @@ fn collect_fn_with_println_has_hidden_deps_1() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -253,7 +259,7 @@ fn foo() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -268,7 +274,7 @@ fn collect_fn_with_single_letter_names_has_opacity() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -283,7 +289,7 @@ fn collect_fn_with_long_names_has_no_opacity() {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -306,7 +312,7 @@ impl MyTrait for MyStruct {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -328,7 +334,7 @@ impl std::fmt::Debug for MyStruct {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -351,7 +357,7 @@ impl MyTrait for C { fn compute(&self) -> i32 { 3 } }
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 3);
@@ -377,7 +383,7 @@ impl MyTrait for D { fn compute(&self) -> i32 { 4 } }
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 4);
@@ -404,7 +410,7 @@ impl MyTrait for MyStruct {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
@@ -429,7 +435,7 @@ impl Derived for MyStruct { fn compute(&self) -> i32 { 42 } }
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     let derived_fn = functions.iter().find(|f| f.name == "compute").unwrap();
@@ -465,7 +471,7 @@ impl Derived for MyStruct {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     let derived_fn = functions.iter().find(|f| f.name == "run").unwrap();
@@ -496,7 +502,7 @@ impl MyTrait for MyStruct {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 5);
@@ -523,9 +529,46 @@ impl MyStruct {
     let root = Path::new(".");
 
     // Act
-    let functions = Collector::collect(source, path, root);
+    let functions = collect(source, path, root);
 
     // Assert
     assert_eq!(functions.len(), 1);
     assert!((functions[0].trait_factor - 0.95).abs() < 0.001);
+}
+
+#[test]
+fn build_trait_registry_trait_defined_separately_from_impl_has_real_factor() {
+    // Arrange
+    let trait_source = r#"
+trait MyTrait {
+    type Output;
+    fn compute(&self) -> Self::Output;
+}
+"#;
+    let impl_source = r#"
+struct MyStruct;
+impl MyTrait for MyStruct {
+    type Output = i32;
+    fn compute(&self) -> i32 { 42 }
+}
+"#;
+    let trait_path = PathBuf::from("src/traits/my_trait.rs");
+    let impl_path = PathBuf::from("src/my_struct.rs");
+    let root = Path::new(".");
+    let files = vec![
+        (trait_path, trait_source.to_string()),
+        (impl_path.clone(), impl_source.to_string()),
+    ];
+
+    // Act
+    let traits = Collector::build_trait_registry(&files);
+    let functions = Collector::collect(impl_source, &impl_path, root, &traits);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert!(
+        (functions[0].trait_factor - 1.30).abs() < 0.001,
+        "expected 1.30 (assoc-type trait, cross-file), got {}",
+        functions[0].trait_factor
+    );
 }

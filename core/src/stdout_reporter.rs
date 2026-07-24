@@ -123,7 +123,7 @@ impl StdoutReporter {
 
     fn render_module_line(&self, module: &ModuleStats) -> String {
         format!(
-            "  {:<30}  {:<6}  {:<8.1}  {:<5}",
+            "  {:<30}  {:<6}  {:<8.1}  {:<5.1}",
             module.path, module.function_count, module.avg_braintax, module.max_braintax,
         )
     }
@@ -133,7 +133,7 @@ impl StdoutReporter {
         functions: &'a [FunctionComplexity],
     ) -> Vec<&'a FunctionComplexity> {
         let mut sorted: Vec<&FunctionComplexity> = functions.iter().collect();
-        sorted.sort_by(|a, b| b.cyclomatic.cmp(&a.cyclomatic));
+        sorted.sort_by(|a, b| b.braintax.partial_cmp(&a.braintax).unwrap());
         sorted.truncate(self.top);
         sorted
     }

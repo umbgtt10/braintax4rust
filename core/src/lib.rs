@@ -19,4 +19,5 @@ pub mod module_stats;
 pub mod name_opacity_counter;
 pub mod overall_stats;
 pub mod stdout_reporter;
+pub mod trait_registry_builder;
 pub mod traits;

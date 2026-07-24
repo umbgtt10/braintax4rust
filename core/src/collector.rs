@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use syn::Attribute;
 use syn::visit::Visit;
@@ -25,27 +25,39 @@ pub struct TraitInfo {
 }
 
 #[derive(Debug)]
-pub struct Collector {
+pub struct Collector<'a> {
     functions: Vec<FunctionComplexity>,
     current_file: String,
     current_module: String,
     current_depth: u32,
-    traits: HashMap<String, TraitInfo>,
+    traits: &'a HashMap<String, TraitInfo>,
 }
 
-impl Collector {
-    fn new(file: String, module: String) -> Self {
+impl<'a> Collector<'a> {
+    fn new(file: String, module: String, traits: &'a HashMap<String, TraitInfo>) -> Self {
         let depth = Self::module_depth(&module);
         Self {
             functions: Vec::new(),
             current_file: file,
             current_module: module,
             current_depth: depth,
-            traits: HashMap::new(),
+            traits,
         }
     }
 
-    pub fn collect(source: &str, path: &Path, root: &Path) -> Vec<FunctionComplexity> {
+    /// Scans every file's trait definitions and impls before any file is
+    /// scored, so `compute_trait_factor` sees a trait's real shape even when
+    /// the trait is defined in a different file than its impl.
+    pub fn build_trait_registry(files: &[(PathBuf, String)]) -> HashMap<String, TraitInfo> {
+        crate::trait_registry_builder::TraitRegistryBuilder::new().build(files)
+    }
+
+    pub fn collect(
+        source: &str,
+        path: &Path,
+        root: &Path,
+        traits: &'a HashMap<String, TraitInfo>,
+    ) -> Vec<FunctionComplexity> {
         let file = path.to_string_lossy().replace('\\', "/");
         let module = Self::module_from_path(path, root);
         let syntax = match syn::parse_file(source) {
@@ -53,27 +65,7 @@ impl Collector {
             Err(_) => return Vec::new(),
         };
 
-        let mut collector = Self::new(file, module);
-
-        for item in &syntax.items {
-            if let syn::Item::Trait(trait_item) = item {
-                let name = trait_item.ident.to_string();
-                let info = Self::trait_info(trait_item);
-                collector.traits.insert(name, info);
-            }
-            if let syn::Item::Impl(item_impl) = item
-                && let Some((_, path, _)) = &item_impl.trait_
-            {
-                let name = path
-                    .segments
-                    .last()
-                    .map(|s| s.ident.to_string())
-                    .unwrap_or_default();
-                if let Some(info) = collector.traits.get_mut(&name) {
-                    info.impl_count += 1;
-                }
-            }
-        }
+        let mut collector = Self::new(file, module, traits);
 
         for item in &syntax.items {
             collector.visit_item(item);
@@ -100,7 +92,7 @@ impl Collector {
         }
     }
 
-    fn trait_info(trait_item: &syn::ItemTrait) -> TraitInfo {
+    pub(crate) fn trait_info(trait_item: &syn::ItemTrait) -> TraitInfo {
         let methods = trait_item
             .items
             .iter()
@@ -210,7 +202,7 @@ impl Collector {
     }
 }
 
-impl<'ast> Visit<'ast> for Collector {
+impl<'ast, 'a> Visit<'ast> for Collector<'a> {
     fn visit_item(&mut self, item: &'ast syn::Item) {
         match item {
             syn::Item::Fn(item_fn) if !Self::has_test_attr(&item_fn.attrs) => {
@@ -253,7 +245,7 @@ struct FnInput {
     return_complexity: f64,
 }
 
-impl Collector {
+impl<'a> Collector<'a> {
     fn push_fn(
         &mut self,
         name: String,

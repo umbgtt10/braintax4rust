@@ -71,9 +71,10 @@ impl<W: Walk, S: Scorer, R: Reporter> App<W, S, R> {
 
     fn collect_files(&self) -> Result<Vec<FunctionComplexity>> {
         let files = self.walker.rust_files()?;
+        let traits = Collector::build_trait_registry(&files);
         let mut all_functions = Vec::new();
-        for (path, source) in files {
-            let functions = Collector::collect(&source, &path, &self.config.path);
+        for (path, source) in &files {
+            let functions = Collector::collect(source, path, &self.config.path, &traits);
             all_functions.extend(functions);
         }
         Ok(all_functions)
