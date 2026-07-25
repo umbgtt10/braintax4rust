@@ -48,25 +48,42 @@ hidden dependencies: **[`docs/FORMULA.md`](docs/FORMULA.md)**.
 
 ---
 
+## Installation
+
+```sh
+cargo install cargo-braintax4rust
+```
+
 ## Usage
 
+```sh
+cargo braintax4rust [OPTIONS] [PATH]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `[PATH]` | Path to Rust crate or workspace root (default: `.`) |
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Emit structured JSON output |
+| `--threshold N` | Exit non-zero if any function's cyclomatic complexity exceeds N — checks the repo's `max_cyclomatic`, not the composite `braintax` score. Alias: `--max-complexity` |
+| `--top N` | Show the N most complex functions in the report (default: `10`) |
+| `-h`, `--help` | Print help |
+| `-V`, `--version` | Print version |
+
+**Examples:**
+
 ```bash
-# Run on the current directory
-cargo braintax4rust
-
-# Run on a specific path
-cargo braintax4rust /path/to/crate
-
-# JSON output
-cargo braintax4rust --json
-
-# Set a maximum complexity threshold (exit code 1 if any function exceeds it)
-cargo braintax4rust --threshold 10
-
-# Show top N most complex functions
-cargo braintax4rust --top 20
-
-# Combined
+cargo braintax4rust                              # current directory
+cargo braintax4rust /path/to/crate               # specific path
+cargo braintax4rust --json                       # structured output
+cargo braintax4rust --threshold 10               # CI gate: fail if any function's CC > 10
+cargo braintax4rust --top 20                     # show the 20 most complex functions
 cargo braintax4rust --json --threshold 10 --top 5
 ```
 
