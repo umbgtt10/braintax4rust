@@ -1,4 +1,4 @@
-# Crap4Rust Code of Conduct
+# Braintax Code of Conduct
 
 ## Purpose
 
