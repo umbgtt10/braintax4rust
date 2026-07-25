@@ -2,6 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use std::fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -11,6 +12,7 @@ use braintax::config::Config;
 use braintax::default_scorer::DefaultScorer;
 use braintax::traits::walk::Walk;
 use braintax_test_utils::capture_reporter::CaptureReporter;
+use tempfile::TempDir;
 
 #[derive(Debug, Clone)]
 struct TestWalk {
@@ -43,7 +45,7 @@ fn trivial() {
         threshold: None,
         top: 10,
     };
-    let app = App::with_deps(walk, scorer, reporter, config);
+    let app = App::with_deps(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
 
     // Act
     let _ = app.run();
@@ -71,7 +73,7 @@ fn with_if(x: bool) {
         threshold: None,
         top: 10,
     };
-    let app = App::with_deps(walk, scorer, reporter, config);
+    let app = App::with_deps(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
 
     // Act
     let _ = app.run();
@@ -110,11 +112,21 @@ fn complex(a: bool, b: bool) {
     };
 
     // Act
-    let app_ok = App::with_deps(walk.clone(), scorer, reporter1, config_ok);
+    let app_ok = App::with_deps(
+        Box::new(walk.clone()),
+        Box::new(scorer),
+        Box::new(reporter1),
+        config_ok,
+    );
     let result_ok = app_ok.run();
 
     // Act & Assert
-    let app_fail = App::with_deps(walk, DefaultScorer::new(), reporter2, config_fail);
+    let app_fail = App::with_deps(
+        Box::new(walk),
+        Box::new(DefaultScorer::new()),
+        Box::new(reporter2),
+        config_fail,
+    );
     let result_fail = app_fail.run();
 
     assert_eq!(result_ok.unwrap(), ExitCode::SUCCESS);
@@ -141,11 +153,61 @@ fn app_with_no_files_returns_error() {
         threshold: None,
         top: 10,
     };
-    let app = App::with_deps(NoFilesWalk, scorer, reporter, config);
+    let app = App::with_deps(
+        Box::new(NoFilesWalk),
+        Box::new(scorer),
+        Box::new(reporter),
+        config,
+    );
 
     // Act
     let result = app.run();
 
     // Assert
     assert!(result.is_err());
+}
+
+#[test]
+fn app_new_with_empty_dir_returns_error() {
+    // Arrange
+    let dir = TempDir::new().unwrap();
+    let config = Config {
+        path: dir.path().to_path_buf(),
+        json: false,
+        threshold: None,
+        top: 10,
+    };
+    let app = App::new(config);
+
+    // Act
+    let result = app.run();
+
+    // Assert
+    assert!(result.is_err());
+}
+
+#[test]
+fn app_new_with_valid_dir_returns_success() {
+    // Arrange
+    let dir = TempDir::new().unwrap();
+    let src = dir.path().join("src");
+    fs::create_dir_all(&src).unwrap();
+    fs::write(
+        src.join("lib.rs"),
+        "pub fn greet() -> &'static str { \"hello\" }\n",
+    )
+    .unwrap();
+    let config = Config {
+        path: dir.path().to_path_buf(),
+        json: false,
+        threshold: None,
+        top: 10,
+    };
+    let app = App::new(config);
+
+    // Act
+    let exit_code = app.run().unwrap();
+
+    // Assert
+    assert_eq!(exit_code, ExitCode::SUCCESS);
 }

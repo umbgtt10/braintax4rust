@@ -19,40 +19,37 @@ use crate::traits::reporter::Reporter;
 use crate::traits::scorer::Scorer;
 use crate::traits::walk::Walk;
 
-#[derive(Debug)]
-pub struct App<W: Walk, S: Scorer, R: Reporter> {
-    walker: W,
-    scorer: S,
-    reporter: R,
+pub struct App {
+    walker: Box<dyn Walk>,
+    scorer: Box<dyn Scorer>,
+    reporter: Box<dyn Reporter>,
     config: Config,
 }
 
-impl App<FsWalk, DefaultScorer, StdoutReporter> {
+impl App {
     #[must_use]
     pub fn new(config: Config) -> Self {
         Self {
-            walker: FsWalk::new(&config.path),
-            scorer: DefaultScorer::new(),
-            reporter: StdoutReporter::new(config.json, config.top),
+            walker: Box::new(FsWalk::new(&config.path)),
+            scorer: Box::new(DefaultScorer::new()),
+            reporter: Box::new(StdoutReporter::new(config.json, config.top)),
             config,
         }
     }
-}
 
-impl<W: Walk, S: Scorer, R: Reporter> App<W, S, R> {
     #[must_use]
-    pub fn with_deps(walker: W, scorer: S, reporter: R, config: Config) -> Self {
+    pub fn with_deps(
+        walker: Box<dyn Walk>,
+        scorer: Box<dyn Scorer>,
+        reporter: Box<dyn Reporter>,
+        config: Config,
+    ) -> Self {
         Self {
             walker,
             scorer,
             reporter,
             config,
         }
-    }
-
-    #[must_use]
-    pub fn reporter(&self) -> &R {
-        &self.reporter
     }
 
     pub fn run(&self) -> Result<ExitCode> {

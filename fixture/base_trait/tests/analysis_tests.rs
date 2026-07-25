@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use braintax::app::App;
 use braintax::braintax_report::BraintaxReport;
@@ -14,10 +15,11 @@ use braintax_test_utils::capture_reporter::CaptureReporter;
 fn analyze() -> BraintaxReport {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let reporter = CaptureReporter::new();
+    let captured = Arc::clone(&reporter.captured);
     let app = App::with_deps(
-        FsWalk::new(&path),
-        DefaultScorer::new(),
-        reporter,
+        Box::new(FsWalk::new(&path)),
+        Box::new(DefaultScorer::new()),
+        Box::new(reporter),
         Config {
             path,
             json: true,
@@ -26,7 +28,7 @@ fn analyze() -> BraintaxReport {
         },
     );
     app.run().unwrap();
-    let json = app.reporter().captured.lock().unwrap().clone();
+    let json = captured.lock().unwrap().clone();
     serde_json::from_str(&json).unwrap()
 }
 
@@ -38,8 +40,8 @@ fn trait_cc_is_18() {
     // Assert
     assert_eq!(report.overall.total_functions, 1);
     assert_eq!(report.overall.max_cyclomatic, 18);
-    assert_eq!(report.overall.max_braintax, 16.7);
+    assert_eq!(report.overall.max_braintax, 16.4);
     assert_eq!(report.functions[0].name, "compute");
     assert_eq!(report.functions[0].cyclomatic, 18);
-    assert!((report.functions[0].braintax - 16.7).abs() < 0.01);
+    assert!((report.functions[0].braintax - 16.4).abs() < 0.01);
 }

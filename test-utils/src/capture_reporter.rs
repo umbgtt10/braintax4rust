@@ -2,14 +2,14 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use anyhow::Result;
 use braintax::braintax_report::BraintaxReport;
 use braintax::traits::reporter::Reporter;
 
 pub struct CaptureReporter {
-    pub captured: Mutex<String>,
+    pub captured: Arc<Mutex<String>>,
 }
 
 impl CaptureReporter {
@@ -21,7 +21,7 @@ impl CaptureReporter {
 impl Default for CaptureReporter {
     fn default() -> Self {
         Self {
-            captured: Mutex::new(String::new()),
+            captured: Arc::new(Mutex::new(String::new())),
         }
     }
 }

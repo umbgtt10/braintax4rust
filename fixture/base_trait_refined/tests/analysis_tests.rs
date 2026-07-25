@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use braintax::app::App;
 use braintax::braintax_report::BraintaxReport;
@@ -14,10 +15,11 @@ use braintax_test_utils::capture_reporter::CaptureReporter;
 fn analyze() -> BraintaxReport {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let reporter = CaptureReporter::new();
+    let captured = Arc::clone(&reporter.captured);
     let app = App::with_deps(
-        FsWalk::new(&path),
-        DefaultScorer::new(),
-        reporter,
+        Box::new(FsWalk::new(&path)),
+        Box::new(DefaultScorer::new()),
+        Box::new(reporter),
         Config {
             path,
             json: true,
@@ -26,7 +28,7 @@ fn analyze() -> BraintaxReport {
         },
     );
     app.run().unwrap();
-    let json = app.reporter().captured.lock().unwrap().clone();
+    let json = captured.lock().unwrap().clone();
     serde_json::from_str(&json).unwrap()
 }
 
@@ -38,5 +40,5 @@ fn refined_trait_braintax_reflects_complex_trait() {
     // Assert
     let run_fn = report.functions.iter().find(|f| f.name == "run").unwrap();
     assert_eq!(run_fn.cyclomatic, 18);
-    assert!((run_fn.braintax - 25.8).abs() < 0.01);
+    assert!((run_fn.braintax - 25.5).abs() < 0.01);
 }

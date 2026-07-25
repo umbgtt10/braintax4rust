@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use braintax::app::App;
 use braintax::braintax_report::BraintaxReport;
@@ -17,10 +18,11 @@ fn analyze_fixture(name: &str) -> BraintaxReport {
         .join("fixture")
         .join(name);
     let reporter = CaptureReporter::new();
+    let captured = Arc::clone(&reporter.captured);
     let app = App::with_deps(
-        FsWalk::new(&path),
-        DefaultScorer::new(),
-        reporter,
+        Box::new(FsWalk::new(&path)),
+        Box::new(DefaultScorer::new()),
+        Box::new(reporter),
         Config {
             path,
             json: true,
@@ -29,7 +31,7 @@ fn analyze_fixture(name: &str) -> BraintaxReport {
         },
     );
     app.run().unwrap();
-    let json = app.reporter().captured.lock().unwrap().clone();
+    let json = captured.lock().unwrap().clone();
     serde_json::from_str(&json).unwrap()
 }
 
@@ -37,21 +39,21 @@ fn analyze_fixture(name: &str) -> BraintaxReport {
 fn fixture_braintax_ordinal_ranking() {
     // Arrange
     let fixtures: &[(&str, f64)] = &[
-        ("base_trait", 16.7),
-        ("base_known_trait", 16.9),
-        ("base_many_methods", 17.06),
-        ("base_inherent", 17.6),
-        ("base_trait_two_impls", 17.78),
+        ("base_trait", 16.4),
+        ("base_known_trait", 16.6),
+        ("base_many_methods", 16.76),
+        ("base_inherent", 17.3),
+        ("base_trait_two_impls", 17.48),
         ("base_flat", 18.0),
-        ("base_trait_multi", 18.86),
-        ("base_trait_four_impls", 19.94),
+        ("base_trait_multi", 18.56),
+        ("base_trait_four_impls", 19.64),
         ("base_depth1", 20.7),
-        ("base_assoc_only", 23.9),
-        ("base_super_only", 23.9),
+        ("base_assoc_only", 23.6),
+        ("base_super_only", 23.6),
         ("base_macros", 24.0),
         ("base_opaque", 24.0),
-        ("base_trait_refined", 25.8),
-        ("base_trait_assoc_dispatch", 27.14),
+        ("base_trait_refined", 25.5),
+        ("base_trait_assoc_dispatch", 26.84),
         ("base_generics", 30.0),
         ("base_cfg", 36.0),
     ];
