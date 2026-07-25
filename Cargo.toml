@@ -9,6 +9,7 @@ members = [
     "fixture/base_opaque",
     "fixture/base_macros",
     "fixture/base_generics",
+    "fixture/base_hidden_deps",
     "fixture/base_trait_refined",
     "fixture/base_trait_multi",
     "fixture/base_trait_two_impls",

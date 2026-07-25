@@ -39,6 +39,7 @@ fn analyze_fixture(name: &str) -> BraintaxReport {
 fn fixture_braintax_ordinal_ranking() {
     // Arrange
     let fixtures: &[(&str, f64)] = &[
+        ("base_hidden_deps", 16.0),
         ("base_trait", 16.4),
         ("base_known_trait", 16.6),
         ("base_many_methods", 16.76),
