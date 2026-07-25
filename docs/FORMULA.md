@@ -223,14 +223,19 @@ average, across every function in scope), and their own
 ceiling — not from averaging each function's own normalized value, which
 would be a different (nonlinear) number.
 
-**Open question, not yet resolved:** whether the intended `grip /
-braintax` testability-index ratio should use `total_braintax` (paired
-with `grip`'s `grip_absolute_total`, both raw sums) or
-`braintax_normalized` (paired with `grip_score`, both already-normalized
-0–100 values) has not been settled — these are different ratios in
-general, and no released code computes either one yet. See
-`../OPEN_POINTS.md` and `grip`'s own `FORMULA.md` before building
-anything that depends on a specific choice here.
+**Decided: `TI = grip_absolute_total / total_braintax`**, not
+`grip_score / braintax_normalized`. Raw sums are the ground truth — a
+direct total of real per-function measurements, with no re-weighting or
+clamping layered on top. `grip_score` and `braintax_normalized` are each
+already a lossy 0–100 projection shaped by decisions specific to each
+tool's own reporting needs: `braintax_normalized` above is derived from
+`avg_braintax`, not `total_braintax`, discarding total codebase size
+entirely; `grip_score` separately blends four independently-weighted
+ratios. Dividing two independently-shaped normalizations would compound
+their distortions into `TI`; dividing the two raw sums does not.
+
+Not yet implemented — no released code computes `TI` today. The same
+decision is recorded in `grip`'s own `FORMULA.md`.
 
 ---
 
@@ -241,8 +246,7 @@ anything that depends on a specific choice here.
   type-resolved, and the resulting blind spots.
 - `docs/ADRs/ADR-SeverityWeightedHiddenDeps.md` — why hidden deps are
   weighted rather than flat, and where the severity table came from.
-- `../OPEN_POINTS.md` — configurable formula weights, and the unresolved
-  ratio question above.
+- `../OPEN_POINTS.md` — configurable formula weights.
 - `fixture/` — every fixture crate is a worked example of one dimension
   in isolation; `fixture/base_hidden_deps` specifically demonstrates
   `hidden_dep_weight`/`hidden_dep_labels` end-to-end.
