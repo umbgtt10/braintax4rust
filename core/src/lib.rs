@@ -14,6 +14,7 @@ pub mod derive_attr_scorer;
 pub mod fs_walk;
 pub mod function_complexity;
 pub mod generics_counter;
+pub mod hidden_dep_severity;
 pub mod hidden_deps_counter;
 pub mod macro_counter;
 pub mod module_stats;

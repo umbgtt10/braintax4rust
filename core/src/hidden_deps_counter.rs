@@ -4,9 +4,33 @@
 
 use syn::visit::{Visit, visit_expr_call, visit_expr_macro, visit_stmt};
 
+use crate::hidden_dep_severity::HiddenDepSeverity;
+
+const HIDDEN_DEP_TAILS: &[&str] = &[
+    "Instant::now",
+    "SystemTime::now",
+    "random",
+    "rand::random",
+    "thread_rng",
+    "rand::thread_rng",
+    "fs::read",
+    "fs::write",
+    "File::open",
+    "File::create",
+    "env::var",
+    "env::args",
+    "process::exit",
+    "process::abort",
+    "abort",
+    "thread::sleep",
+];
+
 #[derive(Default)]
 pub struct HiddenDepsCounter {
     pub count: u32,
+    pub weight: f64,
+    pub labels: Vec<String>,
+    severity: HiddenDepSeverity,
 }
 
 impl HiddenDepsCounter {
@@ -25,22 +49,22 @@ impl<'ast> Visit<'ast> for HiddenDepsCounter {
                 .require_ident()
                 .map(|i| i.to_string())
                 .unwrap_or_default();
-            if Self::is_hidden_macro(&mac_name) {
-                self.count += 1;
+            if let Some(label) = Self::hidden_macro_label(&mac_name) {
+                self.add_dep(label);
             }
         }
         visit_stmt(self, stmt);
     }
 
     fn visit_expr_call(&mut self, expr: &'ast syn::ExprCall) {
-        if Self::is_hidden_call(&expr.func) {
-            self.count += 1;
+        if let Some(label) = Self::hidden_call_label(&expr.func) {
+            self.add_dep(&label);
         }
         visit_expr_call(self, expr);
     }
 
     fn visit_expr_unsafe(&mut self, _expr: &'ast syn::ExprUnsafe) {
-        self.count += 1;
+        self.add_dep("unsafe");
     }
 
     fn visit_expr_macro(&mut self, expr: &'ast syn::ExprMacro) {
@@ -50,17 +74,23 @@ impl<'ast> Visit<'ast> for HiddenDepsCounter {
             .require_ident()
             .map(|i| i.to_string())
             .unwrap_or_default();
-        if Self::is_hidden_macro(&mac_name) {
-            self.count += 1;
+        if let Some(label) = Self::hidden_macro_label(&mac_name) {
+            self.add_dep(label);
         }
         visit_expr_macro(self, expr);
     }
 }
 
 impl HiddenDepsCounter {
-    fn is_hidden_call(expr: &syn::Expr) -> bool {
+    fn add_dep(&mut self, label: &str) {
+        self.count += 1;
+        self.weight += self.severity.severity(label);
+        self.labels.push(label.to_string());
+    }
+
+    fn hidden_call_label(expr: &syn::Expr) -> Option<String> {
         let syn::Expr::Path(path_expr) = expr else {
-            return false;
+            return None;
         };
         let segments: Vec<String> = path_expr
             .path
@@ -68,34 +98,20 @@ impl HiddenDepsCounter {
             .iter()
             .map(|s| s.ident.to_string())
             .collect();
-        let path_str = segments.join("::");
-        Self::is_hidden_path(&path_str)
+        Self::hidden_tail(&segments)
     }
 
-    fn is_hidden_path(path: &str) -> bool {
-        matches!(
-            path,
-            "Instant::now"
-                | "SystemTime::now"
-                | "random"
-                | "thread_rng"
-                | "std::fs::read"
-                | "std::fs::write"
-                | "File::open"
-                | "File::create"
-                | "env::var"
-                | "std::env::var"
-                | "env::args"
-                | "std::env::args"
-                | "process::exit"
-                | "std::process::exit"
-                | "abort"
-                | "thread::sleep"
-                | "std::thread::sleep"
-        )
+    fn hidden_tail(segments: &[String]) -> Option<String> {
+        if segments.is_empty() {
+            return None;
+        }
+        let tail_start = segments.len().saturating_sub(2);
+        let tail = segments[tail_start..].join("::");
+        let qualified_ok = segments.len() <= 2 || segments[0] == "std" || segments[0] == "core";
+        (qualified_ok && HIDDEN_DEP_TAILS.contains(&tail.as_str())).then_some(tail)
     }
 
-    fn is_hidden_macro(mac: &str) -> bool {
-        matches!(mac, "println" | "eprintln" | "print" | "eprint")
+    fn hidden_macro_label(mac: &str) -> Option<&str> {
+        matches!(mac, "println" | "eprintln" | "print" | "eprint").then_some(mac)
     }
 }

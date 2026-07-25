@@ -14,7 +14,7 @@ use crate::traits::scorer::Scorer;
 pub struct BraintaxComponents {
     pub cfg_gates: u32,
     pub cyclomatic: u32,
-    pub hidden_deps: u32,
+    pub hidden_dep_weight: f64,
     pub depth: u32,
     pub trait_factor: f64,
     pub name_opacity: u32,
@@ -31,9 +31,8 @@ pub fn compute_braintax(c: &BraintaxComponents) -> f64 {
         1.0
     };
     let depth_factor = 1.0 + (c.depth.saturating_sub(1) as f64) * 0.15;
-    let hidden_penalty = c.hidden_deps as f64 * 4.0;
     c.cyclomatic as f64 * cfg_factor * depth_factor * c.trait_factor
-        + hidden_penalty
+        + c.hidden_dep_weight
         + c.name_opacity as f64
         + c.macro_density as f64
         + c.generics as f64
@@ -58,7 +57,7 @@ impl DefaultScorer {
         compute_braintax(&BraintaxComponents {
             cfg_gates: func.cfg_gates,
             cyclomatic: func.cyclomatic,
-            hidden_deps: func.hidden_deps,
+            hidden_dep_weight: func.hidden_dep_weight,
             depth: func.depth,
             trait_factor: func.trait_factor,
             name_opacity: 0,

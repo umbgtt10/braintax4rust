@@ -229,6 +229,8 @@ fn collect_fn_with_unsafe_block_has_hidden_deps_1() {
     // Assert
     assert_eq!(functions.len(), 1);
     assert_eq!(functions[0].hidden_deps, 1);
+    assert_eq!(functions[0].hidden_dep_weight, 8.0);
+    assert_eq!(functions[0].hidden_dep_labels, vec!["unsafe".to_string()]);
 }
 
 #[test]
@@ -244,6 +246,8 @@ fn collect_fn_with_println_has_hidden_deps_1() {
     // Assert
     assert_eq!(functions.len(), 1);
     assert_eq!(functions[0].hidden_deps, 1);
+    assert_eq!(functions[0].hidden_dep_weight, 2.0);
+    assert_eq!(functions[0].hidden_dep_labels, vec!["println".to_string()]);
 }
 
 #[test]

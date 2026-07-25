@@ -268,7 +268,7 @@ impl<'a> Collector<'a> {
         let components = BraintaxComponents {
             cfg_gates,
             cyclomatic: visitor.complexity,
-            hidden_deps: hidden.count,
+            hidden_dep_weight: hidden.weight,
             depth,
             trait_factor: input.trait_factor,
             name_opacity,
@@ -285,6 +285,8 @@ impl<'a> Collector<'a> {
             cyclomatic: visitor.complexity,
             cfg_gates,
             hidden_deps: hidden.count,
+            hidden_dep_weight: hidden.weight,
+            hidden_dep_labels: hidden.labels,
             depth,
             trait_factor: input.trait_factor,
             braintax,
