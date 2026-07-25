@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- `HiddenDepSeverity` struct — hidden dependencies are no longer counted
+  as a flat penalty; each one is weighted by how much it actually
+  compromises testability: `unsafe` +8, `process::exit`/`abort` +6,
+  filesystem calls +5, time/randomness +4, env/thread calls +3,
+  print-family +2. Matches the severity table `README.md` already
+  documented but the formula never implemented.
+- `FunctionComplexity` gains `hidden_dep_weight: f64` and
+  `hidden_dep_labels: Vec<String>` — every hidden dependency's call
+  site is now named in the output, not just counted.
+
+### Changed
+- `compute_braintax`'s hidden-dep term is now the severity-weighted sum
+  (`hidden_dep_weight`) instead of `hidden_deps * 4.0`. No fixture's
+  expected `braintax` value changed — none of the 17 fixtures exercise
+  the hidden-dep dimension — but any project with `unsafe` blocks or
+  filesystem/process calls will now see a different (more
+  differentiated) score than before.
+
+### Fixed
+- Hidden-dependency detection matched exact full-path strings
+  (`"Instant::now"`, `"env::var"` *and* `"std::env::var"` as separate,
+  redundant entries) instead of suffix-matching the last two path
+  segments the way grip's `HiddenDepFinder` does. A fully-qualified
+  `std::time::Instant::now()` or a third-party-qualified
+  `rand::random()`/`rand::thread_rng()` call was silently missed.
+  `hidden_deps_counter.rs` now extracts the last two path segments and
+  matches against a collapsed, short-form-only list, gated so a
+  same-named third-party module (`mycrate::fs::read`) can't false-positive.
+  Also adds `rand::random`, `rand::thread_rng`, and `process::abort` as
+  newly-recognized hidden deps. New `fixture/base_hidden_deps` isolates
+  the hidden-dep dimension end-to-end the way every other dimension
+  already has its own fixture.
+
 ## [0.9.0] - 2026-07-25
 
 ### Added

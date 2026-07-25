@@ -207,6 +207,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fixture-base_hidden_deps"
+version = "0.0.0"
+dependencies = [
+ "braintax-test-utils",
+ "cargo-braintax4rust",
+ "serde_json",
+]
+
+[[package]]
 name = "fixture-base_inherent"
 version = "0.0.0"
 dependencies = [

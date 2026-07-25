@@ -1,15 +1,22 @@
 # Open Points
 
-## Hidden-dep path matching: align with grip's suffix-based approach
+## Configurable braintax formula weights
 
-`hidden_deps_counter.rs::is_hidden_path()` matches exact full-path
-strings (`"Instant::now"`, `"env::var"` *and* `"std::env::var"` listed
-separately) rather than suffix-matching on the last N path segments the
-way grip's `hidden_dep_finder.rs` does. A fully-qualified
-`std::time::Instant::now()` or a third-party-qualified `rand::random()`
-call is missed, since neither matches any listed exact string. Same
-category of AST-only limitation as grip's foreign-trait allowlist gap —
-worth aligning since both tools share an author and a purpose, not
-because either approach is wrong on its own.
+Unlike grip's four cleanly-summing score weights, braintax's formula has
+15+ independent hardcoded constants spread across `collector.rs`
+(hidden-dep penalty `4.0`, cfg base `2.0`, depth increment `0.15`, trait
+factor bases and penalties, `self_ref_cost` `0.2`/`0.4`,
+`return_complexity` terms), the name-opacity/macro-density/generics
+counters, and `braintax_normalizer.rs`'s ceiling (`15.0`). There's no
+single "weights" struct to expose — making this configurable is a
+bigger job than grip's equivalent: it needs collecting every constant
+behind one `BraintaxWeights`/`FormulaConfig` struct, threaded through
+`Collector`, `DefaultScorer`, `BraintaxNormalizer`, and each counter's
+constructor, before a CLI flag or config file means anything.
+
+Same comparability trade-off as grip's version applies, amplified: with
+this many independent knobs, two differently-configured runs could
+diverge enough that "braintax score" stops meaning anything shared
+across projects unless the config itself is captured in output.
 
 Not started.
