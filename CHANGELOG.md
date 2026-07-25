@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [0.10.0] - 2026-07-25
 
 ### Added
 - `HiddenDepSeverity` struct — hidden dependencies are no longer counted
@@ -19,6 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `FunctionComplexity` gains `hidden_dep_weight: f64` and
   `hidden_dep_labels: Vec<String>` — every hidden dependency's call
   site is now named in the output, not just counted.
+- `docs/ADRs/` (index, `ADR-AstOnlyNoTypeResolution.md`,
+  `ADR-DynDispatchAppOverGenerics.md`, `ADR-SeverityWeightedHiddenDeps.md`),
+  `docs/ARCHITECTURE.md`, and `docs/FORMULA.md` — the authoritative
+  formula and architecture reference, verified line-by-line against
+  `core/src/`, including two terms (`self_ref_cost`, `return_complexity`)
+  that were previously undocumented anywhere.
+- `README.md`: a missing Installation section, and a full CLI
+  Arguments/Options table (previously the Usage section was example
+  invocations only, with no reference table and no mention of the
+  `--max-complexity` alias for `--threshold`).
 
 ### Changed
 - `compute_braintax`'s hidden-dep term is now the severity-weighted sum
@@ -27,6 +37,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the hidden-dep dimension — but any project with `unsafe` blocks or
   filesystem/process calls will now see a different (more
   differentiated) score than before.
+- `README.md`: formula section trimmed to the headline equation plus a
+  link to `docs/FORMULA.md`; the duplicate "Current phase"/"Roadmap"
+  section (already diverged from `ROADMAP.md`) removed in favor of a
+  Documentation nav table; the stale "Output" example (missing
+  `Total braintax`/`Normalized braintax` and the `BT%` column) replaced
+  with real captured output; new Limitations section added (previously
+  had none, unlike grip's README).
+- `ROADMAP.md` reconciled with shipped reality: every phase's status had
+  been frozen at "Planned"/"In progress" since first written despite
+  v0.2.0 through v0.8.0 having long since shipped; removed the unbuilt
+  git-history/grip-integration phase; added the two phases (Generics
+  v0.7.0, Trait refinement v0.8.0) that existed only as unlabeled
+  Timeline rows with no write-up, plus this release.
+- `docs/FORMULA.md`: the `grip / braintax` testability-index ratio,
+  previously flagged as an open question, is now decided —
+  `TI = grip_absolute_total / total_braintax` (raw sums, not the
+  normalized `grip_score`/`braintax_normalized`). Still not implemented
+  by any released code.
+- `OPEN_POINTS.md`: fixed a stale reference to the flat
+  `hidden_deps * 4.0` penalty (see the severity-weighting change above)
+  that the "Configurable braintax formula weights" entry still
+  described after it had already been replaced.
 
 ### Fixed
 - Hidden-dependency detection matched exact full-path strings

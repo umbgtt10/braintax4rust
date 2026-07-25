@@ -3,7 +3,7 @@
 **Crate:** `braintax`  
 **License:** MIT  
 **Last updated:** 2026-07-25  
-**Current status:** Phase 8 — ✅ Complete (v0.9.0 published)  
+**Current status:** Phase 9 — ✅ Complete (v0.10.0 published)  
 
 ---
 
@@ -303,7 +303,7 @@ cfg_condition_complexity:
 | `unsafe` block | +8 |
 | `std::thread::sleep()` | +3 |
 
-*(This flat table was the Phase 2 starting point. Phase 8 replaced it with a
+*(This flat table was the Phase 2 starting point. Phase 9 replaced it with a
 severity-weighted lookup — see below — but the per-category values carried
 forward unchanged.)*
 
@@ -468,7 +468,7 @@ formula's final, current shape is in `docs/FORMULA.md`, not this section.)*
 
 ---
 
-## Phase 8 — Severity-weighted hidden deps, absolute scores, dyn dispatch
+## Phase 8 — Absolute scores, cross-file trait factor, dyn dispatch
 
 **Status:** ✅ Complete  
 **Delivered:** `braintax` v0.9.0
@@ -480,11 +480,6 @@ formula's final, current shape is in `docs/FORMULA.md`, not this section.)*
   real shape is known even when it's defined in a different file than its
   `impl` — previously this silently fell back to an empty, coincidentally
   plausible-looking default
-- `HiddenDepSeverity` — hidden dependencies are priced by actual severity
-  (`unsafe` 8, `process::exit`/`abort` 6, filesystem 5, time/randomness 4,
-  env/thread 3, print-family 2) instead of Phase 2's flat `× 4.0`, with
-  suffix-based path matching so fully-qualified calls
-  (`std::time::Instant::now()`) are no longer silently missed
 - `braintax_normalized`/`total_braintax` — every function and every
   module/repo now reports a normalized 0–100 score alongside the raw one
 - `App` converted from `App<W, S, R>` generics to `Box<dyn Trait>` fields
@@ -492,7 +487,28 @@ formula's final, current shape is in `docs/FORMULA.md`, not this section.)*
 - `self_ref_cost`/`return_complexity` recalibration and 9 new fixture
   crates, bringing full trait-factor scenario coverage to 17 fixtures
 
-See `CHANGELOG.md` [0.9.0] and `docs/ADRs/ADR-SeverityWeightedHiddenDeps.md`
+See `CHANGELOG.md` [0.9.0] for the complete list.
+
+---
+
+## Phase 9 — Severity-weighted hidden deps, suffix-matched detection
+
+**Status:** ✅ Complete  
+**Delivered:** `braintax` v0.10.0
+
+**What it adds:**
+
+- `HiddenDepSeverity` — hidden dependencies are priced by actual severity
+  (`unsafe` 8, `process::exit`/`abort` 6, filesystem 5, time/randomness 4,
+  env/thread 3, print-family 2) instead of Phase 2's flat `× 4.0`
+- Suffix-based path matching so fully-qualified calls
+  (`std::time::Instant::now()`) or third-party-qualified calls
+  (`rand::random()`, `rand::thread_rng()`) are no longer silently missed —
+  previously matched exact full-path strings only
+- `docs/ADRs/`, `docs/ARCHITECTURE.md`, `docs/FORMULA.md` — the
+  authoritative formula and architecture reference
+
+See `CHANGELOG.md` [0.10.0] and `docs/ADRs/ADR-SeverityWeightedHiddenDeps.md`
 for the complete list and rationale.
 
 ---
@@ -509,7 +525,8 @@ for the complete list and rationale.
 | 5 | v0.6.0 | Macro density (user-defined macros) | ✅ Complete |
 | 6 | v0.7.0 | Generics | ✅ Complete |
 | 7 | v0.8.0 | Trait refinement — associated types, supertraits | ✅ Complete |
-| 8 | v0.9.0 | Severity-weighted hidden deps, absolute scores, dyn dispatch | ✅ Complete |
+| 8 | v0.9.0 | Absolute scores, cross-file trait factor, dyn dispatch | ✅ Complete |
+| 9 | v0.10.0 | Severity-weighted hidden deps, suffix-matched detection | ✅ Complete |
 
 ---
 

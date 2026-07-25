@@ -90,7 +90,7 @@ cargo braintax4rust --json --threshold 10 --top 5
 ## Output
 
 ```
-cargo-braintax4rust 0.9.0 -- core
+cargo-braintax4rust 0.10.0 -- core
 ══════════════════════════════════════════════
 
   Overall braintax:            4.0
