@@ -7,13 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [0.9.0] - 2026-07-25
 
 ### Added
+- Per-function `braintax_normalized: u32` on `FunctionComplexity` — every
+  function reports both its raw `braintax` score and a 0–100 normalized
+  score.
+- `total_braintax: f64` and `braintax_normalized: u32` on `OverallStats` and
+  `ModuleStats` — summed/aggregate values, so a repo's braintax index can
+  always be computed.
+- `BraintaxNormalizer` struct — `100 × clamp(1 − braintax / 15.0, 0, 1)`,
+  ceiling matches the CRAP gate's own threshold.
+- "Total braintax" / "Normalized braintax" lines and a `BT%` column on the
+  top-functions table in human-readable stdout output.
+- `TraitRegistryBuilder` — two-pass trait registry built once across all
+  files before any file is scored (see Fixed: cross-file trait factor).
+- 8 new fixture crates plus `base_trait_multi`, completing full trait-factor
+  scenario coverage (17 fixtures total), and an ordinal-ranking regression
+  test across all of them.
+- `app_new_with_empty_dir_returns_error` / `app_new_with_valid_dir_returns_success`
+  — direct, in-process coverage of `App::new()`'s real dependency wiring,
+  previously reachable only indirectly through CLI subprocess tests.
 
 ### Changed
+- **Breaking:** `App<W: Walk, S: Scorer, R: Reporter>` is now a non-generic
+  `App` holding `Box<dyn Walk>` / `Box<dyn Scorer>` / `Box<dyn Reporter>`
+  fields. `with_deps()` takes those boxes directly. `App::reporter()` and
+  `#[derive(Debug)]` removed.
+- `CaptureReporter` (test-utils) holds `Arc<Mutex<String>>` instead of
+  `Mutex<String>` so callers can keep a handle to the captured output after
+  moving the reporter into `App`.
+- Trait factor formula recalibrated for LLM-realism: inherent impl
+  1.0→0.95; assoc/supertrait penalties now diminishing (+0.15 first, +0.05
+  second) instead of flat +0.10 each; dispatch penalty changed from a step
+  function to `0.06×(n−1)` capped at 0.18 (×1.5 amplified with associated
+  types); method penalty 0.02→0.01 per method after the 3rd.
+- `self_ref_cost` lowered: `&self` 0.5→0.2, `&mut self` 1.0→0.4 — the
+  original weight dominated the score for otherwise-trivial methods.
+- Added `return_complexity` to the formula (`Self` +1.0, `impl Trait` +1.5,
+  `dyn Trait` +1.0, generics +0.3/arg).
+- Internal `crate::` fully-qualified paths replaced with `use` imports
+  throughout.
+- Bumped version to 0.9.0.
 
 ### Fixed
+- **Cross-file trait factor** (headline bug): `Collector` built a fresh,
+  file-scoped trait registry per `collect()` call, so `compute_trait_factor`
+  could only see a trait's real shape when the trait was defined in the
+  same file as its impl. The ordinary cross-file pattern silently fell back
+  to an empty `TraitInfo`, which happens to equal the same 0.90 as a
+  genuinely-verified simple trait, so it never looked wrong. Fixed with a
+  two-pass flow via `TraitRegistryBuilder`.
+- `stdout_reporter.rs`: module table's Max column had no float precision,
+  leaking values like `26.299999999999997` to the terminal.
+- `stdout_reporter.rs`: top-functions table sorted by raw cyclomatic
+  complexity instead of the composite `braintax` score.
+- `fs_walk.rs`: same unanchored-substring exclusion bug as grip, same fix.
 
 ## [0.8.0] - 2026-05-10
 

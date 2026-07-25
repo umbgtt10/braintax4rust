@@ -62,3 +62,4 @@ Specifically:
 - tests should be named as follows `<method under test>_<test description>_<result>`
 - all dependencies (both external and internal path deps) are declared in the workspace root `Cargo.toml` under `[workspace.dependencies]`
 - member crates reference them via `dependency.workspace = true` — no version strings or path declarations in member Cargo.toml files
+- do not use fully qualified paths; use `use` imports instead

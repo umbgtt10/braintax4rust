@@ -2,8 +2,8 @@
 
 **Crate:** `braintax`  
 **License:** MIT  
-**Last updated:** 2026-05-10  
-**Current status:** Phase 0 — ✅ Published (v0.1.0 placeholder)  
+**Last updated:** 2026-07-25  
+**Current status:** Phase 7 — ✅ Complete (v0.9.0 published)  
 
 ---
 
@@ -136,7 +136,7 @@ before writing a single line of scoring logic.
 - `src/collector.rs` — Collector with `syn::Visit`, extracts function names + metadata
 - `src/scorer.rs` — Scorer trait + stub (returns zeros)
 - `src/reporter.rs` — Reporter trait + StdoutReporter (stub)
-- `src/app.rs` — App<W, S, R> with injected deps
+- `src/app.rs` — App with `Box<dyn Trait>` injected deps
 - `src/traits/` — Walk / Scorer / Reporter traits
 
 ### Gate
@@ -472,8 +472,8 @@ When combined with `grip` history: `TI(t) = grip_score(t) / braintax_score(t)`
 | 3 | v0.4.0 | depth factor + trait factor (non-monotonic) | ✅ Complete |
 | 4 | v0.5.0 | Name opacity | ✅ Complete |
 | 5 | v0.6.0 | Macro density (user-defined macros) | ✅ Complete |
-| 6 | v0.7.0 | Generics — generic params and trait bounds add cognitive cost | Planned |
-| 7 | v0.8.0 | Trait refinement — associated types, supertraits, method generics | Planned |
+| 6 | v0.7.0 | Generics — generic params and trait bounds add cognitive cost | ✅ Complete |
+| 7 | v0.8.0 | Trait refinement — associated types, supertraits, method generics | ✅ Complete |
 | 8 | v1.0.0 | Git history + grip integration | Planned |
 ---
 

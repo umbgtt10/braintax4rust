@@ -10,7 +10,7 @@ The **total price, in mental effort, that a reader pays to understand what a fun
 does, why it does it, and what it interacts with** — including everything the reader
 must travel to outside the function itself to form a complete mental model.
 
-## Current phase (v0.8.0)
+## Current phase (v0.9.0)
 
 The current release computes a composite `braintax` score:
 
@@ -136,7 +136,7 @@ cargo braintax4rust --json --threshold 10 --top 5
 ### Output
 
 ```
-cargo-braintax4rust 0.8.0 -- my-crate
+cargo-braintax4rust 0.9.0 -- my-crate
 
   Overall braintax:            13.2
   Maximum braintax:            36.0
