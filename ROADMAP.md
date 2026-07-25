@@ -3,7 +3,7 @@
 **Crate:** `braintax`  
 **License:** MIT  
 **Last updated:** 2026-07-25  
-**Current status:** Phase 7 — ✅ Complete (v0.9.0 published)  
+**Current status:** Phase 8 — ✅ Complete (v0.9.0 published)  
 
 ---
 
@@ -38,16 +38,6 @@ unbounded.
 This means `braintax` cannot be reduced to a simple additive formula over structural
 features. A multiplicative model (`base × depth × cfg × trait`) captures how
 complexity compounds when multiple dimensions interact.
-
-**The consequence for the `grip / braintax` ratio:**
-
-`R = grip / braintax` is not an optimization target. It is an engineering trade-off
-surface. A trait boundary can raise both grip and braintax simultaneously. Whether
-the trade-off was worth making depends on the specific boundary — and R makes that
-visible. High R is not always good. Low R is not always bad. R is a diagnostic
-signal that surfaces trade-offs for examination.
-
-This is the contribution that makes `braintax` and `grip` research, not just tooling.
 
 ---
 
@@ -102,26 +92,33 @@ the reader cannot see into.
 The core formula is a product, not a sum:
 
 ```
-braintax = base × depth × cfg × trait + hidden + args + assoc + ...
+braintax = cyclomatic × cfg_factor × depth_factor × trait_factor
+           + hidden_dep_weight + name_opacity + macro_density + generics
+           + self_ref_cost + return_complexity
 ```
 
 Complexity compounds. A function that is internally complex, buried deep,
 gated behind cfg flags, and implementing an expensive trait is not "complex
 + deep + gated + trait-heavy." It's those four things at once. The cost
-multiplies. Additive penalties (hidden dependencies, argument count,
-associated types) are layered on top.
+multiplies. Additive penalties (hidden dependencies, name opacity, macro
+density, generics, self-reference cost, return-type complexity) are layered
+on top.
 
 This model is closer to how an LLM (or a human) experiences cognitive cost:
 explaining a cfg-gated, deeply nested function requires visiting each variant's
 logic separately, not summing difficulty scores.
 
+Full derivation of every term and every weight: **[`docs/FORMULA.md`](docs/FORMULA.md)**.
+
 ---
 
 ## Phase 0.1 — Architecture skeleton
 
-**Status:** Planned  
-**Target:** 1–2 hours  
-**Deliverable:** `braintax` v0.1.1 on crates.io  
+**Status:** ✅ Complete  
+**Delivered:** as part of `braintax` v0.2.0 — not its own release; v0.1.1 never
+shipped. v0.1.0 was an empty placeholder, and v0.2.0 was a complete rewrite
+that folded this phase and Phase 1's internal-complexity baseline into one
+release.
 
 **Purpose:** Port the proven `grip` architecture (walk → parse → visit → score → report)
 before writing a single line of scoring logic.
@@ -149,9 +146,8 @@ before writing a single line of scoring logic.
 
 ## Phase 1 — Internal complexity baseline (the `base`)
 
-**Status:** In progress (roadmap)  
-**Target:** 12–16 hours  
-**Deliverable:** `braintax` v0.2.0 on crates.io  
+**Status:** ✅ Complete  
+**Delivered:** as part of `braintax` v0.2.0  
 
 **The question Phase 1 answers:**
 
@@ -204,10 +200,13 @@ No step function. No incentive to shave below thresholds.
 - Each closure: +1
 - Each nested closure (closure inside closure): +2 additional per nesting level
 
-### Output — no single score yet
+### Output — no single score yet (superseded)
 
-Phase 1 does NOT produce a single braintax number. It produces raw scores for
-each sub-dimension:
+Phase 1, in isolation, did NOT produce a single braintax number — it produced raw
+scores for each sub-dimension shown below. Phase 2 (next) folded these into the
+first composite `braintax` score; every released version since has always shown
+one. This section is kept as a record of the sub-dimension breakdown that still
+feeds the composite score today.
 
 ```
 braintax v0.2.0 — etheram-ibft
@@ -258,7 +257,7 @@ Options:
 
 ## Phase 2 — `cfg` complexity + hidden dependencies (first composite score)
 
-**Status:** Planned  
+**Status:** ✅ Complete  
 **Target:** 10–14 hours  
 **Depends on:** Phase 1 complete  
 **Deliverable:** `braintax` v0.3.0 on crates.io  
@@ -304,6 +303,10 @@ cfg_condition_complexity:
 | `unsafe` block | +8 |
 | `std::thread::sleep()` | +3 |
 
+*(This flat table was the Phase 2 starting point. Phase 8 replaced it with a
+severity-weighted lookup — see below — but the per-category values carried
+forward unchanged.)*
+
 ### Output addition
 
 ```
@@ -314,23 +317,6 @@ ibft/timer.rs::schedule_round_timeout
 ibft/transport.rs::init_transport   [2 cfgs]
   base: 41   cfg: ×4.0   hidden: none
   braintax: 164
-```
-
-### Future dimensions (not yet in scope)
-
-The multiplicative model accommodates additional factors:
-
-- `args` — number of function arguments
-- `requires` — number of trait bounds required
-- `assoc` — associated types in required traits
-- `depth` — maximum call depth to the implementation from the crate surface
-- `trait` — trait contract cost, the non-monotonic factor
-
-Full formula (Phase 3+):
-
-```
-braintax = base × cfg_factor × depth_factor × trait_factor
-         + hidden_dependency_score + args_penalty + assoc_penalty + ...
 ```
 
 ### Gate
@@ -346,7 +332,7 @@ braintax = base × cfg_factor × depth_factor × trait_factor
 
 ## Phase 3 — Dependency travel distance + trait contract cost
 
-**Status:** Planned  
+**Status:** ✅ Complete  
 **Target:** 8–12 hours  
 **Depends on:** Phase 2 complete  
 **Deliverable:** `braintax` v0.4.0 on crates.io  
@@ -375,6 +361,10 @@ The non-monotonic dimension: a well-designed trait boundary reduces cognitive lo
 (factor < 1.0) because the reader stops at the boundary. An expensive boundary
 increases it (factor > 1.0).
 
+*(These three flat tiers were the Phase 3 starting point. Phase 7 replaced them
+with a shape-aware formula built from a trait's real method/associated-type/
+supertrait count — see below.)*
+
 ### Gate
 
 - Phase 2 gate conditions still pass
@@ -386,7 +376,7 @@ increases it (factor > 1.0).
 
 ## Phase 4 — Name opacity
 
-**Status:** Planned  
+**Status:** ✅ Complete  
 **Target:** 4–6 hours  
 **Depends on:** Phase 3 complete  
 **Deliverable:** `braintax` v0.5.0 on crates.io  
@@ -404,6 +394,10 @@ increases it (factor > 1.0).
 
 Added as a flat penalty on top of the multiplicative score.
 
+*(This was the Phase 4 starting point; the shipped `NameOpacityCounter` scores by
+identifier length instead — 1 char +2, 2–3 chars +1, 4+ chars +0. See
+`docs/FORMULA.md#name_opacity` for the exact, current table.)*
+
 ### Gate
 
 - Phase 3 gate conditions still pass
@@ -414,7 +408,7 @@ Added as a flat penalty on top of the multiplicative score.
 
 ## Phase 5 — Macro density + composite score finalization
 
-**Status:** Planned  
+**Status:** ✅ Complete  
 **Target:** 4–6 hours  
 **Depends on:** Phase 4 complete  
 **Deliverable:** `braintax` v0.6.0 on crates.io  
@@ -427,12 +421,11 @@ Macro invocations are opaque. Each one is a black box the reader cannot see into
 | Project-local declarative macros | +2 |
 | Procedural macros from external crates | +3 |
 
-Added as a flat penalty. The composite score is now complete:
+Added as a flat penalty.
 
-```
-braintax = base × depth × cfg × trait
-         + hidden + name_opacity + macro_density + args + assoc
-```
+*(Phases 6, 7, and 8 below added three more terms — generics, a refined trait
+factor, and severity-weighted hidden deps — after this phase shipped. The
+formula's final, current shape is in `docs/FORMULA.md`, not this section.)*
 
 ### Gate
 
@@ -441,24 +434,66 @@ braintax = base × depth × cfg × trait
 
 ---
 
-## Phase 6 — Git history tracking and grip integration
+## Phase 6 — Generics
 
-**Status:** Planned  
-**Target:** 6–8 hours  
-**Depends on:** Phase 5 complete  
-**Deliverable:** `braintax` v1.0.0 on crates.io  
+**Status:** ✅ Complete  
+**Delivered:** `braintax` v0.7.0
 
-- `--history` flag: walk git commits, compute braintax at each commit
-- Trend classification: `Improving`, `Stable`, `Degrading`
-- Inflection point detection
+**What it adds:**
 
-When combined with `grip` history: `TI(t) = grip_score(t) / braintax_score(t)`
+- `GenericsCounter` — each generic type parameter costs +2, plus +1 per trait
+  bound (inline or in a `where` clause); each const generic costs +3;
+  lifetime parameters are free
+- `BraintaxComponents` struct bundling all score dimensions, replacing the
+  ad hoc parameter list `compute_braintax_impl` had grown
+- `base_generics` fixture (CC=3, generics=9, braintax=12.0)
 
-### Gate
+---
 
-- `--history` completes on a real project with 100+ commits
-- TI history chart is coherent with grip history
-- Published on crates.io as `braintax` v1.0.0
+## Phase 7 — Trait refinement
+
+**Status:** ✅ Complete  
+**Delivered:** `braintax` v0.8.0
+
+**What it adds:**
+
+- `TraitInfo` — tracks a trait's method count, associated types, and
+  supertraits, so `trait_factor` reflects the trait's real shape instead of
+  Phase 3's flat three-tier guess
+- Known standard traits (`Debug`, `Clone`, `Iterator`, …) get a flat 0.80;
+  custom traits are priced from a base plus dimension and method-count
+  penalties
+- `base_trait_refined` fixture (`Extended: Base` — supertrait + associated
+  type together)
+
+---
+
+## Phase 8 — Severity-weighted hidden deps, absolute scores, dyn dispatch
+
+**Status:** ✅ Complete  
+**Delivered:** `braintax` v0.9.0
+
+**What it adds:**
+
+- Cross-file `trait_factor` fix: `TraitRegistryBuilder` now scans every file
+  for trait definitions and impls *before* any file is scored, so a trait's
+  real shape is known even when it's defined in a different file than its
+  `impl` — previously this silently fell back to an empty, coincidentally
+  plausible-looking default
+- `HiddenDepSeverity` — hidden dependencies are priced by actual severity
+  (`unsafe` 8, `process::exit`/`abort` 6, filesystem 5, time/randomness 4,
+  env/thread 3, print-family 2) instead of Phase 2's flat `× 4.0`, with
+  suffix-based path matching so fully-qualified calls
+  (`std::time::Instant::now()`) are no longer silently missed
+- `braintax_normalized`/`total_braintax` — every function and every
+  module/repo now reports a normalized 0–100 score alongside the raw one
+- `App` converted from `App<W, S, R>` generics to `Box<dyn Trait>` fields
+  (see `docs/ADRs/ADR-DynDispatchAppOverGenerics.md`)
+- `self_ref_cost`/`return_complexity` recalibration and 9 new fixture
+  crates, bringing full trait-factor scenario coverage to 17 fixtures
+
+See `CHANGELOG.md` [0.9.0] and `docs/ADRs/ADR-SeverityWeightedHiddenDeps.md`
+for the complete list and rationale.
 
 ---
 
@@ -467,14 +502,15 @@ When combined with `grip` history: `TI(t) = grip_score(t) / braintax_score(t)`
 | Phase | Deliverable | Key addition | Status |
 |---|---|---|---|
 | 0 | v0.1.0 | Placeholder | ✅ Complete |
-| 0.1-1 | v0.2.0 | Architecture skeleton + cyclomatic complexity (base) | ✅ Complete |
+| 0.1–1 | v0.2.0 | Architecture skeleton + cyclomatic complexity (base) | ✅ Complete |
 | 2 | v0.3.0 | cfg factor + hidden dependencies | ✅ Complete |
 | 3 | v0.4.0 | depth factor + trait factor (non-monotonic) | ✅ Complete |
 | 4 | v0.5.0 | Name opacity | ✅ Complete |
 | 5 | v0.6.0 | Macro density (user-defined macros) | ✅ Complete |
-| 6 | v0.7.0 | Generics — generic params and trait bounds add cognitive cost | ✅ Complete |
-| 7 | v0.8.0 | Trait refinement — associated types, supertraits, method generics | ✅ Complete |
-| 8 | v1.0.0 | Git history + grip integration | Planned |
+| 6 | v0.7.0 | Generics | ✅ Complete |
+| 7 | v0.8.0 | Trait refinement — associated types, supertraits | ✅ Complete |
+| 8 | v0.9.0 | Severity-weighted hidden deps, absolute scores, dyn dispatch | ✅ Complete |
+
 ---
 
 ## Hard rules
