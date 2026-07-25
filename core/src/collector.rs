@@ -15,6 +15,7 @@ use crate::generics_counter::GenericsCounter;
 use crate::hidden_deps_counter::HiddenDepsCounter;
 use crate::macro_counter::MacroCounter;
 use crate::name_opacity_counter::NameOpacityCounter;
+use crate::trait_registry_builder::TraitRegistryBuilder;
 
 #[derive(Debug, Clone)]
 pub struct TraitInfo {
@@ -45,11 +46,8 @@ impl<'a> Collector<'a> {
         }
     }
 
-    /// Scans every file's trait definitions and impls before any file is
-    /// scored, so `compute_trait_factor` sees a trait's real shape even when
-    /// the trait is defined in a different file than its impl.
     pub fn build_trait_registry(files: &[(PathBuf, String)]) -> HashMap<String, TraitInfo> {
-        crate::trait_registry_builder::TraitRegistryBuilder::new().build(files)
+        TraitRegistryBuilder::new().build(files)
     }
 
     pub fn collect(
