@@ -60,6 +60,14 @@ impl StdoutReporter {
             "  Maximum braintax:           {:.1}",
             overall.max_braintax
         ));
+        lines.push(format!(
+            "  Total braintax:             {:.1}",
+            overall.total_braintax
+        ));
+        lines.push(format!(
+            "  Normalized braintax:        {} / 100",
+            overall.braintax_normalized
+        ));
         lines.push(String::new());
         lines.push("Cyclomatic complexity:".to_string());
         lines.push(format!(
@@ -98,12 +106,12 @@ impl StdoutReporter {
                 self.top.min(top_n.len())
             ));
             lines.push(format!(
-                "  {:<50}  {:<12}  {:>5}  {:>6}",
-                "Function", "Module", "CC", "BT"
+                "  {:<50}  {:<12}  {:>5}  {:>6}  {:>5}",
+                "Function", "Module", "CC", "BT", "BT%"
             ));
             lines.push(format!(
-                "  {:-<50}  {:-<12}  {:-<5}  {:-<6}",
-                "", "", "", ""
+                "  {:-<50}  {:-<12}  {:-<5}  {:-<6}  {:-<5}",
+                "", "", "", "", ""
             ));
             for func in &top_n {
                 let location = if func.module == "." {
@@ -112,8 +120,8 @@ impl StdoutReporter {
                     format!("{}::{}", func.module, func.name)
                 };
                 lines.push(format!(
-                    "  {:<50}  {:<12}  {:>5}  {:>6.1}",
-                    location, func.module, func.cyclomatic, func.braintax
+                    "  {:<50}  {:<12}  {:>5}  {:>6.1}  {:>5}",
+                    location, func.module, func.cyclomatic, func.braintax, func.braintax_normalized
                 ));
             }
         }

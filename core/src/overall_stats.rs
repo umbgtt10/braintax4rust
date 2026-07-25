@@ -12,4 +12,6 @@ pub struct OverallStats {
     pub total_cyclomatic: u32,
     pub avg_braintax: f64,
     pub max_braintax: f64,
+    pub total_braintax: f64,
+    pub braintax_normalized: u32,
 }

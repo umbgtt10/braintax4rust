@@ -2,6 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use braintax::braintax_normalizer::BraintaxNormalizer;
 use braintax::default_scorer::DefaultScorer;
 use braintax::function_complexity::FunctionComplexity;
 use braintax::traits::scorer::Scorer;
@@ -18,6 +19,7 @@ fn make_fn(name: &str, module: &str, cyclomatic: u32) -> FunctionComplexity {
         depth: 1,
         trait_factor: 1.0,
         braintax,
+        braintax_normalized: BraintaxNormalizer::new().normalize(braintax),
     }
 }
 
@@ -35,6 +37,8 @@ fn overall_stats_empty_returns_zeros() {
     assert_eq!(stats.avg_cyclomatic, 0.0);
     assert_eq!(stats.max_cyclomatic, 0);
     assert_eq!(stats.total_cyclomatic, 0);
+    assert_eq!(stats.total_braintax, 0.0);
+    assert_eq!(stats.braintax_normalized, 0);
 }
 
 #[test]
@@ -51,6 +55,8 @@ fn overall_stats_with_one_fn() {
     assert_eq!(stats.avg_cyclomatic, 5.0);
     assert_eq!(stats.max_cyclomatic, 5);
     assert_eq!(stats.total_cyclomatic, 5);
+    assert_eq!(stats.total_braintax, 5.0);
+    assert_eq!(stats.braintax_normalized, 67);
 }
 
 #[test]
@@ -71,6 +77,8 @@ fn overall_stats_with_multiple_fns() {
     assert_eq!(stats.avg_cyclomatic, (1.0 + 5.0 + 10.0) / 3.0);
     assert_eq!(stats.max_cyclomatic, 10);
     assert_eq!(stats.total_cyclomatic, 16);
+    assert_eq!(stats.total_braintax, 16.0);
+    assert_eq!(stats.braintax_normalized, 64);
 }
 
 #[test]
@@ -93,8 +101,12 @@ fn module_stats_groups_by_module() {
     assert_eq!(foo_mod.avg_cyclomatic, 3.0);
     assert_eq!(foo_mod.max_cyclomatic, 5);
     assert_eq!(foo_mod.total_cyclomatic, 6);
+    assert_eq!(foo_mod.total_braintax, 6.0);
+    assert_eq!(foo_mod.braintax_normalized, 80);
 
     let bar_mod = modules.iter().find(|m| m.path == "bar").unwrap();
     assert_eq!(bar_mod.function_count, 1);
     assert_eq!(bar_mod.max_cyclomatic, 10);
+    assert_eq!(bar_mod.total_braintax, 10.0);
+    assert_eq!(bar_mod.braintax_normalized, 33);
 }

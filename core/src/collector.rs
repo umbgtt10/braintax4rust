@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use syn::Attribute;
 use syn::visit::Visit;
 
+use crate::braintax_normalizer::BraintaxNormalizer;
 use crate::complexity_visitor::ComplexityVisitor;
 use crate::default_scorer::{BraintaxComponents, compute_braintax};
 use crate::function_complexity::FunctionComplexity;
@@ -32,6 +33,7 @@ pub struct Collector<'a> {
     current_module: String,
     current_depth: u32,
     traits: &'a HashMap<String, TraitInfo>,
+    normalizer: BraintaxNormalizer,
 }
 
 impl<'a> Collector<'a> {
@@ -43,6 +45,7 @@ impl<'a> Collector<'a> {
             current_module: module,
             current_depth: depth,
             traits,
+            normalizer: BraintaxNormalizer::new(),
         }
     }
 
@@ -154,9 +157,9 @@ impl<'a> Collector<'a> {
         match inputs.first() {
             Some(syn::FnArg::Receiver(recv)) => {
                 if recv.mutability.is_some() {
-                    1.0
+                    0.4
                 } else {
-                    0.5
+                    0.2
                 }
             }
             _ => 0.0,
@@ -274,6 +277,7 @@ impl<'a> Collector<'a> {
             self_ref_cost: input.self_ref_cost,
             return_complexity: input.return_complexity,
         };
+        let braintax = compute_braintax(&components);
         self.functions.push(FunctionComplexity {
             name,
             file: self.current_file.clone(),
@@ -283,7 +287,8 @@ impl<'a> Collector<'a> {
             hidden_deps: hidden.count,
             depth,
             trait_factor: input.trait_factor,
-            braintax: compute_braintax(&components),
+            braintax,
+            braintax_normalized: self.normalizer.normalize(braintax),
         });
     }
 

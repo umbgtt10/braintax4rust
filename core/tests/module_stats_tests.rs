@@ -15,6 +15,8 @@ fn module_stats_serializes_to_json() {
         total_cyclomatic: 15,
         avg_braintax: 10.0,
         max_braintax: 20.0,
+        total_braintax: 30.0,
+        braintax_normalized: 33,
     };
 
     // Act

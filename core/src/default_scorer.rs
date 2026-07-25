@@ -4,6 +4,7 @@
 
 use std::collections::BTreeMap;
 
+use crate::braintax_normalizer::BraintaxNormalizer;
 use crate::function_complexity::FunctionComplexity;
 use crate::module_stats::ModuleStats;
 use crate::overall_stats::OverallStats;
@@ -41,12 +42,16 @@ pub fn compute_braintax(c: &BraintaxComponents) -> f64 {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct DefaultScorer;
+pub struct DefaultScorer {
+    normalizer: BraintaxNormalizer,
+}
 
 impl DefaultScorer {
     #[must_use]
     pub const fn new() -> Self {
-        Self
+        Self {
+            normalizer: BraintaxNormalizer::new(),
+        }
     }
 
     pub fn compute_braintax(func: &FunctionComplexity) -> f64 {
@@ -76,6 +81,8 @@ impl Scorer for DefaultScorer {
                 total_cyclomatic: 0,
                 avg_braintax: 0.0,
                 max_braintax: 0.0,
+                total_braintax: 0.0,
+                braintax_normalized: 0,
             };
         }
 
@@ -88,7 +95,8 @@ impl Scorer for DefaultScorer {
             .map(|f| f.braintax)
             .max_by(|a, b| a.partial_cmp(b).unwrap())
             .unwrap_or(0.0);
-        let avg_bt = functions.iter().map(|f| f.braintax).sum::<f64>() / count as f64;
+        let total_bt: f64 = functions.iter().map(|f| f.braintax).sum();
+        let avg_bt = total_bt / count as f64;
 
         OverallStats {
             total_functions: count,
@@ -97,6 +105,8 @@ impl Scorer for DefaultScorer {
             total_cyclomatic: total_cc,
             avg_braintax: avg_bt,
             max_braintax: max_bt,
+            total_braintax: total_bt,
+            braintax_normalized: self.normalizer.normalize(avg_bt),
         }
     }
 
@@ -125,7 +135,8 @@ impl Scorer for DefaultScorer {
                     .map(|f| f.braintax)
                     .max_by(|a, b| a.partial_cmp(b).unwrap())
                     .unwrap_or(0.0);
-                let avg_bt = funcs.iter().map(|f| f.braintax).sum::<f64>() / count as f64;
+                let total_bt: f64 = funcs.iter().map(|f| f.braintax).sum();
+                let avg_bt = total_bt / count as f64;
 
                 ModuleStats {
                     path,
@@ -135,6 +146,8 @@ impl Scorer for DefaultScorer {
                     total_cyclomatic: total_cc,
                     avg_braintax: avg_bt,
                     max_braintax: max_bt,
+                    total_braintax: total_bt,
+                    braintax_normalized: self.normalizer.normalize(avg_bt),
                 }
             })
             .collect()

@@ -4,6 +4,7 @@
 
 pub mod app;
 pub mod args;
+pub mod braintax_normalizer;
 pub mod braintax_report;
 pub mod collector;
 pub mod complexity_visitor;

@@ -15,4 +15,5 @@ pub struct FunctionComplexity {
     pub depth: u32,
     pub trait_factor: f64,
     pub braintax: f64,
+    pub braintax_normalized: u32,
 }

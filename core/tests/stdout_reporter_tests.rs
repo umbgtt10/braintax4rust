@@ -20,6 +20,8 @@ fn sample_report() -> BraintaxReport {
             total_cyclomatic: 7,
             avg_braintax: 4.5,
             max_braintax: 6.0,
+            total_braintax: 9.0,
+            braintax_normalized: 70,
         },
         modules: vec![ModuleStats {
             path: "lib".to_string(),
@@ -29,6 +31,8 @@ fn sample_report() -> BraintaxReport {
             total_cyclomatic: 7,
             avg_braintax: 4.5,
             max_braintax: 6.0,
+            total_braintax: 9.0,
+            braintax_normalized: 70,
         }],
         functions: vec![
             FunctionComplexity {
@@ -41,6 +45,7 @@ fn sample_report() -> BraintaxReport {
                 depth: 1,
                 trait_factor: 1.0,
                 braintax: 2.0,
+                braintax_normalized: 87,
             },
             FunctionComplexity {
                 name: "complex".to_string(),
@@ -52,6 +57,7 @@ fn sample_report() -> BraintaxReport {
                 depth: 1,
                 trait_factor: 1.0,
                 braintax: 5.0,
+                braintax_normalized: 67,
             },
         ],
     }

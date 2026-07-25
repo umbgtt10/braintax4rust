@@ -4,6 +4,7 @@
 
 mod app_tests;
 mod args_tests;
+mod braintax_normalizer_tests;
 mod braintax_report_tests;
 mod collector_tests;
 mod complexity_visitor_tests;

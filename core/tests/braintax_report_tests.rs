@@ -20,6 +20,8 @@ fn report_serializes_to_json() {
             total_cyclomatic: 7,
             avg_braintax: 4.5,
             max_braintax: 6.0,
+            total_braintax: 9.0,
+            braintax_normalized: 70,
         },
         modules: vec![ModuleStats {
             path: "src".to_string(),
@@ -29,6 +31,8 @@ fn report_serializes_to_json() {
             total_cyclomatic: 7,
             avg_braintax: 4.5,
             max_braintax: 6.0,
+            total_braintax: 9.0,
+            braintax_normalized: 70,
         }],
         functions: vec![
             FunctionComplexity {
@@ -41,6 +45,7 @@ fn report_serializes_to_json() {
                 depth: 1,
                 trait_factor: 1.0,
                 braintax: 2.0,
+                braintax_normalized: 87,
             },
             FunctionComplexity {
                 name: "bar".to_string(),
@@ -52,6 +57,7 @@ fn report_serializes_to_json() {
                 depth: 1,
                 trait_factor: 1.0,
                 braintax: 5.0,
+                braintax_normalized: 67,
             },
         ],
     };
@@ -77,7 +83,9 @@ fn report_deserializes_from_json() {
             "max_cyclomatic": 5,
             "total_cyclomatic": 7,
             "avg_braintax": 4.5,
-            "max_braintax": 6.0
+            "max_braintax": 6.0,
+            "total_braintax": 9.0,
+            "braintax_normalized": 70
         },
         "modules": [
             {
@@ -87,7 +95,9 @@ fn report_deserializes_from_json() {
                 "max_cyclomatic": 5,
                 "total_cyclomatic": 7,
                 "avg_braintax": 4.5,
-                "max_braintax": 6.0
+                "max_braintax": 6.0,
+                "total_braintax": 9.0,
+                "braintax_normalized": 70
             }
         ],
         "functions": [
@@ -100,7 +110,8 @@ fn report_deserializes_from_json() {
                 "hidden_deps": 0,
                 "depth": 1,
                 "trait_factor": 1.0,
-                "braintax": 2.0
+                "braintax": 2.0,
+                "braintax_normalized": 87
             }
         ]
     }"#;
