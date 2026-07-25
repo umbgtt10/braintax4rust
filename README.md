@@ -10,108 +10,45 @@ The **total price, in mental effort, that a reader pays to understand what a fun
 does, why it does it, and what it interacts with** — including everything the reader
 must travel to outside the function itself to form a complete mental model.
 
-## Current phase (v0.9.0)
+---
 
-The current release computes a composite `braintax` score:
-
-```
-braintax = base × cfg × depth × trait + hidden + name + macros + generics
-```
-
-### Cyclomatic complexity (base)
+## The formula, briefly
 
 ```
-M = 1 + number of decision points
+braintax = cyclomatic × cfg_factor × depth_factor × trait_factor
+           + hidden_dep_weight + name_opacity + macro_density + generics
+           + self_ref_cost + return_complexity
 ```
 
-Decision points: `if`, `else if`, `while`, `for`, `loop`, `match` arms,
-`&&`, `||`, `?`, `return`, `break`, `continue`.
+Complexity compounds: a function that's internally complex, buried deep,
+gated behind cfg flags, *and* implementing an expensive trait is not
+"complex + deep + gated + trait-heavy" — it's those four things at once,
+so those four factors multiply. Everything else is an independent cost
+layered on top, so it adds.
 
-### `cfg` factor
+Every function also gets a normalized `braintax_normalized` (0–100, higher
+= simpler), and every module/repo gets `total_braintax` — the sum across
+every function in scope, plus its own `braintax_normalized`.
 
-Each `#[cfg(...)]` gate on a function multiplies its score:
+Full derivation of every term, every weight, and the severity table for
+hidden dependencies: **[`docs/FORMULA.md`](docs/FORMULA.md)**.
 
-```
-cfg_factor = 2.0 ^ number_of_cfg_gates
-```
+---
 
-A function with one `#[cfg(feature = "...")]` gate has `cfg_factor = 2.0`.
-Two gates → `4.0`, three → `8.0`.
+## Documentation
 
-### Depth factor
-
-Each level of module nesting multiplies the score:
-
-```
-depth_factor = 1.0 + (module_depth - 1) × 0.15
-```
-
-A function at the crate surface: `depth_factor = 1.0`.
-A function 3 modules deep: `depth_factor = 1.3`.
-
-### Trait factor (non-monotonic)
-
-Well-designed trait boundaries can *reduce* cognitive load; sprawling ones increase it:
-
-- **Known standard traits** (`Debug`, `Clone`, `Iterator`, `From`, `Send`, `Sync`, `Drop`, …):
-  flat **0.80** — the reader already knows the contract.
-- **Inherent impls** (no trait): flat **0.95**.
-- **Custom traits**: a `base` of **0.90** (no associated types or supertraits) or **1.15**
-  (has either), plus **0.01** per method beyond the third. On top of `base`:
-  - a **dimension penalty** of 0.15 (associated types *or* supertraits) or 0.20 (both) — more
-    surface the reader must hold in mind at once;
-  - a **dispatch penalty**, up to 0.18 for multiple `impl` blocks (0.06 each beyond the first),
-    amplified ×1.5 and capped at 0.27 when associated types are also in play — more places the
-    reader must check for the "real" behavior.
-
-A cheap, well-known trait boundary lets the reader stop at the boundary — cognitive load goes
-*down*. A custom trait with associated types, supertraits, and several `impl` blocks increases
-load because the reader must track more mental context to know which implementation applies.
-
-### Name opacity
-
-Single- and double-letter identifiers cost more to hold in mind than descriptive ones. Scored
-per parameter, local binding, `for`-loop variable, and `match` binding:
-
-| Identifier length | Penalty |
+| Doc | What's in it |
 |---|---|
-| 1 char (e.g. `x`) | +2 |
-| 2-3 chars (e.g. `tmp`) | +1 |
-| 4+ chars | 0 |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How a `braintax` invocation flows through the code, module by module. |
+| [`docs/FORMULA.md`](docs/FORMULA.md) | Every scoring term, in full, kept in sync with `core/src/`. |
+| [`docs/ADRs/`](docs/ADRs/) | Why the codebase is shaped the way it is. |
+| [`ROADMAP.md`](ROADMAP.md) | What's shipped, what's next. |
+| [`OPEN_POINTS.md`](OPEN_POINTS.md) | Known gaps, deliberately deferred. |
+| [`CHANGELOG.md`](CHANGELOG.md) | Release history. |
 
-### Macro density
+---
 
-Each macro invocation or attribute — including `derive`s — outside a small well-known list
-(`println!`, `assert_eq!`, `vec!`, `Debug`/`Clone`/`Copy`/`Default`/`Eq`/`PartialEq`/`Ord`/
-`PartialOrd`/`Hash` derives, `#[cfg]`, and similar) adds **+3**. Opaque, unfamiliar macros force
-the reader to go look up what they expand to before they can trust what the code does.
-
-### Generics
-
-```
-generics = Σ (2 + trait_bounds) per type param  +  3 per const generic
-```
-
-Each generic type parameter costs **+2**, plus **+1** per trait bound on it (inline or in a
-`where` clause). Const generics cost **+3** each. Lifetime parameters are free — they don't add
-runtime behavior to reason about.
-
-### Hidden dependencies
-
-The tool detects side-effecting calls inside function bodies:
-
-| Pattern | Penalty |
-|---|---|
-| `unsafe` block | +8 |
-| `std::process::exit()`, `abort()` | +6 |
-| `std::fs::read`, `File::open`, etc. | +5 |
-| `Instant::now()`, `SystemTime::now()` | +4 |
-| `rand::random()`, `thread_rng()` | +4 |
-| `std::env::var()`, `env::args()` | +3 |
-| `std::thread::sleep()` | +3 |
-| `println!`, `eprintln!` | +2 |
-
-### Usage
+## Usage
 
 ```bash
 # Run on the current directory
@@ -133,33 +70,41 @@ cargo braintax4rust --top 20
 cargo braintax4rust --json --threshold 10 --top 5
 ```
 
-### Output
+## Output
 
 ```
-cargo-braintax4rust 0.9.0 -- my-crate
+cargo-braintax4rust 0.9.0 -- core
+══════════════════════════════════════════════
 
-  Overall braintax:            13.2
-  Maximum braintax:            36.0
+  Overall braintax:            4.0
+  Maximum braintax:           15.2
+  Total braintax:             360.3
+  Normalized braintax:        73 / 100
 
 Cyclomatic complexity:
-  Total functions:             42
-  Average complexity:         3.2
-  Maximum complexity:         15
-  Total complexity:           134
+  Total functions:             90
+  Average complexity:         2.5
+  Maximum complexity:         9
+  Total complexity:           229
 
 Per module:
   Module                          Funcs   Avg BT    Max
   ------------------------------  ------  --------  -----
-  lib                              15      8.5      12
-  parser                           10     21.0      36
-  utils                            8       3.0       8
+  .                                90      4.0       15.2
 
-Top 10 most complex functions:
-  Function                                            Module          CC     BT
-  --------------------------------------------------  ------------  -----  ------
-  parser/src/parser.rs::parse_expression              parser          15    36.0
-  lib/src/evaluator.rs::eval_deep                     lib             12    12.0
+Top 5 most complex functions:
+  Function                                            Module          CC     BT    BT%
+  --------------------------------------------------  ------------  -----  ------  -----
+  core/src/default_scorer.rs                          .                3    15.2      0
+  core/src/default_scorer.rs                          .                3    14.9      1
+  core/src/collector.rs                               .                9    12.5     16
+  core/src/fs_walk.rs                                 .                6    11.9     21
+  core/src/collector.rs                                .                9    10.5     30
 ```
+
+(`braintax`'s own `core/` source, analyzed by itself. `BT%` is that
+function's own `braintax_normalized` — 0 at or above the CRAP-gate
+ceiling, 100 at zero cost.)
 
 ### CI Gate
 
@@ -171,29 +116,25 @@ cargo braintax4rust --threshold 10
 echo $?  # 0 if pass, 1 if fail
 ```
 
-## Roadmap
+---
 
-The long-term model is multiplicative, not additive:
+## Limitations
 
-```
-braintax = base × depth × cfg × trait + hidden + args + assoc + ...
-```
+- **AST-only, no type resolution.** Trait-factor and hidden-dependency
+  classification are name/structure-based against a fixed known-list, not
+  resolved against the trait's or call's actual origin. A third-party
+  trait or call not on the list is invisible by design — see
+  [`docs/ADRs/ADR-AstOnlyNoTypeResolution.md`](docs/ADRs/ADR-AstOnlyNoTypeResolution.md).
+- **No cross-crate trait shape resolution.** `TraitRegistryBuilder` sees
+  every trait definition and `impl` within the analyzed project, but not
+  in its dependencies — a trait defined in an external crate falls back
+  to the known-standard-trait or generic-custom-trait heuristic.
+- **Formula constants are hand-picked, not empirically calibrated.** Every
+  weight (severity values, penalty magnitudes, the normalization ceiling)
+  reflects judgment, not measured correlation with actual comprehension
+  time. See `OPEN_POINTS.md`'s "Configurable braintax formula weights".
 
-| Phase | Dimension | Description |
-|-------|-----------|-------------|
-| 0.1 | Skeleton | Walk → Collector → Scorer → Reporter pipeline ✅ |
-| 1 | `base` | Cyclomatic complexity, boolean chains, match arms, closures ✅ |
-| 2 | `cfg` | Feature gate multipliers, hidden dependency density ✅ |
-| 3 | `depth` | Dependency travel distance, trait contract cost ✅ |
-| 4 | Name opacity | Semantic distance between names and meaning ✅ |
-| 5 | Macro density | Opaque macro invocations in productive code ✅ |
-| 7 | Generics | Generic params and trait bounds cognitive cost ✅ |
-| 8 | Trait refinement | Associated types, supertraits, method generics ✅ |
-
-Complexity compounds. A function that is internally complex, buried deep,
-gated behind cfg flags, and implementing an expensive trait is not "complex
-+ deep + gated + trait-heavy." It is those four things at once — the cost
-multiplies.
+---
 
 ## License
 
