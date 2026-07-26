@@ -104,12 +104,29 @@ impl<'a> Collector<'a> {
             .iter()
             .filter(|i| matches!(i, syn::TraitItem::Type(_)))
             .count() as u32;
-        let supertraits = trait_item.supertraits.len() as u32;
+        let supertraits = trait_item
+            .supertraits
+            .iter()
+            .filter(|bound| !Self::is_marker_supertrait(bound))
+            .count() as u32;
         TraitInfo {
             methods,
             assoc_types,
             supertraits,
             impl_count: 0,
+        }
+    }
+
+    fn is_marker_supertrait(bound: &syn::TypeParamBound) -> bool {
+        const MARKER_TRAITS: &[&str] = &["Send", "Sync", "Unpin", "Sized"];
+        match bound {
+            syn::TypeParamBound::Lifetime(_) => true,
+            syn::TypeParamBound::Trait(trait_bound) => trait_bound
+                .path
+                .segments
+                .last()
+                .is_some_and(|seg| MARKER_TRAITS.contains(&seg.ident.to_string().as_str())),
+            _ => false,
         }
     }
 

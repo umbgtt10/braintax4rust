@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- `trait_info`'s supertrait count treated every bound in a trait's `: Bound1 +
+  Bound2` clause as equally costly, including zero-cost auto-traits (`Send`,
+  `Sync`, `Unpin`, `Sized`) that add no methods and no conceptual surface.
+  Adding `: Send` to a trait purely to satisfy a clippy lint
+  (`arc_with_non_send_sync`) inflated `trait_factor` — and therefore `braintax`
+  — for every method of every implementor. `trait_info` now filters out known
+  marker traits (and lifetime bounds) before counting supertraits, so only
+  bounds that actually cost the reader something contribute to the dimension
+  penalty. Found via empirical analysis of Faction's commit history.
+
 ## [0.10.0] - 2026-07-25
 
 ### Added

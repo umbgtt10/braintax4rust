@@ -450,6 +450,60 @@ impl Derived for MyStruct { fn compute(&self) -> i32 { 42 } }
 }
 
 #[test]
+fn trait_with_send_supertrait_has_factor_0_90() {
+    // Arrange: Send is a zero-cost auto-trait with no methods and no
+    // conceptual surface - bounding a trait by it must not trigger the
+    // same dimension penalty a real supertrait would.
+    let source = r#"
+trait Observer: Send {
+    fn notify(&self, event: i32);
+}
+struct MyObserver;
+impl Observer for MyObserver { fn notify(&self, event: i32) {} }
+"#;
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = collect(source, path, root);
+
+    // Assert
+    let notify_fn = functions.iter().find(|f| f.name == "notify").unwrap();
+    assert!(
+        (notify_fn.trait_factor - 0.90).abs() < 0.001,
+        "expected 0.90 (no real dimension), got {}",
+        notify_fn.trait_factor
+    );
+}
+
+#[test]
+fn trait_with_real_supertrait_and_send_has_factor_1_30() {
+    // Arrange: a real supertrait (Base) plus a marker (Send) must score the
+    // same as the real supertrait alone - Send must not add a second
+    // dimension on top of it.
+    let source = r#"
+trait Base {
+    fn base_method(&self);
+}
+trait Derived: Base + Send {
+    fn compute(&self) -> i32;
+}
+struct MyStruct;
+impl Base for MyStruct { fn base_method(&self) {} }
+impl Derived for MyStruct { fn compute(&self) -> i32 { 42 } }
+"#;
+    let path = Path::new("src/lib.rs");
+    let root = Path::new(".");
+
+    // Act
+    let functions = collect(source, path, root);
+
+    // Assert
+    let derived_fn = functions.iter().find(|f| f.name == "compute").unwrap();
+    assert!((derived_fn.trait_factor - 1.30).abs() < 0.001);
+}
+
+#[test]
 fn trait_with_assoc_and_super_has_factor_1_35() {
     // Arrange
     let source = r#"
