@@ -2,8 +2,8 @@
 
 **Crate:** `braintax`  
 **License:** MIT  
-**Last updated:** 2026-07-25  
-**Current status:** Phase 9 — ✅ Complete (v0.10.0 published)  
+**Last updated:** 2026-07-26  
+**Current status:** Phase 9 — ✅ Complete (latest feature phase; shipped in v0.10.0) · **Latest release:** v0.11.0 (marker-trait-aware supertrait counting, no new phase)  
 
 ---
 

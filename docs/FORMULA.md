@@ -98,6 +98,18 @@ cost goes *down*. A custom trait with associated types, supertraits, and
 several `impl` blocks increases cost, because the reader must track more
 context to know which implementation applies at a given call site.
 
+`info.supertraits` (`TraitInfo`, built by `TraitRegistryBuilder`) is not
+a raw count of a trait's `: Bound1 + Bound2` clause — it excludes marker
+traits (`Send`, `Sync`, `Unpin`, `Sized`) and lifetime bounds before
+counting. A trait declared `trait Foo: Send` has `supertraits == 0` and
+prices identically to `trait Foo` with no bounds at all; only a bound
+that adds real conceptual surface (a supertrait with its own methods)
+counts toward `has associated types OR supertraits` and the dimension
+penalty. Added after empirical analysis of Faction's commit history
+showed `: Send` bounds added purely to satisfy a clippy lint
+(`arc_with_non_send_sync`) inflating `trait_factor` for every method of
+every implementor.
+
 ## `name_opacity`
 
 Scored per parameter, local binding, `for`-loop variable, and `match`

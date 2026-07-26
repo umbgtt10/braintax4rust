@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-07-26
+
 ### Fixed
 - `trait_info`'s supertrait count treated every bound in a trait's `: Bound1 +
   Bound2` clause as equally costly, including zero-cost auto-traits (`Send`,
