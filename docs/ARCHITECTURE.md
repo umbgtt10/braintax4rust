@@ -120,4 +120,4 @@ are thin entry points — all real logic lives in `App` and below.
 - `docs/ADRs/` — why `App` is shaped this way, why hidden deps are
   severity-weighted, and why classification is name/structure-based
   rather than type-resolved.
-- `ROADMAP.md` — what's shipped and what's planned next.
+- `docs/ROADMAP.md` — what's shipped and what's planned next.

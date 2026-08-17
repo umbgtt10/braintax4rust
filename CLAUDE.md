@@ -1,4 +1,4 @@
-# Braintax
+# Braintax4Rust
 
 ## Meaning
 

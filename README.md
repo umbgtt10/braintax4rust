@@ -42,8 +42,8 @@ hidden dependencies: **[`docs/FORMULA.md`](docs/FORMULA.md)**.
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How a `braintax` invocation flows through the code, module by module. |
 | [`docs/FORMULA.md`](docs/FORMULA.md) | Every scoring term, in full, kept in sync with `core/src/`. |
 | [`docs/ADRs/`](docs/ADRs/) | Why the codebase is shaped the way it is. |
-| [`ROADMAP.md`](ROADMAP.md) | What's shipped, what's next. |
-| [`OPEN_POINTS.md`](OPEN_POINTS.md) | Known gaps, deliberately deferred. |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | What's shipped, what's next. |
+| [`docs/OPEN_POINTS.md`](docs/OPEN_POINTS.md) | Known gaps, deliberately deferred. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release history. |
 
 ---

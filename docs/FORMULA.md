@@ -258,7 +258,7 @@ decision is recorded in `grip`'s own `FORMULA.md`.
   type-resolved, and the resulting blind spots.
 - `docs/ADRs/ADR-SeverityWeightedHiddenDeps.md` — why hidden deps are
   weighted rather than flat, and where the severity table came from.
-- `../OPEN_POINTS.md` — configurable formula weights.
+- `docs/OPEN_POINTS.md` — configurable formula weights.
 - `fixture/` — every fixture crate is a worked example of one dimension
   in isolation; `fixture/base_hidden_deps` specifically demonstrates
   `hidden_dep_weight`/`hidden_dep_labels` end-to-end.

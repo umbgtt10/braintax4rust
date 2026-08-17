@@ -75,7 +75,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-braintax4rust"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "anyhow",
  "braintax-test-utils",

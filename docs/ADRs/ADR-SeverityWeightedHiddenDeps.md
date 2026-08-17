@@ -102,6 +102,6 @@ severity sum.
 - `ADR-AstOnlyNoTypeResolution.md` — this fix narrows that ADR's hidden-dep
   blind spot but does not remove it; an unrecognized third-party call is
   still invisible by design.
-- `OPEN_POINTS.md` — "Configurable braintax formula weights" covers making
+- `docs/OPEN_POINTS.md` — "Configurable braintax formula weights" covers making
   these severity constants (among many others) adjustable; deliberately
   postponed, not part of this decision.

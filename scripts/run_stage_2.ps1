@@ -5,12 +5,87 @@
 $ErrorActionPreference = "Stop"
 Push-Location (Split-Path $PSScriptRoot -Parent)
 
-function Invoke-Step {
-    param([string]$Label, [scriptblock]$Command)
+# A tool that charges a cognitive tax should be held to its own bill. Runs the
+# freshly built binary rather than whatever version happens to be installed, so
+# the gate reflects the working tree.
+#
+# The bound is a floor even though braintax is a cost, because
+# `BraintaxNormalizer` inverts it: `(1 - braintax / 15) * 100`, so 100 is a
+# codebase that costs nothing to read and 0 is one at or past the ceiling.
+# Raise the floor when the score improves, never lower it to turn a red build
+# green.
+#
+# `--threshold` is deliberately not used. It compares `max_cyclomatic`, not any
+# braintax figure, and `App::handle_output` returns before the reporter runs, so
+# a threshold failure exits non-zero having printed nothing to explain itself.
+function Invoke-Braintax4RustSelfGate {
+    param(
+        [string]$Label = "braintax self-analysis",
+        [int]$MinNormalized
+    )
+
     Write-Host "$Label..." -ForegroundColor Cyan
-    & $Command
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "`nFailed: $Label (exit code $LASTEXITCODE)" -ForegroundColor Red
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $output = & cargo run --quiet --package cargo-braintax4rust -- --json
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $previousErrorActionPreference
+
+    if ($exitCode -ne 0) {
+        Write-Host "`nFailed: $Label (exit code $exitCode)" -ForegroundColor Red
+        Pop-Location
+        exit 1
+    }
+
+    $normalized = (($output -join "`n") | ConvertFrom-Json).overall.braintax_normalized
+
+    if ($null -eq $normalized) {
+        Write-Host "`nFailed: $Label (report carries no normalized braintax)" -ForegroundColor Red
+        Pop-Location
+        exit 1
+    }
+
+    Write-Host "  braintax_normalized: $normalized / 100  (floor: $MinNormalized)"
+
+    if ($normalized -lt $MinNormalized) {
+        Write-Host "`nFailed: $Label ($normalized is below the floor of $MinNormalized)" -ForegroundColor Red
+        Pop-Location
+        exit 1
+    }
+}
+
+function Invoke-Twin4RustGate {
+    param(
+        [string]$Label,
+        [string[]]$Packages
+    )
+
+    Write-Host "$Label..." -ForegroundColor Cyan
+
+    if (-not (Get-Command cargo-twin4rust -ErrorAction SilentlyContinue)) {
+        Write-Host "`ncargo-twin4rust is not installed." -ForegroundColor Red
+        Write-Host "Install it with: cargo install cargo-twin4rust" -ForegroundColor Red
+        Pop-Location
+        exit 1
+    }
+
+    $manifestPath = (Resolve-Path (Join-Path $PSScriptRoot "..\Cargo.toml")).Path
+
+    $args = @("twin4rust", "--manifest-path", $manifestPath)
+    foreach ($package in $Packages) {
+        $args += @("--package", $package)
+    }
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $output = & cargo @args 2>&1
+    $ErrorActionPreference = $previousErrorActionPreference
+    $exitCode = $LASTEXITCODE
+    $output | ForEach-Object { Write-Host $_ }
+
+    if ($exitCode -ne 0) {
+        Write-Host "`nFailed: $Label (source files without a mirrored test)" -ForegroundColor Red
         Pop-Location
         exit 1
     }
@@ -97,15 +172,24 @@ function Invoke-Crap4RustGate {
 # Self-analysis: braintax on braintax
 # ---------------------------------------------------------------------------
 
-Invoke-Step "cargo-braintax self-analysis" {
-    cargo run --package cargo-braintax4rust -- --json | Out-Null
-}
+Invoke-Braintax4RustSelfGate -MinNormalized 38
 
 # ---------------------------------------------------------------------------
 # CRAP gate
 # ---------------------------------------------------------------------------
 
 Invoke-Crap4RustGate "CRAP cargo-braintax4rust" @("cargo-braintax4rust")
+
+# ---------------------------------------------------------------------------
+# Mirrored test gate
+#
+# Only the published crate is gated. The fixture crates are analysis inputs
+# whose whole purpose is to be small and odd, and test-utils is harness code.
+# ---------------------------------------------------------------------------
+
+Invoke-Twin4RustGate "Mirrored tests cargo-braintax4rust" @("cargo-braintax4rust")
+
+# ---------------------------------------------------------------------------
 
 Write-Host "`nbraintax Stage 2 passed!" -ForegroundColor Green
 Pop-Location

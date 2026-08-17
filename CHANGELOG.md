@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-08-17
+
+Documentation and CI only. No change to analysis, scoring or public API.
+
+### Added
+- `Invoke-Braintax4RustSelfGate` in `scripts/run_stage_2.ps1` — stage 2 now
+  holds `braintax` to its own score, with a floor of 38 on
+  `overall.braintax_normalized` that ratchets upward. Previously the
+  self-analysis step ran `cargo run ... --json | Out-Null`, which discarded the
+  report and so caught only an outright panic; the score could have collapsed
+  without turning the gate red. The bound is a floor rather than a ceiling
+  because `BraintaxNormalizer` inverts the cost — `(1 - braintax / 15) * 100`,
+  so 100 is free to read and 0 is at the ceiling. The gate reads the JSON
+  rather than passing `--threshold`, which compares `max_cyclomatic` rather
+  than any braintax figure and, because `App::handle_output` returns before the
+  reporter runs, exits non-zero having printed nothing to explain itself.
+- `Invoke-Twin4RustGate` in `scripts/run_stage_2.ps1` — the mirrored-test rule
+  is now enforced here, as it already was in `crap4rust`, `grip4rust`,
+  `slotgate` and both `etheram` protocol repos. Only `cargo-braintax4rust` is
+  gated: the fixture crates are analysis inputs whose purpose is to be small
+  and odd, and `test-utils` is harness code. Already at zero gaps when wired.
+  Requires `cargo-twin4rust` 0.2.0 or later.
+
+### Fixed
+- Links to `ROADMAP.md` and `OPEN_POINTS.md`, both of which moved into `docs/`.
+  `README.md`'s documentation table pointed at the old repository-root paths,
+  so both entries were dead links on crates.io and GitHub. Five prose
+  references were also stale, in `README.md`, `docs/FORMULA.md`,
+  `docs/ARCHITECTURE.md`, `docs/ADRs/README.md` and
+  `docs/ADRs/ADR-SeverityWeightedHiddenDeps.md`.
+
 ## [0.11.0] - 2026-07-26
 
 ### Fixed
