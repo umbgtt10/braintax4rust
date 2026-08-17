@@ -2,6 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use crate::signature_scorer::SignatureScorer;
+use crate::trait_info::TraitInfo;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -17,14 +19,6 @@ use crate::hidden_deps_counter::HiddenDepsCounter;
 use crate::macro_counter::MacroCounter;
 use crate::name_opacity_counter::NameOpacityCounter;
 use crate::trait_registry_builder::TraitRegistryBuilder;
-
-#[derive(Debug, Clone)]
-pub struct TraitInfo {
-    pub methods: u32,
-    pub assoc_types: u32,
-    pub supertraits: u32,
-    pub impl_count: u32,
-}
 
 #[derive(Debug)]
 pub struct Collector<'a> {
@@ -107,115 +101,13 @@ impl<'a> Collector<'a> {
         let supertraits = trait_item
             .supertraits
             .iter()
-            .filter(|bound| !Self::is_marker_supertrait(bound))
+            .filter(|bound| !SignatureScorer::is_marker_supertrait(bound))
             .count() as u32;
         TraitInfo {
             methods,
             assoc_types,
             supertraits,
             impl_count: 0,
-        }
-    }
-
-    fn is_marker_supertrait(bound: &syn::TypeParamBound) -> bool {
-        const MARKER_TRAITS: &[&str] = &["Send", "Sync", "Unpin", "Sized"];
-        match bound {
-            syn::TypeParamBound::Lifetime(_) => true,
-            syn::TypeParamBound::Trait(trait_bound) => trait_bound
-                .path
-                .segments
-                .last()
-                .is_some_and(|seg| MARKER_TRAITS.contains(&seg.ident.to_string().as_str())),
-            _ => false,
-        }
-    }
-
-    fn compute_trait_factor(name: &str, info: &TraitInfo) -> f64 {
-        let known = [
-            "Debug",
-            "Clone",
-            "Copy",
-            "Default",
-            "Eq",
-            "PartialEq",
-            "Ord",
-            "PartialOrd",
-            "Hash",
-            "Display",
-            "Iterator",
-            "Into",
-            "From",
-            "Send",
-            "Sync",
-            "Drop",
-        ];
-        if known.contains(&name) {
-            return 0.80;
-        }
-        let method_penalty = (info.methods.saturating_sub(3)) as f64 * 0.01;
-        let base = if info.assoc_types > 0 || info.supertraits > 0 {
-            1.15 + method_penalty
-        } else {
-            0.90 + method_penalty
-        };
-        let extra_dims = (info.assoc_types > 0) as u32 + (info.supertraits > 0) as u32;
-        let dim_penalty = match extra_dims {
-            0 => 0.0,
-            1 => 0.15,
-            _ => 0.20,
-        };
-        let dispatch_base = ((info.impl_count.saturating_sub(1)) as f64 * 0.06).min(0.18);
-        let dispatch_amplifier = if info.assoc_types > 0 { 1.5 } else { 1.0 };
-        let dispatch_penalty = (dispatch_base * dispatch_amplifier).min(0.27);
-        base + dim_penalty + dispatch_penalty
-    }
-
-    fn self_ref_cost(inputs: &syn::punctuated::Punctuated<syn::FnArg, syn::Token![,]>) -> f64 {
-        match inputs.first() {
-            Some(syn::FnArg::Receiver(recv)) => {
-                if recv.mutability.is_some() {
-                    0.4
-                } else {
-                    0.2
-                }
-            }
-            _ => 0.0,
-        }
-    }
-
-    fn return_complexity(return_type: &syn::ReturnType) -> f64 {
-        match return_type {
-            syn::ReturnType::Default => 0.0,
-            syn::ReturnType::Type(_, ty) => Self::type_complexity(ty),
-        }
-    }
-
-    fn type_complexity(ty: &syn::Type) -> f64 {
-        match ty {
-            syn::Type::ImplTrait(_) => 1.5,
-            syn::Type::TraitObject(_) => 1.0,
-            syn::Type::Path(type_path) => {
-                let mut cost = 0.0;
-                if type_path.qself.is_some() {
-                    cost += 1.0;
-                }
-                if type_path
-                    .path
-                    .segments
-                    .first()
-                    .map(|s| s.ident == "Self")
-                    .unwrap_or(false)
-                {
-                    cost += 1.0;
-                }
-                for seg in &type_path.path.segments {
-                    if let syn::PathArguments::AngleBracketed(args) = &seg.arguments {
-                        cost += args.args.len() as f64 * 0.3;
-                    }
-                }
-                cost
-            }
-            _ => 0.0,
         }
     }
 }
@@ -242,7 +134,7 @@ impl<'ast, 'a> Visit<'ast> for Collector<'a> {
                         supertraits: 0,
                         impl_count: 0,
                     });
-                    Self::compute_trait_factor(&name, &info)
+                    SignatureScorer::trait_factor(&name, &info)
                 } else {
                     0.95
                 };
@@ -328,7 +220,7 @@ impl<'a> Collector<'a> {
             &item_fn.sig.generics.params,
             &item_fn.sig.generics.where_clause,
         );
-        let ret_complexity = Self::return_complexity(&item_fn.sig.output);
+        let ret_complexity = SignatureScorer::return_complexity(&item_fn.sig.output);
         self.push_fn(
             item_fn.sig.ident.to_string(),
             &item_fn.block,
@@ -361,8 +253,8 @@ impl<'a> Collector<'a> {
                 &item_fn.sig.generics.params,
                 &item_fn.sig.generics.where_clause,
             );
-            let self_cost = Self::self_ref_cost(&item_fn.sig.inputs);
-            let ret_complexity = Self::return_complexity(&item_fn.sig.output);
+            let self_cost = SignatureScorer::self_ref_cost(&item_fn.sig.inputs);
+            let ret_complexity = SignatureScorer::return_complexity(&item_fn.sig.output);
             self.push_fn(
                 item_fn.sig.ident.to_string(),
                 &item_fn.block,

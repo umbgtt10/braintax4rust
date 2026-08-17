@@ -223,7 +223,7 @@ Invoke-Twin4RustGate "Mirrored tests cargo-braintax4rust" @("cargo-braintax4rust
 # File risk gate
 # ---------------------------------------------------------------------------
 
-Invoke-Iceberg4RustGate "File risk cargo-braintax4rust" @("cargo-braintax4rust") -Threshold "25.2"
+Invoke-Iceberg4RustGate "File risk cargo-braintax4rust" @("cargo-braintax4rust") -Threshold "20"
 
 
 # ---------------------------------------------------------------------------

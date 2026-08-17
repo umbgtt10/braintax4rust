@@ -5,7 +5,8 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use crate::collector::{Collector, TraitInfo};
+use crate::collector::Collector;
+use crate::trait_info::TraitInfo;
 
 pub struct TraitRegistryBuilder {
     traits: HashMap<String, TraitInfo>,
