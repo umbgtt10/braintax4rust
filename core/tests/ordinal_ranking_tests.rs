@@ -27,6 +27,7 @@ fn analyze_fixture(name: &str) -> BraintaxReport {
             path,
             json: true,
             threshold: None,
+            max_avg_braintax: None,
             top: 10,
         },
     );

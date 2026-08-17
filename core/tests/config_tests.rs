@@ -16,6 +16,7 @@ fn config_has_default_path() {
     assert_eq!(config.path.to_string_lossy(), ".");
     assert!(!config.json);
     assert!(config.threshold.is_none());
+    assert!(config.max_avg_braintax.is_none());
     assert_eq!(config.top, 10);
 }
 
@@ -41,4 +42,16 @@ fn config_parses_threshold() {
 
     // Assert
     assert_eq!(config.threshold, Some(42));
+}
+
+#[test]
+fn config_parses_max_avg_braintax() {
+    // Arrange & Act
+    let args = braintax::args::Args::parse_from_args(vec!["test", "--max-avg-braintax", "9.25"]);
+
+    // Act
+    let config = Config::from_args(args);
+
+    // Assert
+    assert_eq!(config.max_avg_braintax, Some(9.25));
 }

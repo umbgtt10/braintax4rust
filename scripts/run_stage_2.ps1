@@ -5,51 +5,36 @@
 $ErrorActionPreference = "Stop"
 Push-Location (Split-Path $PSScriptRoot -Parent)
 
-# A tool that charges a cognitive tax should be held to its own bill. Runs the
-# freshly built binary rather than whatever version happens to be installed, so
-# the gate reflects the working tree.
+# A tool that charges a cognitive tax should be held to its own bill, through
+# its own CI gate rather than a hand-rolled one. Runs the freshly built binary
+# rather than whatever version happens to be installed, so the gate reflects the
+# working tree.
 #
-# The bound is a floor even though braintax is a cost, because
-# `BraintaxNormalizer` inverts it: `(1 - braintax / 15) * 100`, so 100 is a
-# codebase that costs nothing to read and 0 is one at or past the ceiling.
-# Raise the floor when the score improves, never lower it to turn a red build
-# green.
+# `--max-avg-braintax` bounds `overall.avg_braintax` — the figure
+# `braintax_normalized` is derived from, but unrounded and unclamped. It is a
+# ceiling because braintax is a cost: lower it when the score improves, never
+# raise it to turn a red build green.
 #
-# `--threshold` is deliberately not used. It compares `max_cyclomatic`, not any
-# braintax figure, and `App::handle_output` returns before the reporter runs, so
-# a threshold failure exits non-zero having printed nothing to explain itself.
+# The ceiling is passed as a string rather than a [double] so it reaches the CLI
+# as `9.03` on every machine. Interpolating a [double] formats it with the
+# current culture, which emits `9,03` on a comma-decimal locale and fails to
+# parse.
 function Invoke-Braintax4RustSelfGate {
     param(
         [string]$Label = "braintax self-analysis",
-        [int]$MinNormalized
+        [string]$MaxAvgBraintax
     )
 
     Write-Host "$Label..." -ForegroundColor Cyan
 
     $previousErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
-    $output = & cargo run --quiet --package cargo-braintax4rust -- --json
+    & cargo run --quiet --package cargo-braintax4rust -- --max-avg-braintax $MaxAvgBraintax
     $exitCode = $LASTEXITCODE
     $ErrorActionPreference = $previousErrorActionPreference
 
     if ($exitCode -ne 0) {
-        Write-Host "`nFailed: $Label (exit code $exitCode)" -ForegroundColor Red
-        Pop-Location
-        exit 1
-    }
-
-    $normalized = (($output -join "`n") | ConvertFrom-Json).overall.braintax_normalized
-
-    if ($null -eq $normalized) {
-        Write-Host "`nFailed: $Label (report carries no normalized braintax)" -ForegroundColor Red
-        Pop-Location
-        exit 1
-    }
-
-    Write-Host "  braintax_normalized: $normalized / 100  (floor: $MinNormalized)"
-
-    if ($normalized -lt $MinNormalized) {
-        Write-Host "`nFailed: $Label ($normalized is below the floor of $MinNormalized)" -ForegroundColor Red
+        Write-Host "`nFailed: $Label (avg braintax exceeds the ceiling of $MaxAvgBraintax)" -ForegroundColor Red
         Pop-Location
         exit 1
     }
@@ -172,7 +157,7 @@ function Invoke-Crap4RustGate {
 # Self-analysis: braintax on braintax
 # ---------------------------------------------------------------------------
 
-Invoke-Braintax4RustSelfGate -MinNormalized 38
+Invoke-Braintax4RustSelfGate -MaxAvgBraintax "9.03"
 
 # ---------------------------------------------------------------------------
 # CRAP gate

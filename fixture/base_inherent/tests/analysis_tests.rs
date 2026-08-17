@@ -24,6 +24,7 @@ fn analyze() -> BraintaxReport {
             path,
             json: true,
             threshold: None,
+            max_avg_braintax: None,
             top: 10,
         },
     );

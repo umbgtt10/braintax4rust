@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-08-17
+
+The composite score gets a CI gate of its own, and setting a threshold no
+longer swallows the report.
+
+### Added
+- `--max-avg-braintax N` — exit non-zero when the repo's `avg_braintax`
+  exceeds `N`. Until now the only gate was `--threshold`, which compares
+  `max_cyclomatic`; the composite score this tool exists to compute could not
+  fail a build at all. It bounds `avg_braintax` rather than
+  `braintax_normalized` because the two are the same measurement —
+  `DefaultScorer` computes `braintax_normalized` as
+  `normalize(avg_braintax)` — but the raw average is neither rounded to an
+  integer nor clamped, so it keeps resolving above the normalization ceiling of
+  `15.0`, where the normalized score has already saturated to `0`. Accepts a
+  decimal. Combines with `--threshold`: both bounds must hold.
+- `ThresholdGate` — the exit-code decision, extracted from
+  `App::handle_output` into a struct that takes the two bounds and answers
+  `passes(&OverallStats) -> bool`. An unset bound always passes. Reachable from
+  a test without walking a filesystem or scoring anything, which
+  `App::handle_output` was not.
+
+### Fixed
+- Setting a threshold no longer suppresses the report. `App::handle_output`
+  returned the exit code before reaching `self.reporter.write(report)`, so
+  `--threshold 10` printed nothing at all — on failure it exited `1` with no
+  indication of which function was too complex, or by how much. The report is
+  now always written and the exit code is decided afterwards. This is why
+  `scripts/run_stage_2.ps1` previously parsed `--json` by hand rather than
+  using the tool's own gate; it now calls `--max-avg-braintax` directly.
+
+### Changed
+- `Config` carries `max_avg_braintax: Option<f64>` alongside `threshold`.
+
 ## [0.11.1] - 2026-08-17
 
 Documentation and CI only. No change to analysis, scoring or public API.

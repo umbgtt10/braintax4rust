@@ -15,6 +15,7 @@ use crate::default_scorer::DefaultScorer;
 use crate::fs_walk::FsWalk;
 use crate::function_complexity::FunctionComplexity;
 use crate::stdout_reporter::StdoutReporter;
+use crate::threshold_gate::ThresholdGate;
 use crate::traits::reporter::Reporter;
 use crate::traits::scorer::Scorer;
 use crate::traits::walk::Walk;
@@ -23,6 +24,7 @@ pub struct App {
     walker: Box<dyn Walk>,
     scorer: Box<dyn Scorer>,
     reporter: Box<dyn Reporter>,
+    gate: ThresholdGate,
     config: Config,
 }
 
@@ -33,6 +35,7 @@ impl App {
             walker: Box::new(FsWalk::new(&config.path)),
             scorer: Box::new(DefaultScorer::new()),
             reporter: Box::new(StdoutReporter::new(config.json, config.top)),
+            gate: ThresholdGate::new(config.threshold, config.max_avg_braintax),
             config,
         }
     }
@@ -48,6 +51,7 @@ impl App {
             walker,
             scorer,
             reporter,
+            gate: ThresholdGate::new(config.threshold, config.max_avg_braintax),
             config,
         }
     }
@@ -98,15 +102,13 @@ impl App {
     }
 
     fn handle_output(&self, report: &BraintaxReport) -> Result<ExitCode> {
-        if let Some(max) = self.config.threshold {
-            return Ok(if report.overall.max_cyclomatic <= max {
-                ExitCode::SUCCESS
-            } else {
-                ExitCode::FAILURE
-            });
-        }
         self.reporter.write(report)?;
-        Ok(ExitCode::SUCCESS)
+
+        Ok(if self.gate.passes(&report.overall) {
+            ExitCode::SUCCESS
+        } else {
+            ExitCode::FAILURE
+        })
     }
 }
 

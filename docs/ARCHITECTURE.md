@@ -28,8 +28,9 @@ Args (clap)
           2. compute_report(): scorer turns every function's braintax
              into OverallStats + per-module ModuleStats, assembles a
              BraintaxReport
-          3. handle_output(): if --threshold is set, compare and exit;
-             otherwise hand the BraintaxReport to the reporter
+          3. handle_output(): hand the BraintaxReport to the reporter,
+             then ask ThresholdGate for the exit code — the report is
+             always written, whether or not a threshold is set
 ```
 
 `App` (`app.rs`) is the only place that wires concrete types to trait
@@ -112,6 +113,14 @@ both output modes are projections of.
 (`config.rs`) is the plain-data form `App` actually consumes, built once
 via `Config::from_args(args)`. `main.rs` and `lib.rs::run()`/`run_from_args()`
 are thin entry points — all real logic lives in `App` and below.
+
+`ThresholdGate` (`threshold_gate.rs`) owns the exit-code decision. It is
+constructed from the two bounds `Config` carries — `threshold`
+(`max_cyclomatic`) and `max_avg_braintax` — and answers one question,
+`passes(&OverallStats) -> bool`. An unset bound always passes, so with neither
+set the gate is vacuously true and the run exits `0`. Keeping it out of `App`
+means the whole gating rule is reachable from a test without walking a
+filesystem or scoring anything.
 
 ## Related
 

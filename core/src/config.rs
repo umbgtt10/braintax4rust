@@ -11,6 +11,7 @@ pub struct Config {
     pub path: PathBuf,
     pub json: bool,
     pub threshold: Option<u32>,
+    pub max_avg_braintax: Option<f64>,
     pub top: usize,
 }
 
@@ -21,6 +22,7 @@ impl Config {
             path: args.path,
             json: args.json,
             threshold: args.threshold,
+            max_avg_braintax: args.max_avg_braintax,
             top: args.top.max(1),
         }
     }

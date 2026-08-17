@@ -72,6 +72,7 @@ cargo braintax4rust [OPTIONS] [PATH]
 |---|---|
 | `--json` | Emit structured JSON output |
 | `--threshold N` | Exit non-zero if any function's cyclomatic complexity exceeds N — checks the repo's `max_cyclomatic`, not the composite `braintax` score. Alias: `--max-complexity` |
+| `--max-avg-braintax N` | Exit non-zero if the repo's `avg_braintax` exceeds N. Accepts a decimal. This is the composite score's own gate; combine it with `--threshold` and both must pass |
 | `--top N` | Show the N most complex functions in the report (default: `10`) |
 | `-h`, `--help` | Print help |
 | `-V`, `--version` | Print version |
@@ -83,6 +84,7 @@ cargo braintax4rust                              # current directory
 cargo braintax4rust /path/to/crate               # specific path
 cargo braintax4rust --json                       # structured output
 cargo braintax4rust --threshold 10               # CI gate: fail if any function's CC > 10
+cargo braintax4rust --max-avg-braintax 9.5       # CI gate: fail if avg braintax > 9.5
 cargo braintax4rust --top 20                     # show the 20 most complex functions
 cargo braintax4rust --json --threshold 10 --top 5
 ```
@@ -132,6 +134,20 @@ cyclomatic complexity:
 cargo braintax4rust --threshold 10
 echo $?  # 0 if pass, 1 if fail
 ```
+
+Use `--max-avg-braintax N` to gate on the composite score instead. It bounds
+`avg_braintax`, the same figure `braintax_normalized` is derived from, but
+unrounded and unclamped — so it keeps resolving above the normalization ceiling
+of `15.0`, where the normalized score has already saturated to `0`:
+
+```bash
+cargo braintax4rust --max-avg-braintax 9.5
+echo $?  # 0 if pass, 1 if fail
+```
+
+Both flags may be combined, in which case both bounds must hold. Either way the
+report is still printed — the exit code is a verdict on the run, not a
+replacement for its output.
 
 ---
 

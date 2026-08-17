@@ -23,4 +23,5 @@ mod name_opacity_counter_tests;
 mod ordinal_ranking_tests;
 mod overall_stats_tests;
 mod stdout_reporter_tests;
+mod threshold_gate_tests;
 mod trait_registry_builder_tests;

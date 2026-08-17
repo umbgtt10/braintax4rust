@@ -21,6 +21,9 @@ pub struct Args {
     #[arg(long, alias = "max-complexity")]
     pub threshold: Option<u32>,
 
+    #[arg(long)]
+    pub max_avg_braintax: Option<f64>,
+
     #[arg(long, default_value = "10")]
     pub top: usize,
 }
