@@ -2,27 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-pub mod app;
-pub mod args;
-pub mod braintax_normalizer;
-pub mod braintax_report;
-pub mod collector;
-pub mod complexity_visitor;
-pub mod config;
-pub mod default_scorer;
-pub mod derive_attr_scorer;
-pub mod fs_walk;
-pub mod function_complexity;
-pub mod generics_counter;
-pub mod hidden_dep_severity;
-pub mod hidden_deps_counter;
-pub mod macro_counter;
-pub mod module_stats;
-pub mod name_opacity_counter;
-pub mod overall_stats;
-pub mod signature_scorer;
-pub mod stdout_reporter;
-pub mod threshold_gate;
-pub mod trait_info;
-pub mod trait_registry_builder;
+pub mod analysis;
+pub mod counting;
+pub mod invocation;
+pub mod reporting;
 pub mod traits;

@@ -19,6 +19,48 @@ Push-Location (Split-Path $PSScriptRoot -Parent)
 # as `9.03` on every machine. Interpolating a [double] formats it with the
 # current culture, which emits `9,03` on a comma-decimal locale and fails to
 # parse.
+function Invoke-Stern4RustGate {
+    param(
+        [string]$Label,
+        [string[]]$Packages
+    )
+
+    Write-Host "$Label..." -ForegroundColor Cyan
+
+    if (-not (Get-Command cargo-stern4rust -ErrorAction SilentlyContinue)) {
+        Write-Host "cargo-stern4rust is not installed." -ForegroundColor Red
+        Write-Host "Install it with: cargo install cargo-stern4rust" -ForegroundColor Red
+        Pop-Location
+        exit 1
+    }
+
+    $manifestPath = (Resolve-Path (Join-Path $PSScriptRoot "..\Cargo.toml")).Path
+    $args = @("stern4rust", "--manifest-path", $manifestPath)
+    foreach ($package in $Packages) {
+        $args += @("--package", $package)
+    }
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $output = & cargo @args 2>&1
+    $ErrorActionPreference = $previousErrorActionPreference
+    $exitCode = $LASTEXITCODE
+    $output | ForEach-Object { Write-Host $_ }
+
+    # 2 is a rule broken; 1 is the tool failing to run at all. Kept apart so a
+    # bad manifest cannot read as a clean codebase.
+    if ($exitCode -eq 2) {
+        Write-Host "`nFailed: $Label (a house coding rule was broken)" -ForegroundColor Red
+        Pop-Location
+        exit 1
+    }
+    if ($exitCode -ne 0) {
+        Write-Host "`nFailed: $Label (could not run, exit code $exitCode)" -ForegroundColor Red
+        Pop-Location
+        exit 1
+    }
+}
+
 function Invoke-Braintax4RustSelfGate {
     param(
         [string]$Label = "braintax self-analysis",
@@ -203,6 +245,23 @@ function Invoke-Iceberg4RustGate {
         exit 1
     }
 }
+# ---------------------------------------------------------------------------
+# House coding rules
+#
+# First, because its corrections are renames, file moves and directory splits:
+# a layout it is about to reject is a layout the others would have measured for
+# nothing. Its findings are also the cheapest to act on.
+#
+# Scoped to cargo-braintax4rust, which leaves the fixture crates and the
+# validation crate alone.
+# ---------------------------------------------------------------------------
+
+Invoke-Stern4RustGate "House rules cargo-braintax4rust" @("cargo-braintax4rust")
+
+# ---------------------------------------------------------------------------
+# Self gate
+# ---------------------------------------------------------------------------
+
 Invoke-Braintax4RustSelfGate -MaxAvgBraintax "9.03"
 
 # ---------------------------------------------------------------------------

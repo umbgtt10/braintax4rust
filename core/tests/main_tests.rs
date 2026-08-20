@@ -22,11 +22,12 @@ fn binary_prints_help() {
 
 #[test]
 fn binary_prints_version() {
+    // Arrange
+    let mut command = Command::new("cargo");
+    command.args(["run", "--", "--version"]);
+
     // Act
-    let output = Command::new("cargo")
-        .args(["run", "--", "--version"])
-        .output()
-        .expect("failed to run cargo");
+    let output = command.output().expect("failed to run cargo");
 
     // Assert
     let stdout = String::from_utf8_lossy(&output.stdout);

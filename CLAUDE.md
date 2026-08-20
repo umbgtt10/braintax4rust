@@ -30,6 +30,42 @@ Run gates:
 
 If either gate is not green, the work is not complete.
 
+Stage 1 is formatting, clippy and tests -- cargo built-ins only, so it works on
+a fresh checkout. Stage 2 is five gates, run in this order:
+
+| gate | asks |
+|---|---|
+| `cargo stern4rust` | do the house coding rules hold |
+| `cargo braintax4rust` | does this tool still pay its own bill |
+| `cargo crap4rust` | is any function complex and untested |
+| `cargo twin4rust` | does every source file have a mirrored test file |
+| `cargo iceberg4rust` | is any file's private implementation risk too high |
+
+stern4rust runs **first** because its corrections are renames, file moves and
+directory splits: a layout it is about to reject is a layout the others would
+have measured for nothing. Its findings are also the cheapest to act on.
+
+All twenty-one of its rules are enforced, with nothing skipped and nothing
+unconfigured. `docs/header.txt` holds the three-line header every `.rs` file
+carries and `stern4rust.toml` names it -- in the config rather than the gate
+script, so a hand-run of `cargo stern4rust` checks exactly what the gate checks.
+
+`cargo install cargo-stern4rust`
+`cargo install cargo-crap4rust`
+`cargo install cargo-twin4rust`
+`cargo install cargo-iceberg4rust`
+
+Every stage 2 gate is scoped `--package cargo-braintax4rust`, which is what
+keeps the other members out of them:
+
+- the eighteen `fixture/` crates are analysis inputs, deliberately written to
+  score badly. They are workspace members, so `cargo test` builds them and
+  their own tests run, but no gate measures them.
+- `validation/` holds the ordinal ranking test, which drives the analyser over
+  every fixture in turn and asserts their scores stay in one fixed order. Its
+  subject is the scoring model rather than any source file in `core/`, so
+  measuring it against the house rules would demand a mirror that cannot exist.
+
 ## Orthogonality, trait surface and cognitive complexity
 
 **When changing productive code, always maximize orthogonality and testable surface through traits, and minimize cognitive complexity.**

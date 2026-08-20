@@ -5,7 +5,7 @@
 use std::sync::{Arc, Mutex};
 
 use anyhow::Result;
-use braintax::braintax_report::BraintaxReport;
+use braintax::reporting::braintax_report::BraintaxReport;
 use braintax::traits::reporter::Reporter;
 
 pub struct CaptureReporter {

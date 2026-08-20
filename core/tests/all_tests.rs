@@ -2,27 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-mod app_tests;
-mod args_tests;
-mod braintax_normalizer_tests;
-mod braintax_report_tests;
-mod collector_tests;
-mod complexity_visitor_tests;
-mod config_tests;
-mod default_scorer_tests;
-mod derive_attr_scorer_tests;
-mod fs_walk_tests;
-mod function_complexity_tests;
-mod generics_counter_tests;
-mod hidden_dep_severity_tests;
-mod hidden_deps_counter_tests;
-mod macro_counter_tests;
+mod analysis;
+mod counting;
+mod invocation;
 mod main_tests;
-mod module_stats_tests;
-mod name_opacity_counter_tests;
-mod ordinal_ranking_tests;
-mod overall_stats_tests;
-mod signature_scorer_tests;
-mod stdout_reporter_tests;
-mod threshold_gate_tests;
-mod trait_registry_builder_tests;
+mod reporting;

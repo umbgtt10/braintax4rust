@@ -1,0 +1,320 @@
+// Copyright 2026 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+// Licensed under the MIT License
+// SPDX-License-Identifier: MIT
+
+use anyhow::Result;
+use braintax::invocation::app::App;
+use braintax::invocation::config::Config;
+use braintax::reporting::braintax_report::BraintaxReport;
+use braintax::reporting::default_scorer::DefaultScorer;
+use braintax::traits::walk::Walk;
+use braintax_test_utils::capture_reporter::CaptureReporter;
+use serde_json::from_str;
+use std::fs;
+use std::path::PathBuf;
+use std::process::ExitCode;
+use tempfile::TempDir;
+
+#[derive(Debug, Clone)]
+struct NoFilesWalk;
+
+impl Walk for NoFilesWalk {
+    fn rust_files(&self) -> Result<Vec<(PathBuf, String)>> {
+        Ok(vec![])
+    }
+}
+
+#[derive(Debug, Clone)]
+struct TestWalk {
+    files: Vec<(PathBuf, String)>,
+}
+
+impl Walk for TestWalk {
+    fn rust_files(&self) -> Result<Vec<(PathBuf, String)>> {
+        Ok(self.files.clone())
+    }
+}
+
+#[test]
+fn app_new_with_empty_dir_returns_error() {
+    // Arrange
+    let dir = TempDir::new().unwrap();
+    let config = Config {
+        path: dir.path().to_path_buf(),
+        json: false,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let app = App::new(config);
+
+    // Act
+    let result = app.run();
+
+    // Assert
+    assert!(result.is_err());
+}
+
+#[test]
+fn app_new_with_valid_dir_returns_success() {
+    // Arrange
+    let dir = TempDir::new().unwrap();
+    let src = dir.path().join("src");
+    fs::create_dir_all(&src).unwrap();
+    fs::write(
+        src.join("lib.rs"),
+        "pub fn greet() -> &'static str { \"hello\" }\n",
+    )
+    .unwrap();
+    let config = Config {
+        path: dir.path().to_path_buf(),
+        json: false,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let app = App::new(config);
+
+    // Act
+    let exit_code = app.run().unwrap();
+
+    // Assert
+    assert_eq!(exit_code, ExitCode::SUCCESS);
+}
+
+#[test]
+fn app_with_if_fn_returns_cc_2() {
+    // Arrange
+    let source = r#"
+fn with_if(x: bool) {
+    if x {
+        let _ = 1;
+    }
+}
+"#
+    .to_string();
+    let walk = TestWalk {
+        files: vec![(PathBuf::from("src/lib.rs"), source)],
+    };
+    let scorer = DefaultScorer::new();
+    let reporter = CaptureReporter::new();
+    let config = Config {
+        path: PathBuf::from("."),
+        json: true,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let captured = reporter.captured.clone();
+    let app = App::with_deps(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
+
+    // Act
+    let result = app.run();
+
+    // Assert
+    assert_eq!(result.unwrap(), ExitCode::SUCCESS);
+    let report: BraintaxReport = from_str(&captured.lock().unwrap()).expect("report json");
+    assert_eq!(report.overall.max_cyclomatic, 2);
+}
+
+#[test]
+fn app_with_no_files_returns_error() {
+    // Arrange
+    let scorer = DefaultScorer::new();
+    let reporter = CaptureReporter::new();
+    let config = Config {
+        path: PathBuf::from("."),
+        json: false,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let app = App::with_deps(
+        Box::new(NoFilesWalk),
+        Box::new(scorer),
+        Box::new(reporter),
+        config,
+    );
+
+    // Act
+    let result = app.run();
+
+    // Assert
+    assert!(result.is_err());
+}
+
+#[test]
+fn app_with_threshold_returns_exit_code() {
+    // Arrange
+    let source = r#"
+fn complex(a: bool, b: bool) {
+    if a && b {
+        loop {
+            break;
+        }
+    }
+}
+"#
+    .to_string();
+    let walk = TestWalk {
+        files: vec![(PathBuf::from("src/lib.rs"), source)],
+    };
+    let scorer = DefaultScorer::new();
+    let reporter1 = CaptureReporter::new();
+    let reporter2 = CaptureReporter::new();
+    let config_ok = Config {
+        path: PathBuf::from("."),
+        json: false,
+        threshold: Some(10),
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let config_fail = Config {
+        path: PathBuf::from("."),
+        json: false,
+        threshold: Some(3),
+        max_avg_braintax: None,
+        top: 10,
+    };
+
+    // Act
+    let app_ok = App::with_deps(
+        Box::new(walk.clone()),
+        Box::new(scorer),
+        Box::new(reporter1),
+        config_ok,
+    );
+    let result_ok = app_ok.run();
+
+    // Assert
+    assert_eq!(result_ok.unwrap(), ExitCode::SUCCESS);
+
+    // Act
+    let app_fail = App::with_deps(
+        Box::new(walk),
+        Box::new(DefaultScorer::new()),
+        Box::new(reporter2),
+        config_fail,
+    );
+    let result_fail = app_fail.run();
+
+    // Assert
+    assert_eq!(result_fail.unwrap(), ExitCode::FAILURE);
+}
+
+#[test]
+fn app_with_trivial_fn_returns_cc_1() {
+    // Arrange
+    let source = r#"
+fn trivial() {
+    let x = 1;
+}
+"#
+    .to_string();
+    let walk = TestWalk {
+        files: vec![(PathBuf::from("src/lib.rs"), source)],
+    };
+    let scorer = DefaultScorer::new();
+    let reporter = CaptureReporter::new();
+    let config = Config {
+        path: PathBuf::from("."),
+        json: true,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let captured = reporter.captured.clone();
+    let app = App::with_deps(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
+
+    // Act
+    let result = app.run();
+
+    // Assert
+    assert_eq!(result.unwrap(), ExitCode::SUCCESS);
+    let report: BraintaxReport = from_str(&captured.lock().unwrap()).expect("report json");
+    assert_eq!(report.overall.max_cyclomatic, 1);
+}
+
+#[test]
+fn run_with_a_threshold_set_still_writes_the_report() {
+    // Arrange
+    let walk = TestWalk {
+        files: vec![(PathBuf::from("src/lib.rs"), "fn trivial() {}".to_string())],
+    };
+    let reporter = CaptureReporter::new();
+    let captured = reporter.captured.clone();
+    let config = Config {
+        path: PathBuf::from("."),
+        json: false,
+        threshold: Some(1),
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let app = App::with_deps(
+        Box::new(walk),
+        Box::new(DefaultScorer::new()),
+        Box::new(reporter),
+        config,
+    );
+
+    // Act
+    let result = app.run();
+
+    // Assert
+    assert_eq!(result.unwrap(), ExitCode::SUCCESS);
+    assert!(!captured.lock().unwrap().is_empty());
+}
+
+#[test]
+fn run_with_avg_braintax_above_the_limit_returns_failure() {
+    // Arrange
+    let walk = TestWalk {
+        files: vec![(PathBuf::from("src/lib.rs"), "fn trivial() {}".to_string())],
+    };
+    let config = Config {
+        path: PathBuf::from("."),
+        json: false,
+        threshold: None,
+        max_avg_braintax: Some(0.0),
+        top: 10,
+    };
+    let app = App::with_deps(
+        Box::new(walk),
+        Box::new(DefaultScorer::new()),
+        Box::new(CaptureReporter::new()),
+        config,
+    );
+
+    // Act
+    let result = app.run();
+
+    // Assert
+    assert_eq!(result.unwrap(), ExitCode::FAILURE);
+}
+
+#[test]
+fn run_with_avg_braintax_within_the_limit_returns_success() {
+    // Arrange
+    let walk = TestWalk {
+        files: vec![(PathBuf::from("src/lib.rs"), "fn trivial() {}".to_string())],
+    };
+    let config = Config {
+        path: PathBuf::from("."),
+        json: false,
+        threshold: None,
+        max_avg_braintax: Some(100.0),
+        top: 10,
+    };
+    let app = App::with_deps(
+        Box::new(walk),
+        Box::new(DefaultScorer::new()),
+        Box::new(CaptureReporter::new()),
+        config,
+    );
+
+    // Act
+    let result = app.run();
+
+    // Assert
+    assert_eq!(result.unwrap(), ExitCode::SUCCESS);
+}

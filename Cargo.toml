@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "core",
+    "validation",
     "test-utils",
     "fixture/base_flat",
     "fixture/base_depth1",

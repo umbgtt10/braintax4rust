@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 
-use crate::braintax_report::BraintaxReport;
+use crate::reporting::braintax_report::BraintaxReport;
 
 pub trait Reporter {
     fn render(&self, report: &BraintaxReport) -> Result<String>;

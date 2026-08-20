@@ -5,11 +5,11 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use braintax::app::App;
-use braintax::braintax_report::BraintaxReport;
-use braintax::config::Config;
-use braintax::default_scorer::DefaultScorer;
-use braintax::fs_walk::FsWalk;
+use braintax::analysis::fs_walk::FsWalk;
+use braintax::invocation::app::App;
+use braintax::invocation::config::Config;
+use braintax::reporting::braintax_report::BraintaxReport;
+use braintax::reporting::default_scorer::DefaultScorer;
 use braintax_test_utils::capture_reporter::CaptureReporter;
 
 fn analyze() -> BraintaxReport {
