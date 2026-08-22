@@ -3,8 +3,13 @@ name = "braintax-test-utils"
 version = "0.9.0"
 edition = "2024"
 publish = false
+autotests = false
 
 [dependencies]
 braintax.workspace = true
 anyhow.workspace = true
 serde_json.workspace = true
+
+[[test]]
+name = "all_tests"
+path = "tests/all_tests.rs"

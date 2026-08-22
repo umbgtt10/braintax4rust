@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 use anyhow::Result;
 use braintax::reporting::braintax_report::BraintaxReport;
 use braintax::traits::reporter::Reporter;
+use serde_json::to_string_pretty;
 
 pub struct CaptureReporter {
     pub captured: Arc<Mutex<String>>,
@@ -28,7 +29,7 @@ impl Default for CaptureReporter {
 
 impl Reporter for CaptureReporter {
     fn render(&self, report: &BraintaxReport) -> Result<String> {
-        let json = serde_json::to_string_pretty(report)?;
+        let json = to_string_pretty(report)?;
         *self.captured.lock().unwrap() = json.clone();
         Ok(json)
     }

@@ -8,6 +8,7 @@ use braintax::invocation::config::Config;
 use braintax::reporting::braintax_report::BraintaxReport;
 use braintax::reporting::default_scorer::DefaultScorer;
 use braintax_test_utils::capture_reporter::CaptureReporter;
+use serde_json::from_str;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -32,7 +33,7 @@ fn analyze_fixture(name: &str) -> BraintaxReport {
     );
     app.run().unwrap();
     let json = captured.lock().unwrap().clone();
-    serde_json::from_str(&json).unwrap()
+    from_str(&json).unwrap()
 }
 
 #[test]
