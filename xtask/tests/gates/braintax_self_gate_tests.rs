@@ -10,7 +10,8 @@ fn gate(runner: &FakeCommandRunner) -> BraintaxSelfGate<'_> {
     BraintaxSelfGate::new(
         runner,
         String::from("cargo-braintax4rust"),
-        String::from("9.03"),
+        String::from("core"),
+        String::from("5.0"),
     )
 }
 
@@ -40,6 +41,22 @@ fn run_builds_the_tool_from_this_checkout_rather_than_an_install() {
     assert!(call.contains(&String::from("cargo-braintax4rust")));
 }
 
+// fixture/ holds crates written to score badly -- they are what braintax is
+// pointed at, never its own code. Leaving the target to default swept them in
+// and they outvoted core entirely.
+#[test]
+fn run_measures_the_configured_target_rather_than_the_whole_tree() {
+    // Arrange
+    let runner = FakeCommandRunner::new();
+
+    // Act
+    let _ = gate(&runner).run();
+
+    // Assert
+    let call = &runner.calls()[0];
+    assert!(call.contains(&String::from("core")));
+}
+
 // The ceiling is the tool's to enforce, so it has to reach the tool. Judging
 // it here instead would put a second implementation of the comparison in the
 // gate, free to disagree with the one that ships.
@@ -54,7 +71,7 @@ fn run_passes_the_ceiling_through_to_the_tool() {
     // Assert
     let call = &runner.calls()[0];
     assert!(call.contains(&String::from("--max-avg-braintax")));
-    assert!(call.contains(&String::from("9.03")));
+    assert!(call.contains(&String::from("5.0")));
 }
 
 #[test]
@@ -68,7 +85,7 @@ fn run_with_a_non_zero_exit_code_names_the_ceiling_it_breached() {
     // Assert
     assert_eq!(
         result,
-        Err(String::from("avg braintax exceeds the ceiling of 9.03"))
+        Err(String::from("avg braintax exceeds the ceiling of 5.0"))
     );
 }
 

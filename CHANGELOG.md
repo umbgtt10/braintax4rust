@@ -34,6 +34,22 @@ the workspace gained a member and the test suite grew by 69.
 - The braintax self-gate hands its ceiling to the tool rather than judging the
   average itself, so there is one implementation of that comparison and it is
   the one that ships.
+- **The self-gate now measures `core/` rather than the whole tree, at a ceiling
+  of 5.0 rather than 9.03.** It had no target argument, so it defaulted to the
+  working directory and swept in `fixture/` -- 79 of the 178 functions it
+  scored, at 26 to 52 brain tax each, from crates written to score badly
+  because they are what braintax is pointed at. They outvoted the tool's own
+  code: 8.0 overall against `core/`'s 4.1.
+
+  That only became visible when the gate started running somewhere other than
+  Windows. `fixture/base_assoc_only` scores 41.2 on macOS and 38.8 on Linux --
+  same 178 functions, same cyclomatic complexity to the decimal, different
+  brain tax -- which pushed the whole-tree average across 9.03 on macOS alone.
+  Every `core/src` module is identical on both platforms, so scoping the gate
+  to `core/` removes the disagreement rather than hiding it.
+
+  The platform-dependence in that fixture is a real finding about the tool and
+  is not addressed here.
 - Stage 1 now lints test targets too (`cargo clippy --workspace --all-targets`),
   which the PowerShell script never did.
 - CI checks formatting instead of applying it (`cargo fmt --check` when `CI` is

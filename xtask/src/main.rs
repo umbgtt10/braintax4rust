@@ -19,7 +19,10 @@ const CORE_PACKAGE: &str = "cargo-braintax4rust";
 const XTASK_PACKAGE: &str = "xtask";
 const CRAP_THRESHOLD: &str = "15";
 const ICEBERG_THRESHOLD: &str = "20";
-const BRAINTAX_CEILING: &str = "9.03";
+// core/ alone, and the ceiling is set against what core actually scores (4.1)
+// rather than against the fixture-inflated 8.0 the old default produced.
+const BRAINTAX_TARGET: &str = "core";
+const BRAINTAX_CEILING: &str = "5.0";
 
 // Reading the real process argv and wiring the concrete runner are the two
 // things no test can reach, so they are all this binary does.
@@ -51,6 +54,7 @@ fn run_stage2() -> ExitCode {
     let braintax = BraintaxSelfGate::new(
         &runner,
         String::from(CORE_PACKAGE),
+        String::from(BRAINTAX_TARGET),
         String::from(BRAINTAX_CEILING),
     );
 
