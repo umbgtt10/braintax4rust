@@ -54,6 +54,55 @@ hidden dependencies: **[`docs/FORMULA.md`](docs/FORMULA.md)**.
 cargo install cargo-braintax4rust
 ```
 
+## Development
+
+```sh
+just stage1
+just stage2
+```
+
+Both must be green before a change is complete. Stage 1 is formatting, clippy
+and tests — cargo built-ins only, so it works on a fresh checkout with none of
+the tools below installed. Stage 2 is `cargo xtask stage2`, which runs, in
+order: `cargo stern4rust` (house coding rules), **braintax self-analysis**,
+`cargo crap4rust` (complexity against coverage), `cargo twin4rust` (every source
+file has a mirrored test file) and `cargo iceberg4rust` (file risk).
+
+The self-analysis gate is this repository's own. It builds `cargo-braintax4rust`
+from the working tree, points it at `core/`, and hands it a ceiling of **5.0**
+on average brain tax — letting the tool render its own verdict rather than
+re-implementing the comparison in the gate, so a change that costs this codebase
+clarity is caught by the very measure the tool exists to report. `core/` scores
+**4.1** today.
+
+It measures `core/` specifically, not the whole tree. `fixture/` holds crates
+written to score badly, because they are what braintax is *pointed at* — they
+are the question, not the answer.
+
+`xtask` is itself a workspace member and is gated like everything else. The
+crate that runs the gates is not exempt from them.
+
+Everything the two stages need, none of which ships with cargo:
+
+| Tool | Install | Needed by |
+|---|---|---|
+| [`just`](https://github.com/casey/just) | `cargo install just` | both stages |
+| [`cargo-llvm-cov`](https://github.com/taiki-e/cargo-llvm-cov) | `cargo install cargo-llvm-cov` | stage 2 |
+| `llvm-tools` rustup component | `rustup component add llvm-tools` | stage 2 |
+| `cargo-stern4rust` | `cargo install cargo-stern4rust` | stage 2 |
+| `cargo-crap4rust` | `cargo install cargo-crap4rust` | stage 2 |
+| `cargo-twin4rust` | `cargo install cargo-twin4rust` | stage 2 |
+| `cargo-iceberg4rust` | `cargo install cargo-iceberg4rust` | stage 2 |
+
+`cargo-llvm-cov` and `llvm-tools` are what the CRAP gate needs; without them it
+fails with a bare exit code that says nothing about a missing install.
+
+`cargo-braintax4rust` itself is deliberately absent from that table — the gate
+builds it from your checkout rather than taking an installed copy.
+
+CI (`.github/workflows/ci.yml`) runs both stages on Ubuntu, Windows and macOS
+for every pull request and every push to `main`.
+
 ## Usage
 
 ```sh

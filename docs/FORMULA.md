@@ -222,8 +222,8 @@ braintax_normalized = round(100 × clamp(1 − braintax / 15.0, 0, 1))
 ```
 
 Computed by `BraintaxNormalizer` (`braintax_normalizer.rs`). The ceiling
-(`15.0`) matches the CRAP-gate threshold `scripts/run_stage_2.ps1` already
-uses (`Invoke-Crap4RustGate -Threshold 15`) — a function at or above that
+(`15.0`) matches the CRAP-gate threshold `cargo xtask stage2` already uses
+(`CRAP_THRESHOLD`, in `xtask/src/main.rs`) — a function at or above that
 threshold normalizes to `0`; a function at `0` raw `braintax` normalizes
 to `100`.
 

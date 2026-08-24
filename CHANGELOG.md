@@ -9,6 +9,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-08-24
+
+How the gates are run, not what the tool measures. No scoring rule changed and
+no flag moved, so no crate's brain tax moves. Minor rather than patch because
+the workspace gained a member and the test suite grew by 69.
+
+### Added
+- `xtask/`, a real crate replacing the stage 2 PowerShell script. Each of the
+  five gates is a `Gate` implementation constructed against a `CommandRunner`
+  trait, so the argument lists and failure messages are covered by 69
+  integration tests rather than being unobservable shell.
+- `.github/workflows/ci.yml`: both stages on Ubuntu, Windows and macOS, for
+  every pull request and every push to `main`. CI runs `just stage1` /
+  `just stage2` -- the same two commands a developer runs -- so there is no
+  second definition of the gates to drift out of step.
+
+### Changed
+- Gates run through `just stage1` / `just stage2` on all three platforms.
+- The stern gate now covers `xtask` as well as `cargo-braintax4rust`. The crate
+  that runs the gates is not exempt from them, and it earned its place
+  immediately: the first stage 2 run failed on a misordered test in `xtask`'s
+  own suite. The fixture crates stay out of the gate, as before.
+- The braintax self-gate hands its ceiling to the tool rather than judging the
+  average itself, so there is one implementation of that comparison and it is
+  the one that ships.
+- **The self-gate now measures `core/` rather than the whole tree, at a ceiling
+  of 5.0 rather than 9.03.** It had no target argument, so it defaulted to the
+  working directory and swept in `fixture/` -- 79 of the 178 functions it
+  scored, at 26 to 52 brain tax each, from crates written to score badly
+  because they are what braintax is pointed at. They outvoted the tool's own
+  code: 8.0 overall against `core/`'s 4.1.
+
+  That only became visible when the gate started running somewhere other than
+  Windows. `fixture/base_assoc_only` scores 41.2 on macOS and 38.8 on Linux --
+  same 178 functions, same cyclomatic complexity to the decimal, different
+  brain tax -- which pushed the whole-tree average across 9.03 on macOS alone.
+  Every `core/src` module is identical on both platforms, so scoping the gate
+  to `core/` removes the disagreement rather than hiding it.
+
+  The platform-dependence in that fixture is a real finding about the tool and
+  is not addressed here.
+- Stage 1 now lints test targets too (`cargo clippy --workspace --all-targets`),
+  which the PowerShell script never did.
+- CI checks formatting instead of applying it (`cargo fmt --check` when `CI` is
+  set), so drift fails the build rather than being silently rewritten where
+  nobody is there to review it. A local `just stage1` still formats in place.
+- `binary_prints_version` asserted the literal `0.12.0`, so the bump moved it to
+  `0.13.0`. Left as a literal rather than switched to `env!("CARGO_PKG_VERSION")`:
+  the binary derives its version from that same constant, so the comparison
+  would pass whatever either side reported.
+
+### Removed
+- `scripts/run_stage_1.ps1` and `scripts/run_stage_2.ps1`. A Windows-only gate
+  is not a gate contributors on Linux or macOS can run.
+
 ## [0.12.0] - 2026-08-17
 
 The composite score gets a CI gate of its own, and setting a threshold no
