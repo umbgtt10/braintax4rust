@@ -1,6 +1,11 @@
 // Copyright 2026 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
+use syn::Expr;
+use syn::ExprCall;
+use syn::ExprMacro;
+use syn::ExprUnsafe;
+use syn::Stmt;
 
 use syn::visit::{Visit, visit_expr_call, visit_expr_macro, visit_stmt};
 
@@ -41,7 +46,7 @@ impl HiddenDepsCounter {
 }
 
 impl<'ast> Visit<'ast> for HiddenDepsCounter {
-    fn visit_stmt(&mut self, stmt: &'ast syn::Stmt) {
+    fn visit_stmt(&mut self, stmt: &'ast Stmt) {
         if let syn::Stmt::Macro(stmt_macro) = stmt {
             let mac_name = stmt_macro
                 .mac
@@ -56,18 +61,18 @@ impl<'ast> Visit<'ast> for HiddenDepsCounter {
         visit_stmt(self, stmt);
     }
 
-    fn visit_expr_call(&mut self, expr: &'ast syn::ExprCall) {
+    fn visit_expr_call(&mut self, expr: &'ast ExprCall) {
         if let Some(label) = Self::hidden_call_label(&expr.func) {
             self.add_dep(&label);
         }
         visit_expr_call(self, expr);
     }
 
-    fn visit_expr_unsafe(&mut self, _expr: &'ast syn::ExprUnsafe) {
+    fn visit_expr_unsafe(&mut self, _expr: &'ast ExprUnsafe) {
         self.add_dep("unsafe");
     }
 
-    fn visit_expr_macro(&mut self, expr: &'ast syn::ExprMacro) {
+    fn visit_expr_macro(&mut self, expr: &'ast ExprMacro) {
         let mac_name = expr
             .mac
             .path
@@ -88,7 +93,7 @@ impl HiddenDepsCounter {
         self.labels.push(label.to_string());
     }
 
-    fn hidden_call_label(expr: &syn::Expr) -> Option<String> {
+    fn hidden_call_label(expr: &Expr) -> Option<String> {
         let syn::Expr::Path(path_expr) = expr else {
             return None;
         };

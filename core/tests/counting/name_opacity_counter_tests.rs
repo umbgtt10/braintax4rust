@@ -3,18 +3,20 @@
 // SPDX-License-Identifier: MIT
 
 use braintax::counting::name_opacity_counter::NameOpacityCounter;
+use syn::Block;
+use syn::Signature;
 use syn::parse_str;
 use syn::visit::Visit;
 
 fn score_block(code: &str) -> u32 {
-    let block: syn::Block = parse_str(code).unwrap();
+    let block: Block = parse_str(code).unwrap();
     let mut counter = NameOpacityCounter::new();
     counter.visit_block(&block);
     counter.score
 }
 
 fn score_params(code: &str) -> u32 {
-    let sig: syn::Signature = parse_str(code).unwrap();
+    let sig: Signature = parse_str(code).unwrap();
     let mut counter = NameOpacityCounter::new();
     counter.visit_params(&sig.inputs);
     counter.score

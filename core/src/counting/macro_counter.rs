@@ -1,6 +1,9 @@
 // Copyright 2026 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
+use syn::Attribute;
+use syn::ExprMacro;
+use syn::StmtMacro;
 
 use syn::visit::{Visit, visit_attribute, visit_expr_macro, visit_stmt_macro};
 
@@ -54,7 +57,7 @@ const KNOWN_STD_MACROS: &[&str] = &[
 ];
 
 impl<'ast> Visit<'ast> for MacroCounter {
-    fn visit_expr_macro(&mut self, expr: &'ast syn::ExprMacro) {
+    fn visit_expr_macro(&mut self, expr: &'ast ExprMacro) {
         let name = expr
             .mac
             .path
@@ -67,7 +70,7 @@ impl<'ast> Visit<'ast> for MacroCounter {
         visit_expr_macro(self, expr);
     }
 
-    fn visit_stmt_macro(&mut self, stmt: &'ast syn::StmtMacro) {
+    fn visit_stmt_macro(&mut self, stmt: &'ast StmtMacro) {
         let name = stmt
             .mac
             .path
@@ -80,7 +83,7 @@ impl<'ast> Visit<'ast> for MacroCounter {
         visit_stmt_macro(self, stmt);
     }
 
-    fn visit_attribute(&mut self, attr: &'ast syn::Attribute) {
+    fn visit_attribute(&mut self, attr: &'ast Attribute) {
         if let Some(ident) = attr.path().get_ident() {
             let name = ident.to_string();
             if name == "derive" {
@@ -94,7 +97,7 @@ impl<'ast> Visit<'ast> for MacroCounter {
 }
 
 impl MacroCounter {
-    fn score_derive_attr(&mut self, attr: &syn::Attribute) {
+    fn score_derive_attr(&mut self, attr: &Attribute) {
         self.count += DeriveAttrScorer::new().score(attr);
     }
 

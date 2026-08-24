@@ -3,13 +3,14 @@
 // SPDX-License-Identifier: MIT
 
 use braintax::counting::complexity_visitor::ComplexityVisitor;
+use syn::Block;
 use syn::parse_quote;
 use syn::visit::Visit;
 
 #[test]
 fn boolean_and_adds_1() {
     // Arrange
-    let block: syn::Block = parse_quote!({ if a && b {} });
+    let block: Block = parse_quote!({ if a && b {} });
 
     // Act
     let mut visitor = ComplexityVisitor::new();
@@ -22,7 +23,7 @@ fn boolean_and_adds_1() {
 #[test]
 fn break_adds_1() {
     // Arrange
-    let block: syn::Block = parse_quote!({
+    let block: Block = parse_quote!({
         loop {
             break;
         }
@@ -39,7 +40,7 @@ fn break_adds_1() {
 #[test]
 fn continue_adds_1() {
     // Arrange
-    let block: syn::Block = parse_quote!({
+    let block: Block = parse_quote!({
         loop {
             continue;
         }
@@ -56,7 +57,7 @@ fn continue_adds_1() {
 #[test]
 fn empty_fn_has_cc_1() {
     // Arrange
-    let block: syn::Block = parse_quote!({});
+    let block: Block = parse_quote!({});
 
     // Act
     let mut visitor = ComplexityVisitor::new();
@@ -69,7 +70,7 @@ fn empty_fn_has_cc_1() {
 #[test]
 fn for_loop_adds_1() {
     // Arrange
-    let block: syn::Block = parse_quote!({ for _ in 0..10 {} });
+    let block: Block = parse_quote!({ for _ in 0..10 {} });
 
     // Act
     let mut visitor = ComplexityVisitor::new();
@@ -82,7 +83,7 @@ fn for_loop_adds_1() {
 #[test]
 fn if_else_adds_2() {
     // Arrange
-    let block: syn::Block = parse_quote!({
+    let block: Block = parse_quote!({
         if true {
         } else {
         }
@@ -99,7 +100,7 @@ fn if_else_adds_2() {
 #[test]
 fn if_else_if_adds_3() {
     // Arrange
-    let block: syn::Block = parse_quote!({
+    let block: Block = parse_quote!({
         if true {
         } else if false {
         } else {
@@ -117,7 +118,7 @@ fn if_else_if_adds_3() {
 #[test]
 fn loop_adds_1() {
     // Arrange
-    let block: syn::Block = parse_quote!({
+    let block: Block = parse_quote!({
         loop {
             break;
         }
@@ -134,7 +135,7 @@ fn loop_adds_1() {
 #[test]
 fn match_with_three_arms_adds_3() {
     // Arrange
-    let block: syn::Block = parse_quote!({
+    let block: Block = parse_quote!({
         match x {
             1 => {}
             2 => {}
@@ -153,7 +154,7 @@ fn match_with_three_arms_adds_3() {
 #[test]
 fn return_adds_1() {
     // Arrange
-    let block: syn::Block = parse_quote!({
+    let block: Block = parse_quote!({
         return 42;
     });
 
@@ -168,7 +169,7 @@ fn return_adds_1() {
 #[test]
 fn single_if_adds_1() {
     // Arrange
-    let block: syn::Block = parse_quote!({ if true {} });
+    let block: Block = parse_quote!({ if true {} });
 
     // Act
     let mut visitor = ComplexityVisitor::new();
@@ -181,7 +182,7 @@ fn single_if_adds_1() {
 #[test]
 fn try_operator_adds_1() {
     // Arrange
-    let block: syn::Block = parse_quote!({
+    let block: Block = parse_quote!({
         let _ = foo()?;
     });
 
@@ -196,7 +197,7 @@ fn try_operator_adds_1() {
 #[test]
 fn while_loop_adds_1() {
     // Arrange
-    let block: syn::Block = parse_quote!({
+    let block: Block = parse_quote!({
         while true {
             break;
         }

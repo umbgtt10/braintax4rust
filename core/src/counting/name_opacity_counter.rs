@@ -1,6 +1,9 @@
 // Copyright 2026 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
+use syn::FnArg;
+use syn::Pat;
+use syn::punctuated::Punctuated;
 
 use syn::visit::{Visit, visit_pat};
 
@@ -23,10 +26,7 @@ impl NameOpacityCounter {
         }
     }
 
-    pub fn visit_params(
-        &mut self,
-        inputs: &syn::punctuated::Punctuated<syn::FnArg, syn::Token![,]>,
-    ) {
+    pub fn visit_params(&mut self, inputs: &Punctuated<FnArg, syn::Token![,]>) {
         for input in inputs {
             if let syn::FnArg::Typed(pat_type) = input
                 && let syn::Pat::Ident(pat_ident) = pat_type.pat.as_ref()
@@ -38,7 +38,7 @@ impl NameOpacityCounter {
 }
 
 impl<'ast> Visit<'ast> for NameOpacityCounter {
-    fn visit_pat(&mut self, pat: &'ast syn::Pat) {
+    fn visit_pat(&mut self, pat: &'ast Pat) {
         if let syn::Pat::Ident(pat_ident) = pat {
             self.score += Self::score_ident(&pat_ident.ident.to_string());
         }

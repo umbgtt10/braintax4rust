@@ -3,13 +3,14 @@
 // SPDX-License-Identifier: MIT
 
 use braintax::counting::derive_attr_scorer::DeriveAttrScorer;
+use syn::Attribute;
 use syn::parse_quote;
 
 #[test]
 fn known_derive_scores_zero() {
     // Arrange
     let scorer = DeriveAttrScorer::new();
-    let attr: syn::Attribute = parse_quote!(#[derive(Debug)]);
+    let attr: Attribute = parse_quote!(#[derive(Debug)]);
 
     // Act
     let score = scorer.score(&attr);
@@ -22,7 +23,7 @@ fn known_derive_scores_zero() {
 fn mixed_derives_sum_with_unknown() {
     // Arrange
     let scorer = DeriveAttrScorer::new();
-    let attr: syn::Attribute = parse_quote!(#[derive(Debug, Clone, MyTrait, Eq)]);
+    let attr: Attribute = parse_quote!(#[derive(Debug, Clone, MyTrait, Eq)]);
 
     // Act
     let score = scorer.score(&attr);
@@ -35,7 +36,7 @@ fn mixed_derives_sum_with_unknown() {
 fn multiple_unknown_derives_sum_to_6() {
     // Arrange
     let scorer = DeriveAttrScorer::new();
-    let attr: syn::Attribute = parse_quote!(#[derive(MyTrait, OtherTrait)]);
+    let attr: Attribute = parse_quote!(#[derive(MyTrait, OtherTrait)]);
 
     // Act
     let score = scorer.score(&attr);
@@ -48,7 +49,7 @@ fn multiple_unknown_derives_sum_to_6() {
 fn require_list_fails_returns_zero() {
     // Arrange
     let scorer = DeriveAttrScorer::new();
-    let attr: syn::Attribute = parse_quote!(#[test]);
+    let attr: Attribute = parse_quote!(#[test]);
 
     // Act
     let score = scorer.score(&attr);
@@ -61,7 +62,7 @@ fn require_list_fails_returns_zero() {
 fn unknown_derive_scores_3() {
     // Arrange
     let scorer = DeriveAttrScorer::new();
-    let attr: syn::Attribute = parse_quote!(#[derive(MyCustomDerive)]);
+    let attr: Attribute = parse_quote!(#[derive(MyCustomDerive)]);
 
     // Act
     let score = scorer.score(&attr);

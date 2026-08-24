@@ -4,9 +4,12 @@
 
 use braintax::analysis::trait_info::TraitInfo;
 use braintax::counting::signature_scorer::SignatureScorer;
+use syn::ItemFn;
+use syn::Signature;
+use syn::TypeParamBound;
 use syn::parse_str;
 
-fn bound(source: &str) -> syn::TypeParamBound {
+fn bound(source: &str) -> TypeParamBound {
     parse_str(source).expect("bound should parse")
 }
 
@@ -19,8 +22,8 @@ fn info(methods: u32, assoc_types: u32, supertraits: u32, impl_count: u32) -> Tr
     }
 }
 
-fn signature(source: &str) -> syn::Signature {
-    let parsed: syn::ItemFn = parse_str(source).expect("function should parse");
+fn signature(source: &str) -> Signature {
+    let parsed: ItemFn = parse_str(source).expect("function should parse");
     parsed.sig
 }
 

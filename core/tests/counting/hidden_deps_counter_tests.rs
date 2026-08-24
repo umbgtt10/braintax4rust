@@ -3,18 +3,19 @@
 // SPDX-License-Identifier: MIT
 
 use braintax::counting::hidden_deps_counter::HiddenDepsCounter;
+use syn::Block;
 use syn::parse_str;
 use syn::visit::Visit;
 
 fn count_hidden(code: &str) -> u32 {
-    let block: syn::Block = parse_str(code).unwrap();
+    let block: Block = parse_str(code).unwrap();
     let mut counter = HiddenDepsCounter::new();
     counter.visit_block(&block);
     counter.count
 }
 
 fn hidden_deps_of(code: &str) -> HiddenDepsCounter {
-    let block: syn::Block = parse_str(code).unwrap();
+    let block: Block = parse_str(code).unwrap();
     let mut counter = HiddenDepsCounter::new();
     counter.visit_block(&block);
     counter

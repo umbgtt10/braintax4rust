@@ -8,6 +8,12 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use syn::Attribute;
+use syn::Block;
+use syn::ImplItem;
+use syn::Item;
+use syn::ItemFn;
+use syn::ItemMod;
+use syn::ItemTrait;
 use syn::visit::Visit;
 
 use crate::analysis::trait_registry_builder::TraitRegistryBuilder;
@@ -88,7 +94,7 @@ impl<'a> Collector<'a> {
         }
     }
 
-    pub(crate) fn trait_info(trait_item: &syn::ItemTrait) -> TraitInfo {
+    pub(crate) fn trait_info(trait_item: &ItemTrait) -> TraitInfo {
         let methods = trait_item
             .items
             .iter()
@@ -114,7 +120,7 @@ impl<'a> Collector<'a> {
 }
 
 impl<'ast, 'a> Visit<'ast> for Collector<'a> {
-    fn visit_item(&mut self, item: &'ast syn::Item) {
+    fn visit_item(&mut self, item: &'ast Item) {
         match item {
             syn::Item::Fn(item_fn) if !Self::has_test_attr(&item_fn.attrs) => {
                 self.visit_fn(item_fn);
@@ -157,13 +163,7 @@ struct FnInput {
 }
 
 impl<'a> Collector<'a> {
-    fn push_fn(
-        &mut self,
-        name: String,
-        block: &syn::Block,
-        attrs: &[syn::Attribute],
-        input: FnInput,
-    ) {
+    fn push_fn(&mut self, name: String, block: &Block, attrs: &[Attribute], input: FnInput) {
         let mut visitor = ComplexityVisitor::new();
         visitor.visit_block(block);
         let mut hidden = HiddenDepsCounter::new();
@@ -204,7 +204,7 @@ impl<'a> Collector<'a> {
         });
     }
 
-    fn count_cfg_gates(attrs: &[syn::Attribute]) -> u32 {
+    fn count_cfg_gates(attrs: &[Attribute]) -> u32 {
         attrs
             .iter()
             .filter(|attr| {
@@ -214,7 +214,7 @@ impl<'a> Collector<'a> {
             .count() as u32
     }
 
-    fn visit_fn(&mut self, item_fn: &syn::ItemFn) {
+    fn visit_fn(&mut self, item_fn: &ItemFn) {
         let mut names = NameOpacityCounter::new();
         names.visit_params(&item_fn.sig.inputs);
         let generics = GenericsCounter::score_generics(
@@ -236,7 +236,7 @@ impl<'a> Collector<'a> {
         );
     }
 
-    fn visit_mod(&mut self, item_mod: &syn::ItemMod) {
+    fn visit_mod(&mut self, item_mod: &ItemMod) {
         if let Some((_, items)) = &item_mod.content {
             for inner in items {
                 self.visit_item(inner);
@@ -244,7 +244,7 @@ impl<'a> Collector<'a> {
         }
     }
 
-    fn visit_impl_item(&mut self, item: &syn::ImplItem, trait_factor: f64) {
+    fn visit_impl_item(&mut self, item: &ImplItem, trait_factor: f64) {
         if let syn::ImplItem::Fn(item_fn) = item
             && !Self::has_test_attr(&item_fn.attrs)
         {

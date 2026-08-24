@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 use crate::analysis::collector::Collector;
 use crate::analysis::trait_info::TraitInfo;
+use syn::Item;
 use syn::parse_file;
 
 pub struct TraitRegistryBuilder {
@@ -53,7 +54,7 @@ impl TraitRegistryBuilder {
         }
     }
 
-    fn record_impl(&mut self, item: &syn::Item) {
+    fn record_impl(&mut self, item: &Item) {
         let syn::Item::Impl(item_impl) = item else {
             return;
         };

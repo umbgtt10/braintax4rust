@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: MIT
 
 use braintax::counting::generics_counter::GenericsCounter;
+use syn::Signature;
 use syn::parse_str;
 
 fn score(sig: &str) -> u32 {
-    let sig: syn::Signature = parse_str(sig).unwrap();
+    let sig: Signature = parse_str(sig).unwrap();
     GenericsCounter::score_generics(&sig.generics.params, &sig.generics.where_clause)
 }
 

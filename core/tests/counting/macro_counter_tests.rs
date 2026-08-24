@@ -3,11 +3,12 @@
 // SPDX-License-Identifier: MIT
 
 use braintax::counting::macro_counter::MacroCounter;
+use syn::Block;
 use syn::parse_str;
 use syn::visit::Visit;
 
 fn score_block(code: &str) -> u32 {
-    let block: syn::Block = parse_str(code).unwrap();
+    let block: Block = parse_str(code).unwrap();
     let mut counter = MacroCounter::new();
     counter.visit_block(&block);
     counter.count

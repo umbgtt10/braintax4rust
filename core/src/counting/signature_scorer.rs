@@ -3,6 +3,12 @@
 // SPDX-License-Identifier: MIT
 
 use crate::analysis::trait_info::TraitInfo;
+use syn::FnArg;
+use syn::ReturnType;
+use syn::Type;
+use syn::TypeParamBound;
+use syn::TypePath;
+use syn::punctuated::Punctuated;
 
 const KNOWN_TRAITS: &[&str] = &[
     "Debug",
@@ -32,7 +38,7 @@ impl SignatureScorer {
     // `: Send` to satisfy a lint must not inflate the dimension penalty for
     // every implementor.
     #[must_use]
-    pub fn is_marker_supertrait(bound: &syn::TypeParamBound) -> bool {
+    pub fn is_marker_supertrait(bound: &TypeParamBound) -> bool {
         match bound {
             syn::TypeParamBound::Lifetime(_) => true,
             syn::TypeParamBound::Trait(trait_bound) => {
@@ -59,7 +65,7 @@ impl SignatureScorer {
     }
 
     #[must_use]
-    pub fn self_ref_cost(inputs: &syn::punctuated::Punctuated<syn::FnArg, syn::Token![,]>) -> f64 {
+    pub fn self_ref_cost(inputs: &Punctuated<FnArg, syn::Token![,]>) -> f64 {
         match inputs.first() {
             Some(syn::FnArg::Receiver(receiver)) => {
                 if receiver.mutability.is_some() {
@@ -73,7 +79,7 @@ impl SignatureScorer {
     }
 
     #[must_use]
-    pub fn return_complexity(return_type: &syn::ReturnType) -> f64 {
+    pub fn return_complexity(return_type: &ReturnType) -> f64 {
         match return_type {
             syn::ReturnType::Default => 0.0,
             syn::ReturnType::Type(_, ty) => Self::type_complexity(ty),
@@ -97,7 +103,7 @@ impl SignatureScorer {
         (base * amplifier).min(0.27)
     }
 
-    fn type_complexity(ty: &syn::Type) -> f64 {
+    fn type_complexity(ty: &Type) -> f64 {
         match ty {
             syn::Type::ImplTrait(_) => 1.5,
             syn::Type::TraitObject(_) => 1.0,
@@ -106,7 +112,7 @@ impl SignatureScorer {
         }
     }
 
-    fn path_type_complexity(type_path: &syn::TypePath) -> f64 {
+    fn path_type_complexity(type_path: &TypePath) -> f64 {
         let mut cost = 0.0;
         if type_path.qself.is_some() {
             cost += 1.0;
