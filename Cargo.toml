@@ -3,6 +3,7 @@ members = [
     "core",
     "validation",
     "test-utils",
+    "xtask",
     "fixture/base_flat",
     "fixture/base_depth1",
     "fixture/base_cfg",
