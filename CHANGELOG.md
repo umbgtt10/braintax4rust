@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-10-10
+
+How the repository is gated, not what the tool measures. No scoring rule
+changed, no flag moved, and the output and exit codes are the same, so no
+crate's brain tax moves. Patch rather than minor because no `pub` item of the
+library changed signature: the one change under `core/src` adds a private
+associated function to `MacroCounter`.
+
+### Changed
+- **Every stern4rust rule now applies to every workspace member.**
+  `stern4rust.toml` stood down 79 rule-package pairs across the eighteen
+  fixture crates and `validation`, and `spdx-matches-manifest` went
+  unconfigured in nineteen members for want of a `license` field. All
+  twenty-two rules now apply everywhere, with nothing skipped, selected or
+  unconfigured; a bare `cargo stern4rust` scans 174 files and finds nothing.
+  - Each fixture's acceptance test moved from `tests/analysis_tests.rs` to
+    `tests/lib_tests.rs` (`compute_tests.rs` in `base_macros`), behind a
+    `tests/all_tests.rs` and an `all_tests` test target, with its imports
+    ordered and `serde_json::from_str` imported. braintax reads nothing under
+    `tests/`, so no fixture score moved and no assertion changed.
+  - `validation`'s fixture-running helper, a free function in its test file,
+    is now `FixtureAnalyzer` in `validation/src`, and the ordinal ranking test
+    is named for it: `fixture_analyzer_tests.rs`.
+  - Eight fixture source files break a rule by construction -- several
+    implementors of one trait in one file, a public function nothing calls, a
+    macro defined in `lib.rs`, standard paths written out in full. They are
+    the shapes braintax is pointed at, so each is excluded by name with its
+    reason rather than corrected.
+- Stage 2 gains a sixth gate, `cargo dry4rust`, second after the house rules:
+  no duplicated code in `core/src` beyond `dry4rust-baseline.json`, counting
+  units of 25 AST nodes or more. CI installs `cargo-dry4rust` with the other
+  stage 2 tools.
+- What it found is shared rather than copied. `MacroCounter`'s
+  `visit_expr_macro` and `visit_stmt_macro` repeated the same twelve lines of
+  macro-name lookup and scoring; that is now `MacroCounter::macro_cost`, and
+  every macro costs what it did. The two overrides `Visit` requires are the
+  baseline's one entry. `core/`'s own score moves from 4.1 to 4.0 because the
+  shared code is measured once.
+- `binary_prints_version` asserted the literal `0.13.0`, so the bump moved it
+  to `0.13.1`.
+
 ## [0.13.0] - 2026-08-24
 
 How the gates are run, not what the tool measures. No scoring rule changed and
