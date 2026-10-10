@@ -2,15 +2,15 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::path::PathBuf;
-use std::sync::Arc;
-
 use braintax::analysis::fs_walk::FsWalk;
 use braintax::invocation::app::App;
 use braintax::invocation::config::Config;
 use braintax::reporting::braintax_report::BraintaxReport;
 use braintax::reporting::default_scorer::DefaultScorer;
 use braintax_test_utils::capture_reporter::CaptureReporter;
+use serde_json::from_str;
+use std::path::PathBuf;
+use std::sync::Arc;
 
 fn analyze() -> BraintaxReport {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -30,16 +30,20 @@ fn analyze() -> BraintaxReport {
     );
     app.run().unwrap();
     let json = captured.lock().unwrap().clone();
-    serde_json::from_str(&json).unwrap()
+    from_str(&json).unwrap()
 }
 
 #[test]
-fn generics_braintax_reflects_generic_penalty() {
+fn depth1_cc_is_18() {
     // Arrange & Act
     let report = analyze();
 
     // Assert
     assert_eq!(report.overall.total_functions, 1);
+    assert_eq!(report.overall.max_cyclomatic, 18);
+    assert_eq!(report.overall.max_braintax, 20.7);
+    assert_eq!(report.functions[0].name, "compute");
+    assert_eq!(report.functions[0].module, "deep");
     assert_eq!(report.functions[0].cyclomatic, 18);
-    assert_eq!(report.functions[0].braintax, 30.0);
+    assert!((report.functions[0].braintax - 20.7).abs() < 0.01);
 }

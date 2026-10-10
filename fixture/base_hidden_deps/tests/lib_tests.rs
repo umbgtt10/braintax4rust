@@ -2,15 +2,15 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::path::PathBuf;
-use std::sync::Arc;
-
 use braintax::analysis::fs_walk::FsWalk;
 use braintax::invocation::app::App;
 use braintax::invocation::config::Config;
 use braintax::reporting::braintax_report::BraintaxReport;
 use braintax::reporting::default_scorer::DefaultScorer;
 use braintax_test_utils::capture_reporter::CaptureReporter;
+use serde_json::from_str;
+use std::path::PathBuf;
+use std::sync::Arc;
 
 fn analyze() -> BraintaxReport {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -30,7 +30,7 @@ fn analyze() -> BraintaxReport {
     );
     app.run().unwrap();
     let json = captured.lock().unwrap().clone();
-    serde_json::from_str(&json).unwrap()
+    from_str(&json).unwrap()
 }
 
 #[test]
@@ -44,6 +44,31 @@ fn clean_fn_has_no_hidden_deps() {
     assert_eq!(clean_fn.hidden_dep_weight, 0.0);
     assert!(clean_fn.hidden_dep_labels.is_empty());
     assert_eq!(clean_fn.braintax, 2.0);
+}
+
+#[test]
+fn overall_max_braintax_is_risky_fn() {
+    // Arrange & Act
+    let report = analyze();
+
+    // Assert
+    assert_eq!(report.overall.total_functions, 2);
+    assert_eq!(report.overall.max_braintax, 16.0);
+}
+
+#[test]
+fn risky_fn_braintax_reflects_hidden_dep_weight() {
+    // Arrange & Act
+    let report = analyze();
+
+    // Assert
+    let risky_fn = report.functions.iter().find(|f| f.name == "risky").unwrap();
+    let clean_fn = report.functions.iter().find(|f| f.name == "clean").unwrap();
+    assert_eq!(risky_fn.braintax, 16.0);
+    assert_eq!(
+        risky_fn.braintax - clean_fn.braintax,
+        risky_fn.hidden_dep_weight
+    );
 }
 
 #[test]
@@ -63,29 +88,4 @@ fn risky_fn_sums_severity_weighted_hidden_deps() {
             "Instant::now".to_string()
         ]
     );
-}
-
-#[test]
-fn risky_fn_braintax_reflects_hidden_dep_weight() {
-    // Arrange & Act
-    let report = analyze();
-
-    // Assert
-    let risky_fn = report.functions.iter().find(|f| f.name == "risky").unwrap();
-    let clean_fn = report.functions.iter().find(|f| f.name == "clean").unwrap();
-    assert_eq!(risky_fn.braintax, 16.0);
-    assert_eq!(
-        risky_fn.braintax - clean_fn.braintax,
-        risky_fn.hidden_dep_weight
-    );
-}
-
-#[test]
-fn overall_max_braintax_is_risky_fn() {
-    // Arrange & Act
-    let report = analyze();
-
-    // Assert
-    assert_eq!(report.overall.total_functions, 2);
-    assert_eq!(report.overall.max_braintax, 16.0);
 }

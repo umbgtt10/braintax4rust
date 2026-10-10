@@ -2,4 +2,4 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-pub mod fixture_analyzer_tests;
+pub mod fixture_analyzer;

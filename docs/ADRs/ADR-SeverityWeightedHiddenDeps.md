@@ -93,7 +93,7 @@ unaffected, since none of them contain a hidden dependency of any kind.
 `hidden_dep_severity_tests.rs` and `hidden_deps_counter_tests.rs` pin the
 severity value and detection behavior for every recognized category,
 including the fully-qualified and third-party-qualified-must-not-match
-cases. `fixture/base_hidden_deps/tests/analysis_tests.rs` pins the
+cases. `fixture/base_hidden_deps/tests/lib_tests.rs` pins the
 end-to-end `braintax` delta between a loaded and a clean function to the
 severity sum.
 

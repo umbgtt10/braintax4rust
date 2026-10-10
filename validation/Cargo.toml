@@ -2,13 +2,19 @@
 #
 # The ordinal ranking test drives the analyser over every fixture in turn and
 # asserts that their braintax scores stay in one fixed order. Its subject is the
-# scoring model as a whole rather than any one source file, so it never had a
-# mirror in core/ to be named after -- which is what paired-test-file kept
-# reporting while it lived there.
+# scoring model as a whole rather than any one source file in core/, so it never
+# had a mirror there to be named after -- which is what paired-test-file kept
+# reporting while it lived in core/.
+#
+# What it does have is the harness that runs one fixture end to end, and that
+# harness is this crate's own source: `FixtureAnalyzer` in src/, which the test
+# is named for. It was a free function inside the test file until every stern
+# rule applied here and paired-test-file asked for a source file to name.
 #
 # A workspace member rather than an excluded crate, so `cargo test` at the root
-# still runs it. Stage 2 passes --package cargo-braintax4rust to each gate, so
-# the house rules measure core/ and leave this alone.
+# still runs it. Stage 2 scopes every gate with --package and none names this
+# crate, so the gates leave it alone; a bare `cargo stern4rust` still holds it
+# to every house rule, like any other member.
 [package]
 name = "validation"
 version = "0.12.0"
@@ -23,7 +29,8 @@ autotests = false
 name = "all_tests"
 path = "tests/all_tests.rs"
 
-[dev-dependencies]
+[dependencies]
+anyhow.workspace = true
 braintax.workspace = true
 braintax-test-utils.workspace = true
 serde_json.workspace = true

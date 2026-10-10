@@ -55,16 +55,29 @@ stern4rust runs **first** because its corrections are renames, file moves and
 directory splits: a layout it is about to reject is a layout the others would
 have measured for nothing. Its findings are also the cheapest to act on.
 
-All twenty-one of its rules are enforced, with nothing skipped and nothing
-unconfigured. `docs/header.txt` holds the three-line header every `.rs` file
-carries and `stern4rust.toml` names it -- in the config rather than the gate
-script, so a hand-run of `cargo stern4rust` checks exactly what the gate checks.
+All twenty-two of its rules apply to every member of the workspace, with
+nothing skipped, nothing selected and nothing unconfigured. `docs/header.txt`
+holds the three-line header every `.rs` file carries and `stern4rust.toml` names
+it -- in the config rather than the gate script, so a hand-run of
+`cargo stern4rust` checks exactly what the gate checks. Every member's manifest
+carries `license = "MIT"`, which is what lets `spdx-matches-manifest` apply.
 
 The stern gate is scoped to `cargo-braintax4rust` **and** `xtask`. The crate
 that runs the gates is not exempt from them; it caught a misordered test in its
-own suite on the first run. The fixture crates stay out of the gate -- each is a
-deliberately shaped package braintax is pointed at, and the stand-downs in
-`stern4rust.toml` exist for a bare hand-run rather than for this gate.
+own suite on the first run. A bare `cargo stern4rust` judges every member --
+the fixtures, `validation` and `test-utils` included -- and is green too.
+
+The one thing kept out of the scan is eight fixture source files that break a
+rule by construction: a second type implementing the trait in the same file, a
+public function nothing calls, a macro defined in `lib.rs`, a standard path
+written out in full rather than imported. Each is excluded by name in
+`stern4rust.toml`, beside the reason, rather than having a rule stood down; the
+report counts every exclusion. Never "fix" one of them -- the shape of a
+fixture's `src/` is the question braintax is asked, and its scores are pinned
+twice over, by the fixture's own acceptance test and by the ordinal ranking in
+`validation`. The acceptance tests under each fixture's `tests/` are not
+analysis input (braintax reads nothing under `tests/`), so they follow the house
+layout like any other suite.
 
 `cargo install just`
 `cargo install cargo-llvm-cov`
@@ -77,16 +90,17 @@ cargo-braintax4rust is deliberately not in that list. The self-analysis gate
 builds it from this checkout, so the number it reports is the number for the
 tree being changed rather than for whatever version happens to be installed.
 
-Every stage 2 gate is scoped `--package cargo-braintax4rust`, which is what
-keeps the other members out of them:
+Every stage 2 gate is scoped to `cargo-braintax4rust` -- the stern gate adds
+`xtask` -- which is what keeps the other members out of them:
 
 - the eighteen `fixture/` crates are analysis inputs, deliberately written to
   score badly. They are workspace members, so `cargo test` builds them and
   their own tests run, but no gate measures them.
 - `validation/` holds the ordinal ranking test, which drives the analyser over
   every fixture in turn and asserts their scores stay in one fixed order. Its
-  subject is the scoring model rather than any source file in `core/`, so
-  measuring it against the house rules would demand a mirror that cannot exist.
+  subject is the scoring model rather than any source file in `core/`, so it
+  has no mirror there. Its own `src/` holds `FixtureAnalyzer`, the harness that
+  runs one fixture end to end, and the test file is named for that.
 
 ## Orthogonality, trait surface and cognitive complexity
 

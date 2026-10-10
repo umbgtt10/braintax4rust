@@ -2,15 +2,15 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::path::PathBuf;
-use std::sync::Arc;
-
 use braintax::analysis::fs_walk::FsWalk;
 use braintax::invocation::app::App;
 use braintax::invocation::config::Config;
 use braintax::reporting::braintax_report::BraintaxReport;
 use braintax::reporting::default_scorer::DefaultScorer;
 use braintax_test_utils::capture_reporter::CaptureReporter;
+use serde_json::from_str;
+use std::path::PathBuf;
+use std::sync::Arc;
 
 fn analyze() -> BraintaxReport {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -30,17 +30,27 @@ fn analyze() -> BraintaxReport {
     );
     app.run().unwrap();
     let json = captured.lock().unwrap().clone();
-    serde_json::from_str(&json).unwrap()
+    from_str(&json).unwrap()
 }
 
 #[test]
-fn super_only_costs_more_than_simple_trait() {
+fn many_methods_has_method_penalty() {
     // Arrange & Act
     let report = analyze();
 
     // Assert
-    assert_eq!(report.overall.total_functions, 2);
-    assert_eq!(report.functions[0].cyclomatic, 1);
-    assert_eq!(report.functions[1].cyclomatic, 18);
-    assert!((report.functions[1].braintax - 23.6).abs() < 0.01);
+    assert_eq!(report.overall.total_functions, 5);
+    let compute_fn = report
+        .functions
+        .iter()
+        .find(|f| f.name == "compute")
+        .unwrap();
+    assert_eq!(compute_fn.cyclomatic, 18);
+    assert!((compute_fn.braintax - 16.76).abs() < 0.01);
+    for func in &report.functions {
+        if func.name != "compute" {
+            assert_eq!(func.cyclomatic, 1);
+            assert!((func.braintax - 1.12).abs() < 0.01);
+        }
+    }
 }

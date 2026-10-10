@@ -2,43 +2,17 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use braintax::analysis::fs_walk::FsWalk;
-use braintax::invocation::app::App;
-use braintax::invocation::config::Config;
-use braintax::reporting::braintax_report::BraintaxReport;
-use braintax::reporting::default_scorer::DefaultScorer;
-use braintax_test_utils::capture_reporter::CaptureReporter;
-use serde_json::from_str;
 use std::path::PathBuf;
-use std::sync::Arc;
-
-fn analyze_fixture(name: &str) -> BraintaxReport {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("..")
-        .join("fixture")
-        .join(name);
-    let reporter = CaptureReporter::new();
-    let captured = Arc::clone(&reporter.captured);
-    let app = App::with_deps(
-        Box::new(FsWalk::new(&path)),
-        Box::new(DefaultScorer::new()),
-        Box::new(reporter),
-        Config {
-            path,
-            json: true,
-            threshold: None,
-            max_avg_braintax: None,
-            top: 10,
-        },
-    );
-    app.run().unwrap();
-    let json = captured.lock().unwrap().clone();
-    from_str(&json).unwrap()
-}
+use validation::fixture_analyzer::FixtureAnalyzer;
 
 #[test]
 fn fixture_braintax_ordinal_ranking() {
     // Arrange
+    let analyzer = FixtureAnalyzer::new(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("fixture"),
+    );
     let fixtures: &[(&str, f64)] = &[
         ("base_hidden_deps", 16.0),
         ("base_trait", 16.4),
@@ -64,7 +38,7 @@ fn fixture_braintax_ordinal_ranking() {
     let mut prev_braintax: Option<f64> = None;
     let mut prev_name: Option<&str> = None;
     for &(name, expected) in fixtures {
-        let report = analyze_fixture(name);
+        let report = analyzer.analyze(name).unwrap();
         let got = report.overall.max_braintax;
 
         assert!(

@@ -43,8 +43,9 @@ fn run_stage2() -> ExitCode {
 
     // The house rules reach xtask as well, so the crate that runs the gates is
     // held to them too. The fixture crates stay out: each is a deliberately
-    // shaped package that braintax is pointed at, and their stand-downs in
-    // stern4rust.toml exist for a bare hand-run rather than for this gate.
+    // shaped package that braintax is pointed at. A bare hand-run judges them
+    // against every rule all the same, with the few source files that break one
+    // by construction excluded by name in stern4rust.toml.
     let stern = SternGate::new(
         &runner,
         manifest_path.clone(),

@@ -2,7 +2,14 @@
 name = "fixture-base_many_methods"
 version = "0.0.0"
 edition = "2024"
+license = "MIT"
 publish = false
+
+autotests = false
+
+[[test]]
+name = "all_tests"
+path = "tests/all_tests.rs"
 
 [dependencies]
 braintax.workspace = true

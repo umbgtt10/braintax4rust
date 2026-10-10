@@ -1,129 +1,68 @@
 # House coding rules, enforced by `cargo stern4rust` first in stage 2.
 #
+# All twenty-two rules apply to every member of the workspace: nothing is
+# skipped and nothing is selected. A hand-run of a bare `cargo stern4rust`
+# judges every package; the stage 2 gate narrows that to cargo-braintax4rust and
+# xtask with --package, and checks them exactly as this file says.
+#
 # The header rule is the one rule that cannot hold until it is told what the
 # header says. Naming the file here rather than in the gate script means a
 # hand-run of `cargo stern4rust` checks exactly what the gate checks.
 header-file = "docs/header.txt"
 
-# `validation` has no `src/` at all: it runs the built binary against the
-# fixture crates and asserts on the JSON that comes back, so its tests are
-# named for what they check rather than for a source file.
-# `paired-test-file` asks every `<x>_tests.rs` to name an `src/<x>.rs`, and
-# there is no `src/` here for one to be named after -- the rule has nothing to
-# match rather than something it dislikes.
-[package.validation]
-skip = ["paired-test-file"]
+# The fixture crates are analysis input. Each `src/` is a deliberately shaped
+# package that braintax is pointed at, and its acceptance test asserts on the
+# numbers that come back -- so the shape of a fixture's source is the thing
+# under test, and correcting it is changing the question. The validation crate's
+# ordinal ranking pins the same sources to one fixed order of scores.
+#
+# The files below break a house rule by construction, and are kept out of the
+# scan rather than having the rule stood down: an exclusion names one file and
+# is counted in the report, where a skip silenced the rule for the whole package
+# -- tests included. Everything else in every fixture, its `src/` and its
+# acceptance test alike, is held to all twenty-two rules.
+#
+# braintax reads no file under `tests/`, so the acceptance tests themselves are
+# not analysis input and are not excluded: they follow the house layout like any
+# other suite.
 
-# The fixture crates are analysis input, not code this workspace ships. Each is
-# a deliberately-shaped package that braintax is pointed at, carrying one test
-# that asserts on the numbers which come back -- so the shape of a fixture is
-# the thing under test, and correcting it is changing the question.
-#
-# They stay workspace members rather than being excluded, because those tests
-# are braintax's acceptance suite and stage 1's `cargo test` has to keep running
-# them. Membership is what draws them into a bare `cargo stern4rust`, so the
-# stand-down is written here instead of in the manifest.
-#
-# Four rules cannot hold in any fixture:
-#
-#   paired-test-file     `analysis_tests.rs` names no `src/analysis.rs`; like
-#                        `validation`, it is named for what it checks
-#   tests-layout         one acceptance test per fixture, so no all_tests.rs
-#   test-file-structure  import order and spacing inside that one test file
-#   imported-paths       the test reaches into braintax's own modules
-#
-# and four fixtures break `single-implemented-type`, one breaks
-# `tested-public-api` and one breaks `module-registry` -- by construction. A
-# second implemented type in one file, an undocumented public item and a
-# macro-built module are the shapes those fixtures exist to measure.
-#
-# Nothing is skipped anywhere else.
-[package.fixture-base_assoc_only]
-skip = ["imported-paths", "paired-test-file", "test-file-structure", "tests-layout"]
-
-[package.fixture-base_cfg]
-skip = ["imported-paths", "paired-test-file", "test-file-structure", "tests-layout"]
-
+# `compute` is public, one module below the crate root -- the depth the fixture
+# measures. Nothing calls it: the acceptance test analyses the source rather
+# than running it, so tested-public-api has no call to find.
 [package.fixture-base_depth1]
-skip = [
-    "imported-paths",
-    "paired-test-file",
-    "test-file-structure",
-    "tested-public-api",
-    "tests-layout",
-]
+exclude = ["src/deep/compute.rs"]
 
-[package.fixture-base_flat]
-skip = ["imported-paths", "paired-test-file", "test-file-structure", "tests-layout"]
-
-[package.fixture-base_generics]
-skip = ["imported-paths", "paired-test-file", "test-file-structure", "tests-layout"]
-
+# `std::ptr::null()` is spelled as a path inside the `unsafe` block whose
+# hidden dependencies the fixture exists to weigh (imported-paths).
 [package.fixture-base_hidden_deps]
-skip = ["imported-paths", "paired-test-file", "test-file-structure", "tests-layout"]
+exclude = ["src/risky.rs"]
 
-[package.fixture-base_inherent]
-skip = ["imported-paths", "paired-test-file", "test-file-structure", "tests-layout"]
-
+# The known standard trait is written `impl std::fmt::Debug`, with
+# `std::fmt::Formatter` and `std::fmt::Result` in its signature. The signature
+# scorer walks those path segments, so importing them would move the score
+# (imported-paths).
 [package.fixture-base_known_trait]
-skip = ["imported-paths", "paired-test-file", "test-file-structure", "tests-layout"]
+exclude = ["src/compute.rs"]
 
+# A `#[macro_export]` macro beside the module declarations is the macro-built
+# shape the fixture measures (module-registry). With lib.rs out of the scan,
+# this fixture's acceptance test is named for src/compute.rs, where the macro is
+# used, rather than for lib.rs like every other fixture's.
 [package.fixture-base_macros]
-skip = [
-    "imported-paths",
-    "module-registry",
-    "paired-test-file",
-    "test-file-structure",
-    "tests-layout",
-]
+exclude = ["src/lib.rs"]
 
-[package.fixture-base_many_methods]
-skip = ["imported-paths", "paired-test-file", "test-file-structure", "tests-layout"]
-
-[package.fixture-base_opaque]
-skip = ["imported-paths", "paired-test-file", "test-file-structure", "tests-layout"]
-
-[package.fixture-base_super_only]
-skip = ["imported-paths", "paired-test-file", "test-file-structure", "tests-layout"]
-
-[package.fixture-base_trait]
-skip = ["imported-paths", "paired-test-file", "test-file-structure", "tests-layout"]
-
+# Several types implementing one trait, in one file, is what these four
+# fixtures exist to measure: the trait factor's dispatch penalty rises with the
+# number of implementations a reader has to tell apart at a call site
+# (single-implemented-type).
 [package.fixture-base_trait_assoc_dispatch]
-skip = [
-    "imported-paths",
-    "paired-test-file",
-    "single-implemented-type",
-    "test-file-structure",
-    "tests-layout",
-]
+exclude = ["src/compute.rs"]
 
 [package.fixture-base_trait_four_impls]
-skip = [
-    "imported-paths",
-    "paired-test-file",
-    "single-implemented-type",
-    "test-file-structure",
-    "tests-layout",
-]
+exclude = ["src/compute.rs"]
 
 [package.fixture-base_trait_multi]
-skip = [
-    "imported-paths",
-    "paired-test-file",
-    "single-implemented-type",
-    "test-file-structure",
-    "tests-layout",
-]
-
-[package.fixture-base_trait_refined]
-skip = ["imported-paths", "paired-test-file", "test-file-structure", "tests-layout"]
+exclude = ["src/compute.rs"]
 
 [package.fixture-base_trait_two_impls]
-skip = [
-    "imported-paths",
-    "paired-test-file",
-    "single-implemented-type",
-    "test-file-structure",
-    "tests-layout",
-]
+exclude = ["src/compute.rs"]
