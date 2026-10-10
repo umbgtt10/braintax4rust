@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "kind": "exact",
+      "fingerprint": "e19c8b96b4868505",
+      "members": 2,
+      "names": [
+        "<MacroCounter as Visit>::visit_expr_macro",
+        "<MacroCounter as Visit>::visit_stmt_macro"
+      ]
+    }
+  ]
+}

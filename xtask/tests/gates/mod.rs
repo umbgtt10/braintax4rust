@@ -4,6 +4,7 @@
 
 pub mod braintax_self_gate_tests;
 pub mod crap_gate_tests;
+pub mod dry_gate_tests;
 pub mod gate_tests;
 pub mod iceberg_gate_tests;
 pub mod stage2_tests;

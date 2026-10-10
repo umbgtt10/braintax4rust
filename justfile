@@ -27,9 +27,10 @@ stage1:
     cargo clippy --workspace --all-targets -- -D warnings
     cargo test --workspace
 
-# House rules, braintax self-analysis, CRAP, mirrored tests and file risk, run
-# in that order. The self-analysis gate is this repository's own: the tool is
-# built from the working tree and given its ceiling, so a change that costs the
-# codebase brain tax is caught by the very measure the tool exists to report.
+# House rules, duplication, braintax self-analysis, CRAP, mirrored tests and
+# file risk, run in that order. The self-analysis gate is this repository's own:
+# the tool is built from the working tree and given its ceiling, so a change
+# that costs the codebase brain tax is caught by the very measure the tool
+# exists to report.
 stage2:
     cargo xtask stage2

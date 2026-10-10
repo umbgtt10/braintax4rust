@@ -40,12 +40,13 @@ as well as sources (`--all-targets`), which the PowerShell script did not.
 Stage 2 is `cargo xtask stage2` -- a real crate under `xtask/`, gated like any
 other code, rather than a script. Each gate is a `Gate` implementation
 constructed against a `CommandRunner` trait, so the argument lists and the
-failure messages are covered by `xtask`'s own integration tests. It runs five
+failure messages are covered by `xtask`'s own integration tests. It runs six
 gates, in this order:
 
 | gate | asks |
 |---|---|
 | `cargo stern4rust` | do the house coding rules hold |
+| `cargo dry4rust` | did this change add duplicated code |
 | `cargo braintax4rust` | does this tool still pay its own bill |
 | `cargo crap4rust` | is any function complex and untested |
 | `cargo twin4rust` | does every source file have a mirrored test file |
@@ -79,9 +80,33 @@ twice over, by the fixture's own acceptance test and by the ordinal ranking in
 analysis input (braintax reads nothing under `tests/`), so they follow the house
 layout like any other suite.
 
+`dry4rust` runs **second** for the same reason stern4rust is first: removing a
+duplicate moves code between files and functions, which changes what every gate
+behind it measures -- the braintax self-analysis included. It scans `core/src`
+only -- tests repeat their arrangement by design -- and checks with zero
+ceilings against `dry4rust-baseline.json`, the duplication still there when the
+gate arrived. So it fails on what a change adds, not on what it inherited; a
+duplicate removed is admitted, a copy added to a recorded group is not.
+
+It counts only code units of 25 AST nodes or more. Below that sit the one-call
+`Visit` overrides -- `visit_expr_while`, `visit_expr_try` and their siblings,
+each bumping a counter and recursing -- and the one- and two-field
+constructors; at dry4rust's default of 10 they form four groups whose sameness
+is the trait's or the struct's rather than a copy.
+At 25 the first run found one real copy: `MacroCounter`'s `visit_expr_macro`
+and `visit_stmt_macro` each carried the same twelve lines of name lookup and
+scoring, now shared as `MacroCounter::macro_cost`. What is left of the pair --
+two four-line overrides `Visit` requires, one per node type -- is the baseline's
+one entry.
+
+Re-record the baseline only to drop groups that are gone, never to admit new
+ones, and at the same floor -- a baseline matches only at the floor it was
+recorded at: `cargo dry4rust --path core/src --min-nodes 25 --baseline "$PWD/dry4rust-baseline.json" baseline`.
+
 `cargo install just`
 `cargo install cargo-llvm-cov`
 `cargo install cargo-stern4rust`
+`cargo install cargo-dry4rust`
 `cargo install cargo-crap4rust`
 `cargo install cargo-twin4rust`
 `cargo install cargo-iceberg4rust`
@@ -91,7 +116,8 @@ builds it from this checkout, so the number it reports is the number for the
 tree being changed rather than for whatever version happens to be installed.
 
 Every stage 2 gate is scoped to `cargo-braintax4rust` -- the stern gate adds
-`xtask` -- which is what keeps the other members out of them:
+`xtask`, and the dry gate is pointed at that crate's `core/src` -- which is what
+keeps the other members out of them:
 
 - the eighteen `fixture/` crates are analysis inputs, deliberately written to
   score badly. They are workspace members, so `cargo test` builds them and
