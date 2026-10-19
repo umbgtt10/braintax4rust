@@ -6,7 +6,6 @@ use std::ffi::OsString;
 use std::path::PathBuf;
 
 use clap::Parser;
-use std::env::args_os;
 
 #[derive(Debug, Clone, Parser)]
 #[command(name = "cargo-braintax4rust")]
@@ -51,11 +50,5 @@ impl Args {
         } else {
             raw
         }
-    }
-
-    // Not public: reading the real process argv is glue, and the half of it
-    // worth testing is above.
-    pub(crate) fn parse_cargo() -> Self {
-        Self::parse_from(Self::without_cargo_subcommand(args_os().collect()))
     }
 }

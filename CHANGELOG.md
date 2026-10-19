@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+The command line, output and exit codes are unchanged. The library is not:
+two `pub` free functions became associated functions and one moved, for
+stern4rust 0.17.0's new `owned-functions` rule -- a file with a subject holds
+no free function.
+
+### Changed
+- `invocation::app::run_from_args` is `App::run_from_args`, and the free
+  `run` is gone: `main.rs` reads the process's arguments and hands them, with
+  the cargo subcommand stripped, to `App::run_from_args`. `Args::parse_cargo`,
+  which only `run` used, goes with it.
+- `reporting::default_scorer::compute_braintax` is
+  `BraintaxComponents::compute_braintax`, and `BraintaxComponents` moves to
+  `reporting::braintax_components` with its four tests.
+  `DefaultScorer::compute_braintax`, which a test reached only through the free
+  function's name, has a test of its own.
+- All twenty-four stern4rust rules apply to every workspace member.
+
 ## [0.13.1] - 2026-10-10
 
 How the repository is gated, not what the tool measures. No scoring rule

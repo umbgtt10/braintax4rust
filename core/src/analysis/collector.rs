@@ -23,8 +23,8 @@ use crate::counting::generics_counter::GenericsCounter;
 use crate::counting::hidden_deps_counter::HiddenDepsCounter;
 use crate::counting::macro_counter::MacroCounter;
 use crate::counting::name_opacity_counter::NameOpacityCounter;
+use crate::reporting::braintax_components::BraintaxComponents;
 use crate::reporting::braintax_normalizer::BraintaxNormalizer;
-use crate::reporting::default_scorer::{BraintaxComponents, compute_braintax};
 use syn::parse_file;
 
 #[derive(Debug)]
@@ -187,7 +187,7 @@ impl<'a> Collector<'a> {
             self_ref_cost: input.self_ref_cost,
             return_complexity: input.return_complexity,
         };
-        let braintax = compute_braintax(&components);
+        let braintax = components.compute_braintax();
         self.functions.push(FunctionComplexity {
             name,
             file: self.current_file.clone(),

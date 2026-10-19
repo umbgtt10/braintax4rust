@@ -5,40 +5,11 @@
 use std::collections::BTreeMap;
 
 use crate::counting::function_complexity::FunctionComplexity;
+use crate::reporting::braintax_components::BraintaxComponents;
 use crate::reporting::braintax_normalizer::BraintaxNormalizer;
 use crate::reporting::module_stats::ModuleStats;
 use crate::reporting::overall_stats::OverallStats;
 use crate::traits::scorer::Scorer;
-
-#[derive(Debug, Clone)]
-pub struct BraintaxComponents {
-    pub cfg_gates: u32,
-    pub cyclomatic: u32,
-    pub hidden_dep_weight: f64,
-    pub depth: u32,
-    pub trait_factor: f64,
-    pub name_opacity: u32,
-    pub macro_density: u32,
-    pub generics: u32,
-    pub self_ref_cost: f64,
-    pub return_complexity: f64,
-}
-
-pub fn compute_braintax(c: &BraintaxComponents) -> f64 {
-    let cfg_factor = if c.cfg_gates > 0 {
-        2.0f64.powi(c.cfg_gates as i32)
-    } else {
-        1.0
-    };
-    let depth_factor = 1.0 + (c.depth.saturating_sub(1) as f64) * 0.15;
-    c.cyclomatic as f64 * cfg_factor * depth_factor * c.trait_factor
-        + c.hidden_dep_weight
-        + c.name_opacity as f64
-        + c.macro_density as f64
-        + c.generics as f64
-        + c.self_ref_cost
-        + c.return_complexity
-}
 
 #[derive(Debug, Clone, Default)]
 pub struct DefaultScorer {
@@ -54,7 +25,7 @@ impl DefaultScorer {
     }
 
     pub fn compute_braintax(func: &FunctionComplexity) -> f64 {
-        compute_braintax(&BraintaxComponents {
+        BraintaxComponents {
             cfg_gates: func.cfg_gates,
             cyclomatic: func.cyclomatic,
             hidden_dep_weight: func.hidden_dep_weight,
@@ -65,7 +36,8 @@ impl DefaultScorer {
             generics: 0,
             self_ref_cost: 0.0,
             return_complexity: 0.0,
-        })
+        }
+        .compute_braintax()
     }
 }
 

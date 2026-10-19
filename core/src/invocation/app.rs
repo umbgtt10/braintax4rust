@@ -56,6 +56,14 @@ impl App {
         }
     }
 
+    pub fn run_from_args<I, T>(args: I) -> Result<ExitCode>
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<OsString> + Clone,
+    {
+        Self::new(Config::from_args(Args::parse_from_args(args))).run()
+    }
+
     pub fn run(&self) -> Result<ExitCode> {
         let functions = self.collect_files()?;
 
@@ -110,20 +118,4 @@ impl App {
             ExitCode::FAILURE
         })
     }
-}
-
-pub fn run() -> Result<ExitCode> {
-    let args = Args::parse_cargo();
-    let config = Config::from_args(args);
-    App::new(config).run()
-}
-
-pub fn run_from_args<I, T>(args: I) -> Result<ExitCode>
-where
-    I: IntoIterator<Item = T>,
-    T: Into<OsString> + Clone,
-{
-    let args = Args::parse_from_args(args);
-    let config = Config::from_args(args);
-    App::new(config).run()
 }

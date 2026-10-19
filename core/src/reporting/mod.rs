@@ -2,6 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+pub mod braintax_components;
 pub mod braintax_normalizer;
 pub mod braintax_report;
 pub mod default_scorer;

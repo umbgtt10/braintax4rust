@@ -56,7 +56,7 @@ stern4rust runs **first** because its corrections are renames, file moves and
 directory splits: a layout it is about to reject is a layout the others would
 have measured for nothing. Its findings are also the cheapest to act on.
 
-All twenty-two of its rules apply to every member of the workspace, with
+All twenty-four of its rules apply to every member of the workspace, with
 nothing skipped, nothing selected and nothing unconfigured. `docs/header.txt`
 holds the three-line header every `.rs` file carries and `stern4rust.toml` names
 it -- in the config rather than the gate script, so a hand-run of
