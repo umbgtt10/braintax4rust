@@ -94,7 +94,7 @@ impl<'a> Collector<'a> {
         }
     }
 
-    pub(crate) fn trait_info(trait_item: &ItemTrait) -> TraitInfo {
+    pub fn trait_info(trait_item: &ItemTrait) -> TraitInfo {
         let methods = trait_item
             .items
             .iter()

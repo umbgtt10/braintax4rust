@@ -25,6 +25,9 @@ no free function.
   `DefaultScorer::compute_braintax`, which a test reached only through the free
   function's name, has a test of its own.
 - All twenty-four stern4rust rules apply to every workspace member.
+- `Collector::trait_info` is `pub`, with a test of its own, where it was
+  `pub(crate)`: `TraitRegistryBuilder` calls it, and stern4rust's coming
+  `public-or-private` rule asks that a method be `pub` or private.
 
 ## [0.13.1] - 2026-10-10
 

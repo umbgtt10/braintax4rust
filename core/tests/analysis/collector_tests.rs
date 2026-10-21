@@ -5,6 +5,8 @@
 use braintax::analysis::collector::Collector;
 use braintax::counting::function_complexity::FunctionComplexity;
 use std::path::{Path, PathBuf};
+use syn::ItemTrait;
+use syn::parse_str;
 
 fn collect(source: &str, path: &Path, root: &Path) -> Vec<FunctionComplexity> {
     let traits = Collector::build_trait_registry(&[(path.to_path_buf(), source.to_string())]);
@@ -451,6 +453,26 @@ impl MyTrait for C { fn compute(&self) -> i32 { 3 } }
     for f in &functions {
         assert!((f.trait_factor - 1.02).abs() < 0.001);
     }
+}
+
+// A marker supertrait asks nothing of an implementor, so it is not counted.
+#[test]
+fn trait_info_counts_methods_associated_types_and_supertraits_but_not_markers() {
+    // Arrange
+    let trait_item: ItemTrait = parse_str(
+        "trait Shape: std::fmt::Display + Send {\n    type Unit;\n    fn area(&self) -> u32;\n    \
+         fn name(&self) -> String;\n}",
+    )
+    .expect("parses");
+
+    // Act
+    let info = Collector::trait_info(&trait_item);
+
+    // Assert
+    assert_eq!(info.methods, 2);
+    assert_eq!(info.assoc_types, 1);
+    assert_eq!(info.supertraits, 1);
+    assert_eq!(info.impl_count, 0);
 }
 
 #[test]
