@@ -106,6 +106,10 @@ impl HiddenDepsCounter {
         Self::hidden_tail(&segments)
     }
 
+    fn hidden_macro_label(mac: &str) -> Option<&str> {
+        matches!(mac, "println" | "eprintln" | "print" | "eprint").then_some(mac)
+    }
+
     fn hidden_tail(segments: &[String]) -> Option<String> {
         if segments.is_empty() {
             return None;
@@ -114,9 +118,5 @@ impl HiddenDepsCounter {
         let tail = segments[tail_start..].join("::");
         let qualified_ok = segments.len() <= 2 || segments[0] == "std" || segments[0] == "core";
         (qualified_ok && HIDDEN_DEP_TAILS.contains(&tail.as_str())).then_some(tail)
-    }
-
-    fn hidden_macro_label(mac: &str) -> Option<&str> {
-        matches!(mac, "println" | "eprintln" | "print" | "eprint").then_some(mac)
     }
 }

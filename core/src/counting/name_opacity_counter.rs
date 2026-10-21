@@ -18,14 +18,6 @@ impl NameOpacityCounter {
         Self::default()
     }
 
-    fn score_ident(name: &str) -> u32 {
-        match name.len() {
-            1 => 2,
-            2 | 3 => 1,
-            _ => 0,
-        }
-    }
-
     pub fn visit_params(&mut self, inputs: &Punctuated<FnArg, syn::Token![,]>) {
         for input in inputs {
             if let syn::FnArg::Typed(pat_type) = input
@@ -33,6 +25,14 @@ impl NameOpacityCounter {
             {
                 self.score += Self::score_ident(&pat_ident.ident.to_string());
             }
+        }
+    }
+
+    fn score_ident(name: &str) -> u32 {
+        match name.len() {
+            1 => 2,
+            2 | 3 => 1,
+            _ => 0,
         }
     }
 }

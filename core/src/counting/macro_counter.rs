@@ -91,10 +91,6 @@ impl<'ast> Visit<'ast> for MacroCounter {
 }
 
 impl MacroCounter {
-    fn score_derive_attr(&mut self, attr: &Attribute) {
-        self.count += DeriveAttrScorer::new().score(attr);
-    }
-
     fn is_known_attr(name: &str) -> bool {
         Self::is_known_macro(name)
             || name == "cfg"
@@ -102,5 +98,9 @@ impl MacroCounter {
             || name == "allow"
             || name == "deny"
             || name == "warn"
+    }
+
+    fn score_derive_attr(&mut self, attr: &Attribute) {
+        self.count += DeriveAttrScorer::new().score(attr);
     }
 }

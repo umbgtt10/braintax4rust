@@ -51,17 +51,11 @@ impl SignatureScorer {
     }
 
     #[must_use]
-    pub fn trait_factor(name: &str, info: &TraitInfo) -> f64 {
-        if KNOWN_TRAITS.contains(&name) {
-            return 0.80;
+    pub fn return_complexity(return_type: &ReturnType) -> f64 {
+        match return_type {
+            syn::ReturnType::Default => 0.0,
+            syn::ReturnType::Type(_, ty) => Self::type_complexity(ty),
         }
-        let method_penalty = (info.methods.saturating_sub(3)) as f64 * 0.01;
-        let base = if info.assoc_types > 0 || info.supertraits > 0 {
-            1.15 + method_penalty
-        } else {
-            0.90 + method_penalty
-        };
-        base + Self::dimension_penalty(info) + Self::dispatch_penalty(info)
     }
 
     #[must_use]
@@ -79,11 +73,17 @@ impl SignatureScorer {
     }
 
     #[must_use]
-    pub fn return_complexity(return_type: &ReturnType) -> f64 {
-        match return_type {
-            syn::ReturnType::Default => 0.0,
-            syn::ReturnType::Type(_, ty) => Self::type_complexity(ty),
+    pub fn trait_factor(name: &str, info: &TraitInfo) -> f64 {
+        if KNOWN_TRAITS.contains(&name) {
+            return 0.80;
         }
+        let method_penalty = (info.methods.saturating_sub(3)) as f64 * 0.01;
+        let base = if info.assoc_types > 0 || info.supertraits > 0 {
+            1.15 + method_penalty
+        } else {
+            0.90 + method_penalty
+        };
+        base + Self::dimension_penalty(info) + Self::dispatch_penalty(info)
     }
 
     fn dimension_penalty(info: &TraitInfo) -> f64 {
@@ -101,15 +101,6 @@ impl SignatureScorer {
         let base = ((info.impl_count.saturating_sub(1)) as f64 * 0.06).min(0.18);
         let amplifier = if info.assoc_types > 0 { 1.5 } else { 1.0 };
         (base * amplifier).min(0.27)
-    }
-
-    fn type_complexity(ty: &Type) -> f64 {
-        match ty {
-            syn::Type::ImplTrait(_) => 1.5,
-            syn::Type::TraitObject(_) => 1.0,
-            syn::Type::Path(type_path) => Self::path_type_complexity(type_path),
-            _ => 0.0,
-        }
     }
 
     fn path_type_complexity(type_path: &TypePath) -> f64 {
@@ -131,5 +122,14 @@ impl SignatureScorer {
             }
         }
         cost
+    }
+
+    fn type_complexity(ty: &Type) -> f64 {
+        match ty {
+            syn::Type::ImplTrait(_) => 1.5,
+            syn::Type::TraitObject(_) => 1.0,
+            syn::Type::Path(type_path) => Self::path_type_complexity(type_path),
+            _ => 0.0,
+        }
     }
 }

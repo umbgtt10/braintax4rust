@@ -33,6 +33,23 @@ impl TraitRegistryBuilder {
         self.traits
     }
 
+    fn record_impl(&mut self, item: &Item) {
+        let syn::Item::Impl(item_impl) = item else {
+            return;
+        };
+        let Some((_, path, _)) = &item_impl.trait_ else {
+            return;
+        };
+        let name = path
+            .segments
+            .last()
+            .map(|s| s.ident.to_string())
+            .unwrap_or_default();
+        if let Some(info) = self.traits.get_mut(&name) {
+            info.impl_count += 1;
+        }
+    }
+
     fn scan_trait_definitions(&mut self, source: &str) {
         let Ok(syntax) = parse_file(source) else {
             return;
@@ -51,23 +68,6 @@ impl TraitRegistryBuilder {
         };
         for item in &syntax.items {
             self.record_impl(item);
-        }
-    }
-
-    fn record_impl(&mut self, item: &Item) {
-        let syn::Item::Impl(item_impl) = item else {
-            return;
-        };
-        let Some((_, path, _)) = &item_impl.trait_ else {
-            return;
-        };
-        let name = path
-            .segments
-            .last()
-            .map(|s| s.ident.to_string())
-            .unwrap_or_default();
-        if let Some(info) = self.traits.get_mut(&name) {
-            info.impl_count += 1;
         }
     }
 }

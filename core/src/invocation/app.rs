@@ -56,14 +56,6 @@ impl App {
         }
     }
 
-    pub fn run_from_args<I, T>(args: I) -> Result<ExitCode>
-    where
-        I: IntoIterator<Item = T>,
-        T: Into<OsString> + Clone,
-    {
-        Self::new(Config::from_args(Args::parse_from_args(args))).run()
-    }
-
     pub fn run(&self) -> Result<ExitCode> {
         let functions = self.collect_files()?;
 
@@ -76,6 +68,14 @@ impl App {
 
         let report = self.compute_report(functions);
         self.handle_output(&report)
+    }
+
+    pub fn run_from_args<I, T>(args: I) -> Result<ExitCode>
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<OsString> + Clone,
+    {
+        Self::new(Config::from_args(Args::parse_from_args(args))).run()
     }
 
     fn collect_files(&self) -> Result<Vec<FunctionComplexity>> {

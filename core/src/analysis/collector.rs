@@ -75,25 +75,6 @@ impl<'a> Collector<'a> {
         collector.functions
     }
 
-    fn module_depth(module: &str) -> u32 {
-        if module == "." {
-            1
-        } else {
-            module.split('/').count() as u32 + 1
-        }
-    }
-
-    fn module_from_path(path: &Path, root: &Path) -> String {
-        let relative = path.strip_prefix(root).unwrap_or(path);
-        let s = relative.to_string_lossy().replace('\\', "/");
-        let without_src = s.strip_prefix("src/").map(|s| s.to_string()).unwrap_or(s);
-        if let Some(pos) = without_src.rfind('/') {
-            without_src[..pos].to_string()
-        } else {
-            ".".to_string()
-        }
-    }
-
     pub fn trait_info(trait_item: &ItemTrait) -> TraitInfo {
         let methods = trait_item
             .items
@@ -115,6 +96,25 @@ impl<'a> Collector<'a> {
             assoc_types,
             supertraits,
             impl_count: 0,
+        }
+    }
+
+    fn module_depth(module: &str) -> u32 {
+        if module == "." {
+            1
+        } else {
+            module.split('/').count() as u32 + 1
+        }
+    }
+
+    fn module_from_path(path: &Path, root: &Path) -> String {
+        let relative = path.strip_prefix(root).unwrap_or(path);
+        let s = relative.to_string_lossy().replace('\\', "/");
+        let without_src = s.strip_prefix("src/").map(|s| s.to_string()).unwrap_or(s);
+        if let Some(pos) = without_src.rfind('/') {
+            without_src[..pos].to_string()
+        } else {
+            ".".to_string()
         }
     }
 }
@@ -163,6 +163,32 @@ struct FnInput {
 }
 
 impl<'a> Collector<'a> {
+    fn count_cfg_gates(attrs: &[Attribute]) -> u32 {
+        attrs
+            .iter()
+            .filter(|attr| {
+                let ident = attr.path().get_ident().map(|i| i.to_string());
+                matches!(ident.as_deref(), Some("cfg") | Some("cfg_attr"))
+            })
+            .count() as u32
+    }
+
+    fn has_test_attr(attrs: &[Attribute]) -> bool {
+        attrs.iter().any(|attr| {
+            let ident = attr.path().get_ident().map(|i| i.to_string());
+            match ident.as_deref() {
+                Some("test") => true,
+                Some("cfg") => attr
+                    .meta
+                    .require_list()
+                    .ok()
+                    .map(|list| format!("{}", list.tokens).contains("test"))
+                    .unwrap_or(false),
+                _ => false,
+            }
+        })
+    }
+
     fn push_fn(&mut self, name: String, block: &Block, attrs: &[Attribute], input: FnInput) {
         let mut visitor = ComplexityVisitor::new();
         visitor.visit_block(block);
@@ -204,16 +230,6 @@ impl<'a> Collector<'a> {
         });
     }
 
-    fn count_cfg_gates(attrs: &[Attribute]) -> u32 {
-        attrs
-            .iter()
-            .filter(|attr| {
-                let ident = attr.path().get_ident().map(|i| i.to_string());
-                matches!(ident.as_deref(), Some("cfg") | Some("cfg_attr"))
-            })
-            .count() as u32
-    }
-
     fn visit_fn(&mut self, item_fn: &ItemFn) {
         let mut names = NameOpacityCounter::new();
         names.visit_params(&item_fn.sig.inputs);
@@ -234,14 +250,6 @@ impl<'a> Collector<'a> {
                 return_complexity: ret_complexity,
             },
         );
-    }
-
-    fn visit_mod(&mut self, item_mod: &ItemMod) {
-        if let Some((_, items)) = &item_mod.content {
-            for inner in items {
-                self.visit_item(inner);
-            }
-        }
     }
 
     fn visit_impl_item(&mut self, item: &ImplItem, trait_factor: f64) {
@@ -271,19 +279,11 @@ impl<'a> Collector<'a> {
         }
     }
 
-    fn has_test_attr(attrs: &[Attribute]) -> bool {
-        attrs.iter().any(|attr| {
-            let ident = attr.path().get_ident().map(|i| i.to_string());
-            match ident.as_deref() {
-                Some("test") => true,
-                Some("cfg") => attr
-                    .meta
-                    .require_list()
-                    .ok()
-                    .map(|list| format!("{}", list.tokens).contains("test"))
-                    .unwrap_or(false),
-                _ => false,
+    fn visit_mod(&mut self, item_mod: &ItemMod) {
+        if let Some((_, items)) = &item_mod.content {
+            for inner in items {
+                self.visit_item(inner);
             }
-        })
+        }
     }
 }
