@@ -10,31 +10,6 @@ use syn::visit::{Visit, visit_attribute, visit_expr_macro, visit_stmt_macro};
 
 use crate::counting::derive_attr_scorer::DeriveAttrScorer;
 
-#[derive(Default)]
-pub struct MacroCounter {
-    pub count: u32,
-}
-
-impl MacroCounter {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    fn is_known_macro(name: &str) -> bool {
-        KNOWN_STD_MACROS.contains(&name)
-    }
-
-    fn macro_cost(mac: &Macro) -> u32 {
-        let name = mac
-            .path
-            .require_ident()
-            .map(|i| i.to_string())
-            .unwrap_or_default();
-        if Self::is_known_macro(&name) { 0 } else { 3 }
-    }
-}
-
 const KNOWN_STD_MACROS: &[&str] = &[
     "println",
     "eprintln",
@@ -65,6 +40,31 @@ const KNOWN_STD_MACROS: &[&str] = &[
     "env",
     "option_env",
 ];
+
+#[derive(Default)]
+pub struct MacroCounter {
+    pub count: u32,
+}
+
+impl MacroCounter {
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    fn is_known_macro(name: &str) -> bool {
+        KNOWN_STD_MACROS.contains(&name)
+    }
+
+    fn macro_cost(mac: &Macro) -> u32 {
+        let name = mac
+            .path
+            .require_ident()
+            .map(|i| i.to_string())
+            .unwrap_or_default();
+        if Self::is_known_macro(&name) { 0 } else { 3 }
+    }
+}
 
 impl<'ast> Visit<'ast> for MacroCounter {
     fn visit_expr_macro(&mut self, expr: &'ast ExprMacro) {
