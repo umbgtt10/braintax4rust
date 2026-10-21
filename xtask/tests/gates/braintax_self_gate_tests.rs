@@ -84,7 +84,7 @@ fn run_with_a_non_zero_exit_code_names_the_ceiling_it_breached() {
 
     // Assert
     assert_eq!(
-        result,
+        result.map_err(|failure| failure.to_string()),
         Err(String::from("avg braintax exceeds the ceiling of 5.0"))
     );
 }

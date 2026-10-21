@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use crate::gates::gate::Gate;
+use crate::gates::gate_failure::GateFailure;
 use crate::process::command_runner::CommandRunner;
 
 pub struct BraintaxSelfGate<'a> {
@@ -33,7 +34,7 @@ impl Gate for BraintaxSelfGate<'_> {
         String::from("braintax self-analysis")
     }
 
-    fn run(&self) -> Result<(), String> {
+    fn run(&self) -> Result<(), GateFailure> {
         // Built from this checkout rather than taken from an install: a tool
         // that reports its own braintax has to report the tree being changed.
         //
@@ -59,10 +60,10 @@ impl Gate for BraintaxSelfGate<'_> {
 
         match self.runner.run_streaming("cargo", &args)? {
             Some(0) => Ok(()),
-            _ => Err(format!(
+            _ => Err(GateFailure::Found(format!(
                 "avg braintax exceeds the ceiling of {}",
                 self.ceiling
-            )),
+            ))),
         }
     }
 }
