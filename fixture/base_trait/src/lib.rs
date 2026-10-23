@@ -4,5 +4,5 @@
 
 #![allow(dead_code, unused_variables)]
 
-pub mod compute;
 pub mod computer;
+pub mod my_computer;

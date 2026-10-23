@@ -4,4 +4,4 @@
 
 #![allow(dead_code, unused_variables)]
 
-pub mod compute;
+pub mod my_processor;
