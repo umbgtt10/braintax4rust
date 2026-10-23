@@ -11,7 +11,6 @@ use braintax::reporting::default_scorer::DefaultScorer;
 use braintax_test_utils::capture_reporter::CaptureReporter;
 use serde_json::from_str;
 use std::path::PathBuf;
-use std::sync::Arc;
 
 pub struct FixtureAnalyzer {
     fixture_root: PathBuf,
@@ -25,7 +24,7 @@ impl FixtureAnalyzer {
     pub fn analyze(&self, name: &str) -> Result<BraintaxReport> {
         let path = self.fixture_root.join(name);
         let reporter = CaptureReporter::new();
-        let captured = Arc::clone(&reporter.captured);
+        let captured = reporter.captured();
         let app = App::with_deps(
             Box::new(FsWalk::new(&path)),
             Box::new(DefaultScorer::new()),

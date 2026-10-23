@@ -10,12 +10,11 @@ use braintax::reporting::default_scorer::DefaultScorer;
 use braintax_test_utils::capture_reporter::CaptureReporter;
 use serde_json::from_str;
 use std::path::PathBuf;
-use std::sync::Arc;
 
 fn analyze() -> BraintaxReport {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let reporter = CaptureReporter::new();
-    let captured = Arc::clone(&reporter.captured);
+    let captured = reporter.captured();
     let app = App::with_deps(
         Box::new(FsWalk::new(&path)),
         Box::new(DefaultScorer::new()),

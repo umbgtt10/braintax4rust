@@ -19,8 +19,8 @@ fn new_agrees_with_default() {
 
     // Assert
     assert_eq!(
-        *from_new.captured.lock().expect("the lock holds"),
-        *from_default.captured.lock().expect("the lock holds")
+        *from_new.captured().lock().expect("the lock holds"),
+        *from_default.captured().lock().expect("the lock holds")
     );
 }
 
@@ -30,5 +30,11 @@ fn new_starts_with_nothing_captured() {
     let reporter = CaptureReporter::new();
 
     // Assert
-    assert!(reporter.captured.lock().expect("the lock holds").is_empty());
+    assert!(
+        reporter
+            .captured()
+            .lock()
+            .expect("the lock holds")
+            .is_empty()
+    );
 }

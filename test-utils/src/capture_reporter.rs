@@ -10,12 +10,17 @@ use braintax::traits::reporter::Reporter;
 use serde_json::to_string_pretty;
 
 pub struct CaptureReporter {
-    pub captured: Arc<Mutex<String>>,
+    captured: Arc<Mutex<String>>,
 }
 
 impl CaptureReporter {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    // A handle on what the reporter captures, kept by a test that hands the reporter itself away.
+    pub fn captured(&self) -> Arc<Mutex<String>> {
+        Arc::clone(&self.captured)
     }
 }
 

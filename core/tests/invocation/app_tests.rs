@@ -87,7 +87,7 @@ fn with_if(x: bool) {
     let scorer = DefaultScorer::new();
     let reporter = CaptureReporter::new();
     let config = Config::new(PathBuf::from("."), true, None, None, 10);
-    let captured = reporter.captured.clone();
+    let captured = reporter.captured();
     let app = App::with_deps(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
 
     // Act
@@ -181,7 +181,7 @@ fn trivial() {
     let scorer = DefaultScorer::new();
     let reporter = CaptureReporter::new();
     let config = Config::new(PathBuf::from("."), true, None, None, 10);
-    let captured = reporter.captured.clone();
+    let captured = reporter.captured();
     let app = App::with_deps(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
 
     // Act
@@ -200,7 +200,7 @@ fn run_with_a_threshold_set_still_writes_the_report() {
         files: vec![(PathBuf::from("src/lib.rs"), "fn trivial() {}".to_string())],
     };
     let reporter = CaptureReporter::new();
-    let captured = reporter.captured.clone();
+    let captured = reporter.captured();
     let config = Config::new(PathBuf::from("."), false, Some(1), None, 10);
     let app = App::with_deps(
         Box::new(walk),
