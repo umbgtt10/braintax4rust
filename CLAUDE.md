@@ -40,12 +40,13 @@ as well as sources (`--all-targets`), which the PowerShell script did not.
 Stage 2 is `cargo xtask stage2` -- a real crate under `xtask/`, gated like any
 other code, rather than a script. Each gate is a `Gate` implementation
 constructed against a `CommandRunner` trait, so the argument lists and the
-failure messages are covered by `xtask`'s own integration tests. It runs six
+failure messages are covered by `xtask`'s own integration tests. It runs seven
 gates, in this order:
 
 | gate | asks |
 |---|---|
 | `cargo stern4rust` | do the house coding rules hold |
+| `cargo shear` | is every declared dependency used, in the section that uses it |
 | `cargo dry4rust` | did this change add duplicated code |
 | `cargo braintax4rust` | does this tool still pay its own bill |
 | `cargo crap4rust` | is any function complex and untested |
@@ -80,7 +81,18 @@ twice over, by the fixture's own acceptance test and by the ordinal ranking in
 analysis input (braintax reads nothing under `tests/`), so they follow the house
 layout like any other suite.
 
-`dry4rust` runs **second** for the same reason stern4rust is first: removing a
+cargo-shear runs **second**: its corrections edit manifests only -- a
+dependency removed, or moved to the section that uses it -- so they change
+nothing the gates behind it measure, and it takes a second. It runs `--locked`,
+reading the lock file and never writing it, and `--deny-warnings`, so an
+optional dependency no feature's code uses fails as an unused one does. A
+dependency it cannot see used -- linked only for what it provides, declared
+only to switch on a feature, used only by generated code -- goes in
+`[package.metadata.cargo-shear] ignored`, and the gate refuses an entry without
+its reason in the same table's `reasons`; there are none today. Pinned at
+1.14.0, as CI installs it.
+
+`dry4rust` runs **third** for the same reason stern4rust is first: removing a
 duplicate moves code between files and functions, which changes what every gate
 behind it measures -- the braintax self-analysis included. It scans `core/src`
 only -- tests repeat their arrangement by design -- and checks with zero
@@ -110,6 +122,7 @@ recorded at: `cargo dry4rust --path core/src --min-nodes 25 --baseline "$PWD/dry
 `cargo install cargo-crap4rust`
 `cargo install cargo-twin4rust`
 `cargo install cargo-iceberg4rust`
+`cargo install --locked cargo-shear --version 1.14.0`
 
 cargo-braintax4rust is deliberately not in that list. The self-analysis gate
 builds it from this checkout, so the number it reports is the number for the
