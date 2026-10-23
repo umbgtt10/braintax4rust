@@ -19,7 +19,6 @@ use xtask::gates::twin_gate::TwinGate;
 use xtask::process::system_command_runner::SystemCommandRunner;
 
 const CORE_PACKAGE: &str = "cargo-braintax4rust";
-const XTASK_PACKAGE: &str = "xtask";
 const CRAP_THRESHOLD: &str = "15";
 const ICEBERG_THRESHOLD: &str = "20";
 // core/ alone, and the ceiling is set against what core actually scores (4.1)
@@ -47,17 +46,12 @@ fn run_stage2() -> ExitCode {
     let runner = SystemCommandRunner::new();
     let parser = CrapReportParser::new();
 
-    // The house rules reach xtask as well, so the crate that runs the gates is
-    // held to them too. The fixture crates stay out: each is a deliberately
-    // shaped package that braintax is pointed at. A bare hand-run judges them
-    // against every rule all the same, and is not clean: stern4rust.toml
-    // excludes by name the source files that break a rule by construction, but
-    // not the six `compute.rs` files named-subject reports (docs/OPEN_POINTS.md).
-    let stern = SternGate::new(
-        &runner,
-        manifest_path.clone(),
-        vec![String::from(CORE_PACKAGE), String::from(XTASK_PACKAGE)],
-    );
+    // Every member, so the gate checks what a hand-run of `cargo stern4rust`
+    // checks: xtask, because it is the crate that runs the gates, and the
+    // fixtures, whose source files that break a rule by construction
+    // stern4rust.toml excludes by name. Left out, the fixtures broke
+    // named-subject six times with the gate green.
+    let stern = SternGate::new(&runner, manifest_path.clone(), Vec::new());
 
     // Second: every declared dependency used, in the section that uses it. Its
     // corrections edit manifests only, so they move nothing the gates behind it

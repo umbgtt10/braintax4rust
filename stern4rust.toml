@@ -1,9 +1,9 @@
 # House coding rules, enforced by `cargo stern4rust` first in stage 2.
 #
-# All twenty-two rules apply to every member of the workspace: nothing is
-# skipped and nothing is selected. A hand-run of a bare `cargo stern4rust`
-# judges every package; the stage 2 gate narrows that to cargo-braintax4rust and
-# xtask with --package, and checks them exactly as this file says.
+# Every rule applies to every member of the workspace, the fixtures included:
+# nothing is skipped and nothing is selected. The stage 2 gate judges every
+# package, as a bare `cargo stern4rust` does, and checks them exactly as this
+# file says.
 #
 # The header rule is the one rule that cannot hold until it is told what the
 # header says. Naming the file here rather than in the gate script means a
@@ -20,7 +20,7 @@ header-file = "docs/header.txt"
 # scan rather than having the rule stood down: an exclusion names one file and
 # is counted in the report, where a skip silenced the rule for the whole package
 # -- tests included. Everything else in every fixture, its `src/` and its
-# acceptance test alike, is held to all twenty-two rules.
+# acceptance test alike, is held to every rule.
 #
 # braintax reads no file under `tests/`, so the acceptance tests themselves are
 # not analysis input and are not excluded: they follow the house layout like any

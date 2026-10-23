@@ -64,10 +64,11 @@ it -- in the config rather than the gate script, so a hand-run of
 `cargo stern4rust` checks exactly what the gate checks. Every member's manifest
 carries `license = "MIT"`, which is what lets `spdx-matches-manifest` apply.
 
-The stern gate is scoped to `cargo-braintax4rust` **and** `xtask`. The crate
-that runs the gates is not exempt from them; it caught a misordered test in its
-own suite on the first run. A bare `cargo stern4rust` judges every member --
-the fixtures, `validation` and `test-utils` included -- and is green too.
+The stern gate judges every member, as a bare `cargo stern4rust` does --
+`xtask`, the fixtures, `validation` and `test-utils` included. The crate that
+runs the gates is not exempt from them; it caught a misordered test in its own
+suite on the first run. While the gate named only `cargo-braintax4rust` and
+`xtask`, the fixtures broke `named-subject` six times with stage 2 green.
 
 The one thing kept out of the scan is eight fixture source files that break a
 rule by construction: a second type implementing the trait in the same file, a
@@ -128,9 +129,10 @@ cargo-braintax4rust is deliberately not in that list. The self-analysis gate
 builds it from this checkout, so the number it reports is the number for the
 tree being changed rather than for whatever version happens to be installed.
 
-Every stage 2 gate is scoped to `cargo-braintax4rust` -- the stern gate adds
-`xtask`, and the dry gate is pointed at that crate's `core/src` -- which is what
-keeps the other members out of them:
+The measuring stage 2 gates are scoped to `cargo-braintax4rust` -- the dry gate
+is pointed at that crate's `core/src` -- which is what keeps the other members
+out of them; the stern and dependency gates hold every member to the house rules
+and its manifest, nothing more:
 
 - the eighteen `fixture/` crates are analysis inputs, deliberately written to
   score badly. They are workspace members, so `cargo test` builds them and
