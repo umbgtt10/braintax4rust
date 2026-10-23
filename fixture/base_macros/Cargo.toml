@@ -11,7 +11,7 @@ autotests = false
 name = "all_tests"
 path = "tests/all_tests.rs"
 
-[dependencies]
+[dev-dependencies]
 braintax.workspace = true
 braintax-test-utils.workspace = true
 serde_json.workspace = true
