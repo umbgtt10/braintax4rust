@@ -20,13 +20,7 @@ fn analyze() -> BraintaxReport {
         Box::new(FsWalk::new(&path)),
         Box::new(DefaultScorer::new()),
         Box::new(reporter),
-        Config {
-            path,
-            json: true,
-            threshold: None,
-            max_avg_braintax: None,
-            top: 10,
-        },
+        Config::new(path, true, None, None, 10),
     );
     app.run().unwrap();
     let json = captured.lock().unwrap().clone();
@@ -39,19 +33,19 @@ fn cfg_shows_both_functions() {
     let report = analyze();
 
     // Assert
-    assert_eq!(report.overall.total_functions, 2);
-    assert_eq!(report.overall.max_cyclomatic, 18);
-    assert_eq!(report.overall.max_braintax, 36.0);
+    assert_eq!(report.overall().total_functions(), 2);
+    assert_eq!(report.overall().max_cyclomatic(), 18);
+    assert_eq!(report.overall().max_braintax(), 36.0);
     assert!(
         report
-            .functions
+            .functions()
             .iter()
-            .any(|f| f.name == "compute" && f.cyclomatic == 18 && f.braintax == 36.0)
+            .any(|f| f.name() == "compute" && f.cyclomatic() == 18 && f.braintax() == 36.0)
     );
     assert!(
         report
-            .functions
+            .functions()
             .iter()
-            .any(|f| f.name == "placeholder" && f.cyclomatic == 1 && f.braintax == 1.0)
+            .any(|f| f.name() == "placeholder" && f.cyclomatic() == 1 && f.braintax() == 1.0)
     );
 }

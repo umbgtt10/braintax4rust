@@ -7,6 +7,34 @@ use serde_json::from_str;
 use serde_json::to_string;
 
 #[test]
+fn depth_returns_the_depth_it_was_given() {
+    // Arrange
+    let function = FunctionComplexity::default()
+        .with_file(String::from("src/codec.rs"))
+        .with_depth(2);
+
+    // Act
+    let depth = function.depth();
+
+    // Assert
+    assert_eq!(depth, 2);
+}
+
+#[test]
+fn file_returns_the_file_it_was_given() {
+    // Arrange
+    let function = FunctionComplexity::default()
+        .with_file(String::from("src/codec.rs"))
+        .with_depth(2);
+
+    // Act
+    let file = function.file();
+
+    // Assert
+    assert_eq!(file, "src/codec.rs");
+}
+
+#[test]
 fn function_complexity_deserializes_from_json() {
     // Arrange
     let json = r#"{"name":"bar","file":"src/main.rs","module":"","cyclomatic":3,"cfg_gates":0,"hidden_deps":0,"hidden_dep_weight":0.0,"hidden_dep_labels":[],"depth":1,"trait_factor":1.0,"braintax":3.0,"braintax_normalized":80}"#;
@@ -15,31 +43,52 @@ fn function_complexity_deserializes_from_json() {
     let fc: FunctionComplexity = from_str(json).unwrap();
 
     // Assert
-    assert_eq!(fc.name, "bar");
-    assert_eq!(fc.cyclomatic, 3);
+    assert_eq!(fc.name(), "bar");
+    assert_eq!(fc.cyclomatic(), 3);
 }
 
 #[test]
 fn function_complexity_serializes_to_json() {
     // Arrange
-    let fc = FunctionComplexity {
-        name: "foo".to_string(),
-        file: "src/lib.rs".to_string(),
-        module: "lib".to_string(),
-        cyclomatic: 5,
-        cfg_gates: 0,
-        hidden_deps: 0,
-        hidden_dep_weight: 0.0,
-        hidden_dep_labels: vec![],
-        depth: 1,
-        trait_factor: 1.0,
-        braintax: 5.0,
-        braintax_normalized: 67,
-    };
+    let fc = FunctionComplexity::default()
+        .with_name("foo".to_string())
+        .with_file("src/lib.rs".to_string())
+        .with_module("lib".to_string())
+        .with_cyclomatic(5)
+        .with_depth(1)
+        .with_trait_factor(1.0)
+        .with_braintax(5.0)
+        .with_braintax_normalized(67);
 
     // Act
     let json = to_string(&fc).unwrap();
 
     // Assert
     assert!(json.contains("\"cyclomatic\":5"));
+}
+
+#[test]
+fn with_hidden_dep_labels_names_the_dependencies_and_keeps_the_rest() {
+    // Arrange
+    let function = FunctionComplexity::default().with_depth(2);
+
+    // Act
+    let labelled = function.with_hidden_dep_labels(vec![String::from("clock")]);
+
+    // Assert
+    assert_eq!(labelled.hidden_dep_labels(), [String::from("clock")]);
+    assert_eq!(labelled.depth(), 2);
+}
+
+#[test]
+fn with_hidden_deps_counts_the_dependencies_and_keeps_the_rest() {
+    // Arrange
+    let function = FunctionComplexity::default().with_depth(2);
+
+    // Act
+    let counted = function.with_hidden_deps(3);
+
+    // Assert
+    assert_eq!(counted.hidden_deps(), 3);
+    assert_eq!(counted.depth(), 2);
 }

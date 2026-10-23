@@ -26,11 +26,11 @@ impl ThresholdGate {
 
     fn avg_braintax_passes(&self, overall: &OverallStats) -> bool {
         self.max_avg_braintax
-            .is_none_or(|max| overall.avg_braintax <= max)
+            .is_none_or(|max| overall.avg_braintax() <= max)
     }
 
     fn cyclomatic_passes(&self, overall: &OverallStats) -> bool {
         self.max_cyclomatic
-            .is_none_or(|max| overall.max_cyclomatic <= max)
+            .is_none_or(|max| overall.max_cyclomatic() <= max)
     }
 }

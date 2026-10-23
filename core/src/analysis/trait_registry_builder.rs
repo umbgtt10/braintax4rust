@@ -46,7 +46,7 @@ impl TraitRegistryBuilder {
             .map(|s| s.ident.to_string())
             .unwrap_or_default();
         if let Some(info) = self.traits.get_mut(&name) {
-            info.impl_count += 1;
+            info.count_impl();
         }
     }
 

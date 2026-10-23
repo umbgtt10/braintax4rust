@@ -43,13 +43,17 @@ const KNOWN_STD_MACROS: &[&str] = &[
 
 #[derive(Default)]
 pub struct MacroCounter {
-    pub count: u32,
+    count: u32,
 }
 
 impl MacroCounter {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn count(&self) -> u32 {
+        self.count
     }
 
     fn is_known_macro(name: &str) -> bool {

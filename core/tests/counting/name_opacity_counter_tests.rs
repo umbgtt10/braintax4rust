@@ -12,14 +12,14 @@ fn score_block(code: &str) -> u32 {
     let block: Block = parse_str(code).unwrap();
     let mut counter = NameOpacityCounter::new();
     counter.visit_block(&block);
-    counter.score
+    counter.score()
 }
 
 fn score_params(code: &str) -> u32 {
     let sig: Signature = parse_str(code).unwrap();
     let mut counter = NameOpacityCounter::new();
     counter.visit_params(&sig.inputs);
-    counter.score
+    counter.score()
 }
 
 #[test]

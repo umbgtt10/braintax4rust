@@ -20,13 +20,7 @@ fn analyze() -> BraintaxReport {
         Box::new(FsWalk::new(&path)),
         Box::new(DefaultScorer::new()),
         Box::new(reporter),
-        Config {
-            path,
-            json: true,
-            threshold: None,
-            max_avg_braintax: None,
-            top: 10,
-        },
+        Config::new(path, true, None, None, 10),
     );
     app.run().unwrap();
     let json = captured.lock().unwrap().clone();
@@ -39,8 +33,8 @@ fn super_only_costs_more_than_simple_trait() {
     let report = analyze();
 
     // Assert
-    assert_eq!(report.overall.total_functions, 2);
-    assert_eq!(report.functions[0].cyclomatic, 1);
-    assert_eq!(report.functions[1].cyclomatic, 18);
-    assert!((report.functions[1].braintax - 23.6).abs() < 0.01);
+    assert_eq!(report.overall().total_functions(), 2);
+    assert_eq!(report.functions()[0].cyclomatic(), 1);
+    assert_eq!(report.functions()[1].cyclomatic(), 18);
+    assert!((report.functions()[1].braintax() - 23.6).abs() < 0.01);
 }

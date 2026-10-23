@@ -20,13 +20,7 @@ fn analyze() -> BraintaxReport {
         Box::new(FsWalk::new(&path)),
         Box::new(DefaultScorer::new()),
         Box::new(reporter),
-        Config {
-            path,
-            json: true,
-            threshold: None,
-            max_avg_braintax: None,
-            top: 10,
-        },
+        Config::new(path, true, None, None, 10),
     );
     app.run().unwrap();
     let json = captured.lock().unwrap().clone();
@@ -39,10 +33,10 @@ fn trait_cc_is_18() {
     let report = analyze();
 
     // Assert
-    assert_eq!(report.overall.total_functions, 1);
-    assert_eq!(report.overall.max_cyclomatic, 18);
-    assert_eq!(report.overall.max_braintax, 16.4);
-    assert_eq!(report.functions[0].name, "compute");
-    assert_eq!(report.functions[0].cyclomatic, 18);
-    assert!((report.functions[0].braintax - 16.4).abs() < 0.01);
+    assert_eq!(report.overall().total_functions(), 1);
+    assert_eq!(report.overall().max_cyclomatic(), 18);
+    assert_eq!(report.overall().max_braintax(), 16.4);
+    assert_eq!(report.functions()[0].name(), "compute");
+    assert_eq!(report.functions()[0].cyclomatic(), 18);
+    assert!((report.functions()[0].braintax() - 16.4).abs() < 0.01);
 }

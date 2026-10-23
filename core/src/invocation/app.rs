@@ -32,10 +32,10 @@ impl App {
     #[must_use]
     pub fn new(config: Config) -> Self {
         Self {
-            walker: Box::new(FsWalk::new(&config.path)),
+            walker: Box::new(FsWalk::new(config.path())),
             scorer: Box::new(DefaultScorer::new()),
-            reporter: Box::new(StdoutReporter::new(config.json, config.top)),
-            gate: ThresholdGate::new(config.threshold, config.max_avg_braintax),
+            reporter: Box::new(StdoutReporter::new(config.json(), config.top())),
+            gate: ThresholdGate::new(config.threshold(), config.max_avg_braintax()),
             config,
         }
     }
@@ -51,7 +51,7 @@ impl App {
             walker,
             scorer,
             reporter,
-            gate: ThresholdGate::new(config.threshold, config.max_avg_braintax),
+            gate: ThresholdGate::new(config.threshold(), config.max_avg_braintax()),
             config,
         }
     }
@@ -62,7 +62,7 @@ impl App {
         if functions.is_empty() {
             return Err(anyhow::anyhow!(
                 "no Rust source files found in {}",
-                self.config.path.display()
+                self.config.path().display()
             ));
         }
 
@@ -83,7 +83,7 @@ impl App {
         let traits = Collector::build_trait_registry(&files);
         let mut all_functions = Vec::new();
         for (path, source) in &files {
-            let functions = Collector::collect(source, path, &self.config.path, &traits);
+            let functions = Collector::collect(source, path, self.config.path(), &traits);
             all_functions.extend(functions);
         }
         Ok(all_functions)
@@ -94,25 +94,25 @@ impl App {
         let module_stats = self.scorer.module_stats(&functions);
         let target = self
             .config
-            .path
+            .path()
             .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or(".")
             .to_string();
 
-        BraintaxReport {
-            version: env!("CARGO_PKG_VERSION").to_string(),
+        BraintaxReport::new(
+            env!("CARGO_PKG_VERSION").to_string(),
             target,
             overall,
-            modules: module_stats,
+            module_stats,
             functions,
-        }
+        )
     }
 
     fn handle_output(&self, report: &BraintaxReport) -> Result<ExitCode> {
         self.reporter.write(report)?;
 
-        Ok(if self.gate.passes(&report.overall) {
+        Ok(if self.gate.passes(report.overall()) {
             ExitCode::SUCCESS
         } else {
             ExitCode::FAILURE

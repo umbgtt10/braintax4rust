@@ -14,11 +14,11 @@ fn config_has_default_path() {
     let config = Config::from_args(args);
 
     // Assert
-    assert_eq!(config.path.to_string_lossy(), ".");
-    assert!(!config.json);
-    assert!(config.threshold.is_none());
-    assert!(config.max_avg_braintax.is_none());
-    assert_eq!(config.top, 10);
+    assert_eq!(config.path().to_string_lossy(), ".");
+    assert!(!config.json());
+    assert!(config.threshold().is_none());
+    assert!(config.max_avg_braintax().is_none());
+    assert_eq!(config.top(), 10);
 }
 
 #[test]
@@ -30,7 +30,7 @@ fn config_parses_json_flag() {
     let config = Config::from_args(args);
 
     // Assert
-    assert!(config.json);
+    assert!(config.json());
 }
 
 #[test]
@@ -42,7 +42,7 @@ fn config_parses_max_avg_braintax() {
     let config = Config::from_args(args);
 
     // Assert
-    assert_eq!(config.max_avg_braintax, Some(9.25));
+    assert_eq!(config.max_avg_braintax(), Some(9.25));
 }
 
 #[test]
@@ -54,5 +54,5 @@ fn config_parses_threshold() {
     let config = Config::from_args(args);
 
     // Assert
-    assert_eq!(config.threshold, Some(42));
+    assert_eq!(config.threshold(), Some(42));
 }

@@ -30,13 +30,7 @@ impl FixtureAnalyzer {
             Box::new(FsWalk::new(&path)),
             Box::new(DefaultScorer::new()),
             Box::new(reporter),
-            Config {
-                path,
-                json: true,
-                threshold: None,
-                max_avg_braintax: None,
-                top: 10,
-            },
+            Config::new(path, true, None, None, 10),
         );
         app.run()?;
         let json = captured.lock().unwrap().clone();

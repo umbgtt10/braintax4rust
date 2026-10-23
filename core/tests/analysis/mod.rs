@@ -4,4 +4,5 @@
 
 mod collector_tests;
 mod fs_walk_tests;
+mod trait_info_tests;
 mod trait_registry_builder_tests;

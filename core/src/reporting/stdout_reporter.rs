@@ -45,62 +45,63 @@ impl Reporter for StdoutReporter {
 impl StdoutReporter {
     fn render_human(&self, report: &BraintaxReport) -> String {
         let mut lines = Vec::new();
-        let target = &report.target;
+        let target = &report.target();
         lines.push(format!(
             "cargo-braintax4rust {} -- {}\n══════════════════════════════════════════════",
-            report.version, target,
+            report.version(),
+            target,
         ));
 
-        let overall = &report.overall;
+        let overall = &report.overall();
         lines.push(String::new());
         lines.push(format!(
             "  Overall braintax:            {:.1}",
-            overall.avg_braintax
+            overall.avg_braintax()
         ));
         lines.push(format!(
             "  Maximum braintax:           {:.1}",
-            overall.max_braintax
+            overall.max_braintax()
         ));
         lines.push(format!(
             "  Total braintax:             {:.1}",
-            overall.total_braintax
+            overall.total_braintax()
         ));
         lines.push(format!(
             "  Normalized braintax:        {} / 100",
-            overall.braintax_normalized
+            overall.braintax_normalized()
         ));
         lines.push(String::new());
         lines.push("Cyclomatic complexity:".to_string());
         lines.push(format!(
             "  Total functions:             {}",
-            overall.total_functions
+            overall.total_functions()
         ));
         lines.push(format!(
             "  Average complexity:         {:.1}",
-            overall.avg_cyclomatic
+            overall.avg_cyclomatic()
         ));
         lines.push(format!(
             "  Maximum complexity:         {}",
-            overall.max_cyclomatic
+            overall.max_cyclomatic()
         ));
         lines.push(format!(
             "  Total complexity:           {}",
-            overall.total_cyclomatic
+            overall.total_cyclomatic()
         ));
 
-        if !report.modules.is_empty() {
+        if !report.modules().is_empty() {
             lines.push("\nPer module:".to_string());
             lines.push(format!(
                 "  {:<30}  {:<6}  {:<8}  {:<5}",
                 "Module", "Funcs", "Avg BT", "Max"
             ));
             lines.push(format!("  {:-<30}  {:-<6}  {:-<8}  {:-<5}", "", "", "", ""));
-            for module in &report.modules {
+            for module in report.modules() {
                 lines.push(self.render_module_line(module));
             }
         }
 
-        let top_n = self.top_functions(&report.functions);
+        let top_n = self.top_functions(report.functions());
         if !top_n.is_empty() {
             lines.push(format!(
                 "\nTop {} most complex functions:",
@@ -115,14 +116,18 @@ impl StdoutReporter {
                 "", "", "", "", ""
             ));
             for func in &top_n {
-                let location = if func.module == "." {
-                    func.file.clone()
+                let location = if func.module() == "." {
+                    func.file().to_string()
                 } else {
-                    format!("{}::{}", func.module, func.name)
+                    format!("{}::{}", func.module(), func.name())
                 };
                 lines.push(format!(
                     "  {:<50}  {:<12}  {:>5}  {:>6.1}  {:>5}",
-                    location, func.module, func.cyclomatic, func.braintax, func.braintax_normalized
+                    location,
+                    func.module(),
+                    func.cyclomatic(),
+                    func.braintax(),
+                    func.braintax_normalized()
                 ));
             }
         }
@@ -133,7 +138,10 @@ impl StdoutReporter {
     fn render_module_line(&self, module: &ModuleStats) -> String {
         format!(
             "  {:<30}  {:<6}  {:<8.1}  {:<5.1}",
-            module.path, module.function_count, module.avg_braintax, module.max_braintax,
+            module.path(),
+            module.function_count(),
+            module.avg_braintax(),
+            module.max_braintax(),
         )
     }
 
@@ -142,7 +150,7 @@ impl StdoutReporter {
         functions: &'a [FunctionComplexity],
     ) -> Vec<&'a FunctionComplexity> {
         let mut sorted: Vec<&FunctionComplexity> = functions.iter().collect();
-        sorted.sort_by(|a, b| b.braintax.partial_cmp(&a.braintax).unwrap());
+        sorted.sort_by(|a, b| b.braintax().partial_cmp(&a.braintax()).unwrap());
         sorted.truncate(self.top);
         sorted
     }

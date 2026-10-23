@@ -20,13 +20,7 @@ fn analyze() -> BraintaxReport {
         Box::new(FsWalk::new(&path)),
         Box::new(DefaultScorer::new()),
         Box::new(reporter),
-        Config {
-            path,
-            json: true,
-            threshold: None,
-            max_avg_braintax: None,
-            top: 10,
-        },
+        Config::new(path, true, None, None, 10),
     );
     app.run().unwrap();
     let json = captured.lock().unwrap().clone();
@@ -39,18 +33,18 @@ fn many_methods_has_method_penalty() {
     let report = analyze();
 
     // Assert
-    assert_eq!(report.overall.total_functions, 5);
+    assert_eq!(report.overall().total_functions(), 5);
     let compute_fn = report
-        .functions
+        .functions()
         .iter()
-        .find(|f| f.name == "compute")
+        .find(|f| f.name() == "compute")
         .unwrap();
-    assert_eq!(compute_fn.cyclomatic, 18);
-    assert!((compute_fn.braintax - 16.76).abs() < 0.01);
-    for func in &report.functions {
-        if func.name != "compute" {
-            assert_eq!(func.cyclomatic, 1);
-            assert!((func.braintax - 1.12).abs() < 0.01);
+    assert_eq!(compute_fn.cyclomatic(), 18);
+    assert!((compute_fn.braintax() - 16.76).abs() < 0.01);
+    for func in report.functions() {
+        if func.name() != "compute" {
+            assert_eq!(func.cyclomatic(), 1);
+            assert!((func.braintax() - 1.12).abs() < 0.01);
         }
     }
 }

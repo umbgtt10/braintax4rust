@@ -4,8 +4,40 @@
 
 #[derive(Debug, Clone)]
 pub struct TraitInfo {
-    pub methods: u32,
-    pub assoc_types: u32,
-    pub supertraits: u32,
-    pub impl_count: u32,
+    methods: u32,
+    assoc_types: u32,
+    supertraits: u32,
+    impl_count: u32,
+}
+
+impl TraitInfo {
+    #[must_use]
+    pub fn new(methods: u32, assoc_types: u32, supertraits: u32, impl_count: u32) -> Self {
+        Self {
+            methods,
+            assoc_types,
+            supertraits,
+            impl_count,
+        }
+    }
+
+    pub fn assoc_types(&self) -> u32 {
+        self.assoc_types
+    }
+
+    pub fn count_impl(&mut self) {
+        self.impl_count += 1;
+    }
+
+    pub fn impl_count(&self) -> u32 {
+        self.impl_count
+    }
+
+    pub fn methods(&self) -> u32 {
+        self.methods
+    }
+
+    pub fn supertraits(&self) -> u32 {
+        self.supertraits
+    }
 }

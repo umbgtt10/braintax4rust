@@ -20,13 +20,7 @@ fn analyze() -> BraintaxReport {
         Box::new(FsWalk::new(&path)),
         Box::new(DefaultScorer::new()),
         Box::new(reporter),
-        Config {
-            path,
-            json: true,
-            threshold: None,
-            max_avg_braintax: None,
-            top: 10,
-        },
+        Config::new(path, true, None, None, 10),
     );
     app.run().unwrap();
     let json = captured.lock().unwrap().clone();
@@ -39,11 +33,15 @@ fn clean_fn_has_no_hidden_deps() {
     let report = analyze();
 
     // Assert
-    let clean_fn = report.functions.iter().find(|f| f.name == "clean").unwrap();
-    assert_eq!(clean_fn.hidden_deps, 0);
-    assert_eq!(clean_fn.hidden_dep_weight, 0.0);
-    assert!(clean_fn.hidden_dep_labels.is_empty());
-    assert_eq!(clean_fn.braintax, 2.0);
+    let clean_fn = report
+        .functions()
+        .iter()
+        .find(|f| f.name() == "clean")
+        .unwrap();
+    assert_eq!(clean_fn.hidden_deps(), 0);
+    assert_eq!(clean_fn.hidden_dep_weight(), 0.0);
+    assert!(clean_fn.hidden_dep_labels().is_empty());
+    assert_eq!(clean_fn.braintax(), 2.0);
 }
 
 #[test]
@@ -52,8 +50,8 @@ fn overall_max_braintax_is_risky_fn() {
     let report = analyze();
 
     // Assert
-    assert_eq!(report.overall.total_functions, 2);
-    assert_eq!(report.overall.max_braintax, 16.0);
+    assert_eq!(report.overall().total_functions(), 2);
+    assert_eq!(report.overall().max_braintax(), 16.0);
 }
 
 #[test]
@@ -62,12 +60,20 @@ fn risky_fn_braintax_reflects_hidden_dep_weight() {
     let report = analyze();
 
     // Assert
-    let risky_fn = report.functions.iter().find(|f| f.name == "risky").unwrap();
-    let clean_fn = report.functions.iter().find(|f| f.name == "clean").unwrap();
-    assert_eq!(risky_fn.braintax, 16.0);
+    let risky_fn = report
+        .functions()
+        .iter()
+        .find(|f| f.name() == "risky")
+        .unwrap();
+    let clean_fn = report
+        .functions()
+        .iter()
+        .find(|f| f.name() == "clean")
+        .unwrap();
+    assert_eq!(risky_fn.braintax(), 16.0);
     assert_eq!(
-        risky_fn.braintax - clean_fn.braintax,
-        risky_fn.hidden_dep_weight
+        risky_fn.braintax() - clean_fn.braintax(),
+        risky_fn.hidden_dep_weight()
     );
 }
 
@@ -77,11 +83,15 @@ fn risky_fn_sums_severity_weighted_hidden_deps() {
     let report = analyze();
 
     // Assert
-    let risky_fn = report.functions.iter().find(|f| f.name == "risky").unwrap();
-    assert_eq!(risky_fn.hidden_deps, 3);
-    assert_eq!(risky_fn.hidden_dep_weight, 14.0);
+    let risky_fn = report
+        .functions()
+        .iter()
+        .find(|f| f.name() == "risky")
+        .unwrap();
+    assert_eq!(risky_fn.hidden_deps(), 3);
+    assert_eq!(risky_fn.hidden_dep_weight(), 14.0);
     assert_eq!(
-        risky_fn.hidden_dep_labels,
+        risky_fn.hidden_dep_labels(),
         vec![
             "unsafe".to_string(),
             "println".to_string(),

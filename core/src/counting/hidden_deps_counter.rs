@@ -32,9 +32,9 @@ const HIDDEN_DEP_TAILS: &[&str] = &[
 
 #[derive(Default)]
 pub struct HiddenDepsCounter {
-    pub count: u32,
-    pub weight: f64,
-    pub labels: Vec<String>,
+    count: u32,
+    weight: f64,
+    labels: Vec<String>,
     severity: HiddenDepSeverity,
 }
 
@@ -42,6 +42,18 @@ impl HiddenDepsCounter {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn count(&self) -> u32 {
+        self.count
+    }
+
+    pub fn labels(&self) -> &[String] {
+        &self.labels
+    }
+
+    pub fn weight(&self) -> f64 {
+        self.weight
     }
 }
 

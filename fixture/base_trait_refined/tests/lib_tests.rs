@@ -20,13 +20,7 @@ fn analyze() -> BraintaxReport {
         Box::new(FsWalk::new(&path)),
         Box::new(DefaultScorer::new()),
         Box::new(reporter),
-        Config {
-            path,
-            json: true,
-            threshold: None,
-            max_avg_braintax: None,
-            top: 10,
-        },
+        Config::new(path, true, None, None, 10),
     );
     app.run().unwrap();
     let json = captured.lock().unwrap().clone();
@@ -39,7 +33,11 @@ fn refined_trait_braintax_reflects_complex_trait() {
     let report = analyze();
 
     // Assert
-    let run_fn = report.functions.iter().find(|f| f.name == "run").unwrap();
-    assert_eq!(run_fn.cyclomatic, 18);
-    assert!((run_fn.braintax - 25.5).abs() < 0.01);
+    let run_fn = report
+        .functions()
+        .iter()
+        .find(|f| f.name() == "run")
+        .unwrap();
+    assert_eq!(run_fn.cyclomatic(), 18);
+    assert!((run_fn.braintax() - 25.5).abs() < 0.01);
 }

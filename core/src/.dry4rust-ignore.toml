@@ -1,0 +1,3 @@
+[[ignore]]
+fingerprint = "d92e4a4a67ea502f"
+reason = "Plain constructors of four and five fields, a near-duplicate group: under stern4rust's private-fields (R035) each is its struct's shape, not copied logic. dry4rust leaves plain constructors out from its next release (ADR-PlainConstructorsAreTheStructsShape); delete this entry then."

@@ -17,7 +17,7 @@ fn boolean_and_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 3);
+    assert_eq!(visitor.complexity(), 3);
 }
 
 #[test]
@@ -34,7 +34,26 @@ fn break_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 3);
+    assert_eq!(visitor.complexity(), 3);
+}
+
+#[test]
+fn cfg_body_gates_counts_each_cfg_attribute_in_the_body() {
+    // Arrange
+    let block: Block = parse_quote!({
+        #[cfg(test)]
+        let a = 1;
+        #[cfg_attr(test, allow(unused))]
+        let b = 2;
+    });
+    let mut visitor = ComplexityVisitor::new();
+    visitor.visit_block(&block);
+
+    // Act
+    let gates = visitor.cfg_body_gates();
+
+    // Assert
+    assert_eq!(gates, 2);
 }
 
 #[test]
@@ -51,7 +70,7 @@ fn continue_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 3);
+    assert_eq!(visitor.complexity(), 3);
 }
 
 #[test]
@@ -64,7 +83,7 @@ fn empty_fn_has_cc_1() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 1);
+    assert_eq!(visitor.complexity(), 1);
 }
 
 #[test]
@@ -77,7 +96,7 @@ fn for_loop_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 2);
+    assert_eq!(visitor.complexity(), 2);
 }
 
 #[test]
@@ -94,7 +113,7 @@ fn if_else_adds_2() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 2);
+    assert_eq!(visitor.complexity(), 2);
 }
 
 #[test]
@@ -112,7 +131,7 @@ fn if_else_if_adds_3() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 3);
+    assert_eq!(visitor.complexity(), 3);
 }
 
 #[test]
@@ -129,7 +148,7 @@ fn loop_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 3);
+    assert_eq!(visitor.complexity(), 3);
 }
 
 #[test]
@@ -148,7 +167,7 @@ fn match_with_three_arms_adds_3() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 4);
+    assert_eq!(visitor.complexity(), 4);
 }
 
 #[test]
@@ -163,7 +182,7 @@ fn return_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 2);
+    assert_eq!(visitor.complexity(), 2);
 }
 
 #[test]
@@ -176,7 +195,7 @@ fn single_if_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 2);
+    assert_eq!(visitor.complexity(), 2);
 }
 
 #[test]
@@ -191,7 +210,7 @@ fn try_operator_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 2);
+    assert_eq!(visitor.complexity(), 2);
 }
 
 #[test]
@@ -208,5 +227,5 @@ fn while_loop_adds_1() {
     visitor.visit_block(&block);
 
     // Assert
-    assert_eq!(visitor.complexity, 3);
+    assert_eq!(visitor.complexity(), 3);
 }

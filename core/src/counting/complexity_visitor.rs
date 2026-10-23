@@ -19,14 +19,22 @@ use syn::visit::{
 };
 
 pub struct ComplexityVisitor {
-    pub complexity: u32,
-    pub cfg_body_gates: u32,
+    complexity: u32,
+    cfg_body_gates: u32,
 }
 
 impl ComplexityVisitor {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn cfg_body_gates(&self) -> u32 {
+        self.cfg_body_gates
+    }
+
+    pub fn complexity(&self) -> u32 {
+        self.complexity
     }
 }
 

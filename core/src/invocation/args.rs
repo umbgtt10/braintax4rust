@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use std::ffi::OsString;
+use std::path::Path;
 use std::path::PathBuf;
 
 use clap::Parser;
@@ -13,19 +14,19 @@ use clap::Parser;
 #[command(about = "Estimate the cognitive tax of Rust code")]
 pub struct Args {
     #[arg(default_value = ".")]
-    pub path: PathBuf,
+    path: PathBuf,
 
     #[arg(long)]
-    pub json: bool,
+    json: bool,
 
     #[arg(long, alias = "max-complexity")]
-    pub threshold: Option<u32>,
+    threshold: Option<u32>,
 
     #[arg(long)]
-    pub max_avg_braintax: Option<f64>,
+    max_avg_braintax: Option<f64>,
 
     #[arg(long, default_value = "10")]
-    pub top: usize,
+    top: usize,
 }
 
 impl Args {
@@ -35,6 +36,26 @@ impl Args {
         T: Into<OsString> + Clone,
     {
         Self::parse_from(args)
+    }
+
+    pub fn json(&self) -> bool {
+        self.json
+    }
+
+    pub fn max_avg_braintax(&self) -> Option<f64> {
+        self.max_avg_braintax
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    pub fn threshold(&self) -> Option<u32> {
+        self.threshold
+    }
+
+    pub fn top(&self) -> usize {
+        self.top
     }
 
     // Cargo runs `cargo braintax4rust ...` as `cargo-braintax4rust

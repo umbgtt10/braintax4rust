@@ -9,13 +9,17 @@ use syn::visit::{Visit, visit_pat};
 
 #[derive(Default)]
 pub struct NameOpacityCounter {
-    pub score: u32,
+    score: u32,
 }
 
 impl NameOpacityCounter {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn score(&self) -> u32 {
+        self.score
     }
 
     pub fn visit_params(&mut self, inputs: &Punctuated<FnArg, syn::Token![,]>) {

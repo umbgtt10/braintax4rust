@@ -77,8 +77,8 @@ impl SignatureScorer {
         if KNOWN_TRAITS.contains(&name) {
             return 0.80;
         }
-        let method_penalty = (info.methods.saturating_sub(3)) as f64 * 0.01;
-        let base = if info.assoc_types > 0 || info.supertraits > 0 {
+        let method_penalty = (info.methods().saturating_sub(3)) as f64 * 0.01;
+        let base = if info.assoc_types() > 0 || info.supertraits() > 0 {
             1.15 + method_penalty
         } else {
             0.90 + method_penalty
@@ -87,8 +87,8 @@ impl SignatureScorer {
     }
 
     fn dimension_penalty(info: &TraitInfo) -> f64 {
-        let assoc_dim: u32 = (info.assoc_types > 0).into();
-        let supertrait_dim: u32 = (info.supertraits > 0).into();
+        let assoc_dim: u32 = (info.assoc_types() > 0).into();
+        let supertrait_dim: u32 = (info.supertraits() > 0).into();
         let extra_dims = assoc_dim + supertrait_dim;
         match extra_dims {
             0 => 0.0,
@@ -98,8 +98,8 @@ impl SignatureScorer {
     }
 
     fn dispatch_penalty(info: &TraitInfo) -> f64 {
-        let base = ((info.impl_count.saturating_sub(1)) as f64 * 0.06).min(0.18);
-        let amplifier = if info.assoc_types > 0 { 1.5 } else { 1.0 };
+        let base = ((info.impl_count().saturating_sub(1)) as f64 * 0.06).min(0.18);
+        let amplifier = if info.assoc_types() > 0 { 1.5 } else { 1.0 };
         (base * amplifier).min(0.27)
     }
 

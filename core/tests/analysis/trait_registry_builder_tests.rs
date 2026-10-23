@@ -30,7 +30,7 @@ impl Greet for B { fn hello(&self) {} }
     let traits = TraitRegistryBuilder::new().build(&files);
 
     // Assert
-    assert_eq!(traits.get("Greet").unwrap().impl_count, 2);
+    assert_eq!(traits.get("Greet").unwrap().impl_count(), 2);
 }
 
 #[test]
@@ -62,8 +62,8 @@ impl MyTrait for MyStruct {
 
     // Assert
     let info = traits.get("MyTrait").expect("MyTrait should be registered");
-    assert_eq!(info.assoc_types, 1);
-    assert_eq!(info.impl_count, 1);
+    assert_eq!(info.assoc_types(), 1);
+    assert_eq!(info.impl_count(), 1);
 }
 
 #[test]
@@ -79,5 +79,5 @@ fn build_trait_with_no_impls_registers_with_zero_impl_count() {
     let traits = TraitRegistryBuilder::new().build(&files);
 
     // Assert
-    assert_eq!(traits.get("Unused").unwrap().impl_count, 0);
+    assert_eq!(traits.get("Unused").unwrap().impl_count(), 0);
 }

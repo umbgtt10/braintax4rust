@@ -11,7 +11,7 @@ fn count_hidden(code: &str) -> u32 {
     let block: Block = parse_str(code).unwrap();
     let mut counter = HiddenDepsCounter::new();
     counter.visit_block(&block);
-    counter.count
+    counter.count()
 }
 
 fn hidden_deps_of(code: &str) -> HiddenDepsCounter {
@@ -63,7 +63,7 @@ fn fully_qualified_instant_now_label_is_canonical_short_form() {
     let counter = hidden_deps_of("{ let _ = std::time::Instant::now(); }");
 
     // Assert
-    assert_eq!(counter.labels, vec!["Instant::now".to_string()]);
+    assert_eq!(counter.labels(), vec!["Instant::now".to_string()]);
 }
 
 #[test]
@@ -82,7 +82,7 @@ fn multiple_hidden_deps_labels_captured_in_order() {
 
     // Assert
     assert_eq!(
-        counter.labels,
+        counter.labels(),
         vec![
             "unsafe".to_string(),
             "println".to_string(),
@@ -106,7 +106,7 @@ fn multiple_hidden_deps_sum_weight() {
     let counter = hidden_deps_of("{ unsafe { }  println!(\"a\");  Instant::now(); }");
 
     // Assert
-    assert_eq!(counter.weight, 8.0 + 2.0 + 4.0);
+    assert_eq!(counter.weight(), 8.0 + 2.0 + 4.0);
 }
 
 #[test]
@@ -124,7 +124,7 @@ fn println_weight_is_2() {
     let counter = hidden_deps_of("{ println!(\"hello\"); }");
 
     // Assert
-    assert_eq!(counter.weight, 2.0);
+    assert_eq!(counter.weight(), 2.0);
 }
 
 #[test]
@@ -187,7 +187,7 @@ fn unsafe_block_label_is_captured() {
     let counter = hidden_deps_of("{ unsafe { let p = std::ptr::null(); } }");
 
     // Assert
-    assert_eq!(counter.labels, vec!["unsafe".to_string()]);
+    assert_eq!(counter.labels(), vec!["unsafe".to_string()]);
 }
 
 #[test]
@@ -196,5 +196,5 @@ fn unsafe_block_weight_is_8() {
     let counter = hidden_deps_of("{ unsafe { let p = std::ptr::null(); } }");
 
     // Assert
-    assert_eq!(counter.weight, 8.0);
+    assert_eq!(counter.weight(), 8.0);
 }

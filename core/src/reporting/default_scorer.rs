@@ -25,19 +25,13 @@ impl DefaultScorer {
     }
 
     pub fn compute_braintax(func: &FunctionComplexity) -> f64 {
-        BraintaxComponents {
-            cfg_gates: func.cfg_gates,
-            cyclomatic: func.cyclomatic,
-            hidden_dep_weight: func.hidden_dep_weight,
-            depth: func.depth,
-            trait_factor: func.trait_factor,
-            name_opacity: 0,
-            macro_density: 0,
-            generics: 0,
-            self_ref_cost: 0.0,
-            return_complexity: 0.0,
-        }
-        .compute_braintax()
+        BraintaxComponents::default()
+            .with_cfg_gates(func.cfg_gates())
+            .with_cyclomatic(func.cyclomatic())
+            .with_hidden_dep_weight(func.hidden_dep_weight())
+            .with_depth(func.depth())
+            .with_trait_factor(func.trait_factor())
+            .compute_braintax()
     }
 }
 
@@ -45,47 +39,37 @@ impl Scorer for DefaultScorer {
     fn overall_stats(&self, functions: &[FunctionComplexity]) -> OverallStats {
         let count = functions.len();
         if count == 0 {
-            return OverallStats {
-                total_functions: 0,
-                avg_cyclomatic: 0.0,
-                max_cyclomatic: 0,
-                total_cyclomatic: 0,
-                avg_braintax: 0.0,
-                max_braintax: 0.0,
-                total_braintax: 0.0,
-                braintax_normalized: 0,
-            };
+            return OverallStats::default();
         }
 
-        let total_cc: u32 = functions.iter().map(|f| f.cyclomatic).sum();
-        let max_cc = functions.iter().map(|f| f.cyclomatic).max().unwrap_or(0);
+        let total_cc: u32 = functions.iter().map(|f| f.cyclomatic()).sum();
+        let max_cc = functions.iter().map(|f| f.cyclomatic()).max().unwrap_or(0);
         let avg_cc = total_cc as f64 / count as f64;
 
         let max_bt = functions
             .iter()
-            .map(|f| f.braintax)
+            .map(|f| f.braintax())
             .max_by(|a, b| a.partial_cmp(b).unwrap())
             .unwrap_or(0.0);
-        let total_bt: f64 = functions.iter().map(|f| f.braintax).sum();
+        let total_bt: f64 = functions.iter().map(|f| f.braintax()).sum();
         let avg_bt = total_bt / count as f64;
 
-        OverallStats {
-            total_functions: count,
-            avg_cyclomatic: avg_cc,
-            max_cyclomatic: max_cc,
-            total_cyclomatic: total_cc,
-            avg_braintax: avg_bt,
-            max_braintax: max_bt,
-            total_braintax: total_bt,
-            braintax_normalized: self.normalizer.normalize(avg_bt),
-        }
+        OverallStats::default()
+            .with_total_functions(count)
+            .with_avg_cyclomatic(avg_cc)
+            .with_max_cyclomatic(max_cc)
+            .with_total_cyclomatic(total_cc)
+            .with_avg_braintax(avg_bt)
+            .with_max_braintax(max_bt)
+            .with_total_braintax(total_bt)
+            .with_braintax_normalized(self.normalizer.normalize(avg_bt))
     }
 
     fn module_stats(&self, functions: &[FunctionComplexity]) -> Vec<ModuleStats> {
         let mut module_map: BTreeMap<String, Vec<&FunctionComplexity>> = BTreeMap::new();
         for func in functions {
             module_map
-                .entry(func.module.clone())
+                .entry(func.module().to_string())
                 .or_default()
                 .push(func);
         }
@@ -94,8 +78,8 @@ impl Scorer for DefaultScorer {
             .into_iter()
             .map(|(path, funcs)| {
                 let count = funcs.len();
-                let total_cc: u32 = funcs.iter().map(|f| f.cyclomatic).sum();
-                let max_cc = funcs.iter().map(|f| f.cyclomatic).max().unwrap_or(0);
+                let total_cc: u32 = funcs.iter().map(|f| f.cyclomatic()).sum();
+                let max_cc = funcs.iter().map(|f| f.cyclomatic()).max().unwrap_or(0);
                 let avg_cc = if count > 0 {
                     total_cc as f64 / count as f64
                 } else {
@@ -103,23 +87,22 @@ impl Scorer for DefaultScorer {
                 };
                 let max_bt = funcs
                     .iter()
-                    .map(|f| f.braintax)
+                    .map(|f| f.braintax())
                     .max_by(|a, b| a.partial_cmp(b).unwrap())
                     .unwrap_or(0.0);
-                let total_bt: f64 = funcs.iter().map(|f| f.braintax).sum();
+                let total_bt: f64 = funcs.iter().map(|f| f.braintax()).sum();
                 let avg_bt = total_bt / count as f64;
 
-                ModuleStats {
-                    path,
-                    function_count: count,
-                    avg_cyclomatic: avg_cc,
-                    max_cyclomatic: max_cc,
-                    total_cyclomatic: total_cc,
-                    avg_braintax: avg_bt,
-                    max_braintax: max_bt,
-                    total_braintax: total_bt,
-                    braintax_normalized: self.normalizer.normalize(avg_bt),
-                }
+                ModuleStats::default()
+                    .with_path(path)
+                    .with_function_count(count)
+                    .with_avg_cyclomatic(avg_cc)
+                    .with_max_cyclomatic(max_cc)
+                    .with_total_cyclomatic(total_cc)
+                    .with_avg_braintax(avg_bt)
+                    .with_max_braintax(max_bt)
+                    .with_total_braintax(total_bt)
+                    .with_braintax_normalized(self.normalizer.normalize(avg_bt))
             })
             .collect()
     }

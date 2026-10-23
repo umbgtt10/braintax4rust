@@ -91,12 +91,7 @@ impl<'a> Collector<'a> {
             .iter()
             .filter(|bound| !SignatureScorer::is_marker_supertrait(bound))
             .count() as u32;
-        TraitInfo {
-            methods,
-            assoc_types,
-            supertraits,
-            impl_count: 0,
-        }
+        TraitInfo::new(methods, assoc_types, supertraits, 0)
     }
 
     fn module_depth(module: &str) -> u32 {
@@ -135,12 +130,11 @@ impl<'ast, 'a> Visit<'ast> for Collector<'a> {
                         .last()
                         .map(|s| s.ident.to_string())
                         .unwrap_or_default();
-                    let info = self.traits.get(&name).cloned().unwrap_or(TraitInfo {
-                        methods: 0,
-                        assoc_types: 0,
-                        supertraits: 0,
-                        impl_count: 0,
-                    });
+                    let info = self
+                        .traits
+                        .get(&name)
+                        .cloned()
+                        .unwrap_or(TraitInfo::new(0, 0, 0, 0));
                     SignatureScorer::trait_factor(&name, &info)
                 } else {
                     0.95
@@ -196,38 +190,38 @@ impl<'a> Collector<'a> {
         hidden.visit_block(block);
         let mut names = NameOpacityCounter::new();
         names.visit_block(block);
-        let name_opacity = input.param_opacity + names.score;
+        let name_opacity = input.param_opacity + names.score();
         let mut macros = MacroCounter::new();
         macros.visit_block(block);
         let cfg_gates = Self::count_cfg_gates(attrs);
         let depth = self.current_depth;
-        let components = BraintaxComponents {
-            cfg_gates,
-            cyclomatic: visitor.complexity,
-            hidden_dep_weight: hidden.weight,
-            depth,
-            trait_factor: input.trait_factor,
-            name_opacity,
-            macro_density: macros.count,
-            generics: input.generics,
-            self_ref_cost: input.self_ref_cost,
-            return_complexity: input.return_complexity,
-        };
+        let components = BraintaxComponents::default()
+            .with_cfg_gates(cfg_gates)
+            .with_cyclomatic(visitor.complexity())
+            .with_hidden_dep_weight(hidden.weight())
+            .with_depth(depth)
+            .with_trait_factor(input.trait_factor)
+            .with_name_opacity(name_opacity)
+            .with_macro_density(macros.count())
+            .with_generics(input.generics)
+            .with_self_ref_cost(input.self_ref_cost)
+            .with_return_complexity(input.return_complexity);
         let braintax = components.compute_braintax();
-        self.functions.push(FunctionComplexity {
-            name,
-            file: self.current_file.clone(),
-            module: self.current_module.clone(),
-            cyclomatic: visitor.complexity,
-            cfg_gates,
-            hidden_deps: hidden.count,
-            hidden_dep_weight: hidden.weight,
-            hidden_dep_labels: hidden.labels,
-            depth,
-            trait_factor: input.trait_factor,
-            braintax,
-            braintax_normalized: self.normalizer.normalize(braintax),
-        });
+        self.functions.push(
+            FunctionComplexity::default()
+                .with_name(name)
+                .with_file(self.current_file.clone())
+                .with_module(self.current_module.clone())
+                .with_cyclomatic(visitor.complexity())
+                .with_cfg_gates(cfg_gates)
+                .with_hidden_deps(hidden.count())
+                .with_hidden_dep_weight(hidden.weight())
+                .with_hidden_dep_labels(hidden.labels().to_vec())
+                .with_depth(depth)
+                .with_trait_factor(input.trait_factor)
+                .with_braintax(braintax)
+                .with_braintax_normalized(self.normalizer.normalize(braintax)),
+        );
     }
 
     fn visit_fn(&mut self, item_fn: &ItemFn) {
@@ -244,7 +238,7 @@ impl<'a> Collector<'a> {
             &item_fn.attrs,
             FnInput {
                 trait_factor: 1.0,
-                param_opacity: names.score,
+                param_opacity: names.score(),
                 generics,
                 self_ref_cost: 0.0,
                 return_complexity: ret_complexity,
@@ -270,7 +264,7 @@ impl<'a> Collector<'a> {
                 &item_fn.attrs,
                 FnInput {
                     trait_factor,
-                    param_opacity: names.score,
+                    param_opacity: names.score(),
                     generics,
                     self_ref_cost: self_cost,
                     return_complexity: ret_complexity,

@@ -14,12 +14,7 @@ fn bound(source: &str) -> TypeParamBound {
 }
 
 fn info(methods: u32, assoc_types: u32, supertraits: u32, impl_count: u32) -> TraitInfo {
-    TraitInfo {
-        methods,
-        assoc_types,
-        supertraits,
-        impl_count,
-    }
+    TraitInfo::new(methods, assoc_types, supertraits, impl_count)
 }
 
 fn signature(source: &str) -> Signature {
