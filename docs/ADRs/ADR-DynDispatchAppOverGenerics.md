@@ -75,6 +75,20 @@ sharing one crate, and have no cross-thread requirement forcing `Arc`).
 N/A — structural; enforced only by the type signature of `App` itself
 (there is no generic parameter left to reintroduce accidentally).
 
+## Amendment -- 2026-10-25
+
+`App::new()`, which built the real `FsWalk`/`DefaultScorer`/`StdoutReporter`
+itself, is gone. stern4rust's coming `injected-dependencies` rule holds that a
+field declared as a trait receives only what the caller passed in: a
+constructor that builds its own seams closes them. `with_deps()` is renamed
+`App::new()` and is the only constructor, taking the three boxes and the
+`Config`. The real parts are composed outside `App`, by
+`invocation::entry_point::EntryPoint::compose`, and `App::run_from_args` is
+`EntryPoint::run_from_args`. The decision above stands: `Box<dyn Trait>`
+fields, the box explicit at every construction site. Where the text above says
+`with_deps()`, read `App::new()`; where it says `App::new()`, read
+`EntryPoint::compose()`.
+
 ## Related
 
 - `grip`'s own `ADR-DynDispatchAppOverGenerics.md` — the identical

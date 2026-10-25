@@ -2,19 +2,14 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::ffi::OsString;
 use std::process::ExitCode;
 
 use anyhow::Result;
 
 use crate::analysis::collector::Collector;
-use crate::analysis::fs_walk::FsWalk;
 use crate::counting::function_complexity::FunctionComplexity;
-use crate::invocation::args::Args;
 use crate::invocation::config::Config;
 use crate::reporting::braintax_report::BraintaxReport;
-use crate::reporting::default_scorer::DefaultScorer;
-use crate::reporting::stdout_reporter::StdoutReporter;
 use crate::reporting::threshold_gate::ThresholdGate;
 use crate::traits::reporter::Reporter;
 use crate::traits::scorer::Scorer;
@@ -30,18 +25,7 @@ pub struct App {
 
 impl App {
     #[must_use]
-    pub fn new(config: Config) -> Self {
-        Self {
-            walker: Box::new(FsWalk::new(config.path())),
-            scorer: Box::new(DefaultScorer::new()),
-            reporter: Box::new(StdoutReporter::new(config.json(), config.top())),
-            gate: ThresholdGate::new(config.threshold(), config.max_avg_braintax()),
-            config,
-        }
-    }
-
-    #[must_use]
-    pub fn with_deps(
+    pub fn new(
         walker: Box<dyn Walk>,
         scorer: Box<dyn Scorer>,
         reporter: Box<dyn Reporter>,
@@ -68,14 +52,6 @@ impl App {
 
         let report = self.compute_report(functions);
         self.handle_output(&report)
-    }
-
-    pub fn run_from_args<I, T>(args: I) -> Result<ExitCode>
-    where
-        I: IntoIterator<Item = T>,
-        T: Into<OsString> + Clone,
-    {
-        Self::new(Config::from_args(Args::parse_from_args(args))).run()
     }
 
     fn collect_files(&self) -> Result<Vec<FunctionComplexity>> {

@@ -12,10 +12,11 @@ This is a map of what exists today, not a decision record — see
 ```
 Args (clap)
   → Config
-    → App
-        walker:   Box<dyn Walk>      — finds .rs files
-        scorer:   Box<dyn Scorer>    — aggregates + scores
-        reporter: Box<dyn Reporter>  — renders output
+    → EntryPoint::compose(config)
+      → App::new(walker, scorer, reporter, config)
+          walker:   Box<dyn Walk>      — finds .rs files
+          scorer:   Box<dyn Scorer>    — aggregates + scores
+          reporter: Box<dyn Reporter>  — renders output
       → App::run()
           1. collect_files():
              a. walker finds every .rs file under the target path
@@ -33,10 +34,14 @@ Args (clap)
              always written, whether or not a threshold is set
 ```
 
-`App` (`app.rs`) is the only place that wires concrete types to trait
-objects — everywhere else in the codebase depends on the `traits/`
-interfaces, never on `FsWalk`/`DefaultScorer`/`StdoutReporter` directly.
-See `docs/ADRs/ADR-DynDispatchAppOverGenerics.md` for why these are
+`EntryPoint::compose` (`entry_point.rs`) is the only place that wires
+concrete types to trait objects — everywhere else in the codebase, `App`
+included, depends on the `traits/` interfaces, never on
+`FsWalk`/`DefaultScorer`/`StdoutReporter` directly. `App::new` takes every
+seam as a parameter and builds none of them, as stern4rust's
+`injected-dependencies` rule asks; it builds only its concrete
+`ThresholdGate`, from the bounds `Config` carries. See
+`docs/ADRs/ADR-DynDispatchAppOverGenerics.md` for why these are
 `Box<dyn Trait>` fields rather than generic parameters.
 
 The two-pass split (registry first, then scoring) exists specifically so
@@ -53,7 +58,7 @@ realistically-organized crate.
 | `Scorer` | `DefaultScorer` | Combine each function's `braintax` into `OverallStats`/`ModuleStats`; hold the `HiddenDepSeverity`/`BraintaxNormalizer` used per function. |
 | `Reporter` | `StdoutReporter` | Render a `BraintaxReport` as human-readable text or JSON. |
 
-Every fixture crate under `fixture/` exercises `App::with_deps()` with a
+Every fixture crate under `fixture/` exercises `App::new()` with a
 mix of real and fake implementations of these three traits — that's the
 seam the whole test suite is built around. `test-utils`' `CaptureReporter`
 is the one fake shared across all of them.
@@ -111,8 +116,11 @@ both output modes are projections of.
 
 `Args` (`args.rs`, `clap::Parser`) parses argv into flags; `Config`
 (`config.rs`) is the plain-data form `App` actually consumes, built once
-via `Config::from_args(args)`. `main.rs` and `lib.rs::run()`/`run_from_args()`
-are thin entry points — all real logic lives in `App` and below.
+via `Config::from_args(args)`. `main.rs` hands the process's arguments to
+`EntryPoint::run`, which strips the name cargo repeats, turns an error into a
+failing exit code and calls `EntryPoint::run_from_args`; that parses the
+arguments and runs the `App` `EntryPoint::compose` builds. They are thin entry
+points — all real logic lives in `App` and below.
 
 `ThresholdGate` (`threshold_gate.rs`) owns the exit-code decision. It is
 constructed from the two bounds `Config` carries — `threshold`

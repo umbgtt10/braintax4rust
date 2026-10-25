@@ -5,3 +5,4 @@
 mod app_tests;
 mod args_tests;
 mod config_tests;
+mod entry_point_tests;

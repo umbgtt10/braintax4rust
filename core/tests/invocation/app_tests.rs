@@ -10,10 +10,8 @@ use braintax::reporting::default_scorer::DefaultScorer;
 use braintax::traits::walk::Walk;
 use braintax_test_utils::capture_reporter::CaptureReporter;
 use serde_json::from_str;
-use std::fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
-use tempfile::TempDir;
 
 #[derive(Debug, Clone)]
 struct NoFilesWalk;
@@ -36,41 +34,6 @@ impl Walk for TestWalk {
 }
 
 #[test]
-fn app_new_with_empty_dir_returns_error() {
-    // Arrange
-    let dir = TempDir::new().unwrap();
-    let config = Config::new(dir.path().to_path_buf(), false, None, None, 10);
-    let app = App::new(config);
-
-    // Act
-    let result = app.run();
-
-    // Assert
-    assert!(result.is_err());
-}
-
-#[test]
-fn app_new_with_valid_dir_returns_success() {
-    // Arrange
-    let dir = TempDir::new().unwrap();
-    let src = dir.path().join("src");
-    fs::create_dir_all(&src).unwrap();
-    fs::write(
-        src.join("lib.rs"),
-        "pub fn greet() -> &'static str { \"hello\" }\n",
-    )
-    .unwrap();
-    let config = Config::new(dir.path().to_path_buf(), false, None, None, 10);
-    let app = App::new(config);
-
-    // Act
-    let exit_code = app.run().unwrap();
-
-    // Assert
-    assert_eq!(exit_code, ExitCode::SUCCESS);
-}
-
-#[test]
 fn app_with_if_fn_returns_cc_2() {
     // Arrange
     let source = r#"
@@ -88,7 +51,7 @@ fn with_if(x: bool) {
     let reporter = CaptureReporter::new();
     let config = Config::new(PathBuf::from("."), true, None, None, 10);
     let captured = reporter.captured();
-    let app = App::with_deps(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
+    let app = App::new(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
 
     // Act
     let result = app.run();
@@ -105,7 +68,7 @@ fn app_with_no_files_returns_error() {
     let scorer = DefaultScorer::new();
     let reporter = CaptureReporter::new();
     let config = Config::new(PathBuf::from("."), false, None, None, 10);
-    let app = App::with_deps(
+    let app = App::new(
         Box::new(NoFilesWalk),
         Box::new(scorer),
         Box::new(reporter),
@@ -142,7 +105,7 @@ fn complex(a: bool, b: bool) {
     let config_fail = Config::new(PathBuf::from("."), false, Some(3), None, 10);
 
     // Act
-    let app_ok = App::with_deps(
+    let app_ok = App::new(
         Box::new(walk.clone()),
         Box::new(scorer),
         Box::new(reporter1),
@@ -154,7 +117,7 @@ fn complex(a: bool, b: bool) {
     assert_eq!(result_ok.unwrap(), ExitCode::SUCCESS);
 
     // Act
-    let app_fail = App::with_deps(
+    let app_fail = App::new(
         Box::new(walk),
         Box::new(DefaultScorer::new()),
         Box::new(reporter2),
@@ -182,7 +145,7 @@ fn trivial() {
     let reporter = CaptureReporter::new();
     let config = Config::new(PathBuf::from("."), true, None, None, 10);
     let captured = reporter.captured();
-    let app = App::with_deps(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
+    let app = App::new(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
 
     // Act
     let result = app.run();
@@ -202,7 +165,7 @@ fn run_with_a_threshold_set_still_writes_the_report() {
     let reporter = CaptureReporter::new();
     let captured = reporter.captured();
     let config = Config::new(PathBuf::from("."), false, Some(1), None, 10);
-    let app = App::with_deps(
+    let app = App::new(
         Box::new(walk),
         Box::new(DefaultScorer::new()),
         Box::new(reporter),
@@ -224,7 +187,7 @@ fn run_with_avg_braintax_above_the_limit_returns_failure() {
         files: vec![(PathBuf::from("src/lib.rs"), "fn trivial() {}".to_string())],
     };
     let config = Config::new(PathBuf::from("."), false, None, Some(0.0), 10);
-    let app = App::with_deps(
+    let app = App::new(
         Box::new(walk),
         Box::new(DefaultScorer::new()),
         Box::new(CaptureReporter::new()),
@@ -245,7 +208,7 @@ fn run_with_avg_braintax_within_the_limit_returns_success() {
         files: vec![(PathBuf::from("src/lib.rs"), "fn trivial() {}".to_string())],
     };
     let config = Config::new(PathBuf::from("."), false, None, Some(100.0), 10);
-    let app = App::with_deps(
+    let app = App::new(
         Box::new(walk),
         Box::new(DefaultScorer::new()),
         Box::new(CaptureReporter::new()),

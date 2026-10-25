@@ -2,45 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use braintax::invocation::app::App;
 use braintax::invocation::args::Args;
 use std::ffi::OsString;
-
-#[test]
-fn run_from_args_with_defaults_returns_ok() {
-    // Arrange & Act
-    let result = App::run_from_args(vec!["test"]);
-
-    // Assert
-    assert!(result.is_ok());
-}
-
-#[test]
-fn run_from_args_with_json_flag_returns_ok() {
-    // Arrange & Act
-    let result = App::run_from_args(vec!["test", "--json"]);
-
-    // Assert
-    assert!(result.is_ok());
-}
-
-#[test]
-fn run_from_args_with_max_complexity_alias_returns_ok() {
-    // Arrange & Act
-    let result = App::run_from_args(vec!["test", "--threshold", "15"]);
-
-    // Assert
-    assert!(result.is_ok());
-}
-
-#[test]
-fn run_from_args_with_threshold_returns_ok() {
-    // Arrange & Act
-    let result = App::run_from_args(vec!["test", "--threshold", "10"]);
-
-    // Assert
-    assert!(result.is_ok());
-}
 
 #[test]
 fn without_cargo_subcommand_drops_the_name_cargo_repeats() {

@@ -15,7 +15,7 @@ fn analyze() -> BraintaxReport {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let reporter = CaptureReporter::new();
     let captured = reporter.captured();
-    let app = App::with_deps(
+    let app = App::new(
         Box::new(FsWalk::new(&path)),
         Box::new(DefaultScorer::new()),
         Box::new(reporter),

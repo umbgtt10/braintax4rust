@@ -25,7 +25,7 @@ impl FixtureAnalyzer {
         let path = self.fixture_root.join(name);
         let reporter = CaptureReporter::new();
         let captured = reporter.captured();
-        let app = App::with_deps(
+        let app = App::new(
             Box::new(FsWalk::new(&path)),
             Box::new(DefaultScorer::new()),
             Box::new(reporter),

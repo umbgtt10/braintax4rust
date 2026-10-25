@@ -15,10 +15,18 @@ stern4rust 0.17.0's new `owned-functions` rule -- a file with a subject holds
 no free function.
 
 ### Changed
-- `invocation::app::run_from_args` is `App::run_from_args`, and the free
-  `run` is gone: `main.rs` reads the process's arguments and hands them, with
-  the cargo subcommand stripped, to `App::run_from_args`. `Args::parse_cargo`,
-  which only `run` used, goes with it.
+- `invocation::app::run_from_args` is `EntryPoint::run_from_args`, and the
+  free `run` is gone: `main.rs` reads the process's arguments and hands them to
+  `EntryPoint::run`, which strips the cargo subcommand and passes them on to
+  `EntryPoint::run_from_args`. `Args::parse_cargo`, which only `run` used, goes
+  with it.
+- `App::new(config)`, which built its own parts, is gone: `App::with_deps` is
+  renamed `App::new` and is the only constructor, taking every dependency, for
+  stern4rust's coming `injected-dependencies` rule -- a field declared as a
+  trait holds only what the caller passed in. The concrete parts are built by
+  the new composition root `invocation::entry_point::EntryPoint` (`compose`,
+  `run`, `run_from_args`); `App::run_from_args` is `EntryPoint::run_from_args`,
+  and `main.rs` calls `EntryPoint::run`.
 - `reporting::default_scorer::compute_braintax` is
   `BraintaxComponents::compute_braintax`, and `BraintaxComponents` moves to
   `reporting::braintax_components` with its four tests.

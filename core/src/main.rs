@@ -2,17 +2,10 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use braintax::invocation::app::App;
-use braintax::invocation::args::Args;
+use braintax::invocation::entry_point::EntryPoint;
 use std::env::args_os;
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
-    match App::run_from_args(Args::without_cargo_subcommand(args_os().collect())) {
-        Ok(ec) => ec,
-        Err(e) => {
-            eprintln!("error: {e}");
-            ExitCode::FAILURE
-        }
-    }
+    EntryPoint::run(args_os().collect())
 }
