@@ -96,7 +96,7 @@ fn with_if(x: bool) {
     // Assert
     assert_eq!(result.unwrap(), ExitCode::SUCCESS);
     let report: BraintaxReport = from_str(&captured.lock().unwrap()).expect("report json");
-    assert_eq!(report.overall().max_cyclomatic(), 2);
+    assert_eq!(report.overall.max_cyclomatic, 2);
 }
 
 #[test]
@@ -190,7 +190,7 @@ fn trivial() {
     // Assert
     assert_eq!(result.unwrap(), ExitCode::SUCCESS);
     let report: BraintaxReport = from_str(&captured.lock().unwrap()).expect("report json");
-    assert_eq!(report.overall().max_cyclomatic(), 1);
+    assert_eq!(report.overall.max_cyclomatic, 1);
 }
 
 #[test]

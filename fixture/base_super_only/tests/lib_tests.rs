@@ -32,8 +32,8 @@ fn super_only_costs_more_than_simple_trait() {
     let report = analyze();
 
     // Assert
-    assert_eq!(report.overall().total_functions(), 2);
-    assert_eq!(report.functions()[0].cyclomatic(), 1);
-    assert_eq!(report.functions()[1].cyclomatic(), 18);
-    assert!((report.functions()[1].braintax() - 23.6).abs() < 0.01);
+    assert_eq!(report.overall.total_functions, 2);
+    assert_eq!(report.functions[0].cyclomatic, 1);
+    assert_eq!(report.functions[1].cyclomatic, 18);
+    assert!((report.functions[1].braintax - 23.6).abs() < 0.01);
 }

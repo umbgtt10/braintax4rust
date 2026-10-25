@@ -100,19 +100,19 @@ impl App {
             .unwrap_or(".")
             .to_string();
 
-        BraintaxReport::new(
-            env!("CARGO_PKG_VERSION").to_string(),
+        BraintaxReport {
+            version: env!("CARGO_PKG_VERSION").to_string(),
             target,
             overall,
-            module_stats,
+            modules: module_stats,
             functions,
-        )
+        }
     }
 
     fn handle_output(&self, report: &BraintaxReport) -> Result<ExitCode> {
         self.reporter.write(report)?;
 
-        Ok(if self.gate.passes(report.overall()) {
+        Ok(if self.gate.passes(&report.overall) {
             ExitCode::SUCCESS
         } else {
             ExitCode::FAILURE

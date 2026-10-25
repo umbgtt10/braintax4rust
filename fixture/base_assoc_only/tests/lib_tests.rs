@@ -32,7 +32,7 @@ fn assoc_only_costs_more_than_simple_trait() {
     let report = analyze();
 
     // Assert
-    assert_eq!(report.overall().total_functions(), 1);
-    assert_eq!(report.functions()[0].cyclomatic(), 18);
-    assert!((report.functions()[0].braintax() - 23.6).abs() < 0.01);
+    assert_eq!(report.overall.total_functions, 1);
+    assert_eq!(report.functions[0].cyclomatic, 18);
+    assert!((report.functions[0].braintax - 23.6).abs() < 0.01);
 }

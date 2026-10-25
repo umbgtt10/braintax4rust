@@ -117,11 +117,13 @@ ones, and at the same floor -- a baseline matches only at the floor it was
 recorded at: `cargo dry4rust --path core/src --min-nodes 25 --baseline "$PWD/dry4rust-baseline.json" baseline`.
 
 `core/src/.dry4rust-ignore.toml` holds one fingerprint, with its reason: plain
-constructors -- `Self { a, b, c, d }` -- which stern4rust's `private-fields`
-gives every struct, so a few with near field counts look nearly alike. dry4rust
-leaves plain constructors out from its next release
-(ADR-PlainConstructorsAreTheStructsShape, in dry4rust); until the gate installs
-it, this entry bridges, and the file goes when the release does.
+constructors -- `Self { a, b, c, d }` -- of objects, whose fields stern4rust's
+`records-and-objects` keeps private, so `TraitInfo::new` and `Config::new`, with
+near field counts, look nearly alike. A record is built by literal and has no
+constructor to match. dry4rust leaves plain constructors
+out from its next release (ADR-PlainConstructorsAreTheStructsShape, in
+dry4rust); until the gate installs it, this entry bridges, and the file goes
+when the release does.
 
 `cargo install just`
 `cargo install cargo-llvm-cov`

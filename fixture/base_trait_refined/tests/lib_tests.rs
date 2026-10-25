@@ -32,11 +32,7 @@ fn refined_trait_braintax_reflects_complex_trait() {
     let report = analyze();
 
     // Assert
-    let run_fn = report
-        .functions()
-        .iter()
-        .find(|f| f.name() == "run")
-        .unwrap();
-    assert_eq!(run_fn.cyclomatic(), 18);
-    assert!((run_fn.braintax() - 25.5).abs() < 0.01);
+    let run_fn = report.functions.iter().find(|f| f.name == "run").unwrap();
+    assert_eq!(run_fn.cyclomatic, 18);
+    assert!((run_fn.braintax - 25.5).abs() < 0.01);
 }

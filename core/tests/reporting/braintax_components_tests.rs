@@ -12,6 +12,22 @@ fn neutral_components() -> BraintaxComponents {
 }
 
 #[test]
+fn cfg_gates_returns_the_value_it_was_given() {
+    // Arrange
+    let components = BraintaxComponents::default()
+        .with_cfg_gates(2)
+        .with_cyclomatic(3)
+        .with_hidden_dep_weight(4.5)
+        .with_trait_factor(1.25);
+
+    // Act
+    let got = components.cfg_gates();
+
+    // Assert
+    assert_eq!(got, 2);
+}
+
+#[test]
 fn compute_braintax_adds_fifteen_percent_for_each_level_below_the_first() {
     // Arrange
     let components = neutral_components().with_depth(3);
@@ -66,6 +82,22 @@ fn compute_braintax_with_neutral_components_returns_the_cyclomatic_count() {
 }
 
 #[test]
+fn cyclomatic_returns_the_value_it_was_given() {
+    // Arrange
+    let components = BraintaxComponents::default()
+        .with_cfg_gates(2)
+        .with_cyclomatic(3)
+        .with_hidden_dep_weight(4.5)
+        .with_trait_factor(1.25);
+
+    // Act
+    let got = components.cyclomatic();
+
+    // Assert
+    assert_eq!(got, 3);
+}
+
+#[test]
 fn depth_returns_the_value_it_was_given() {
     // Arrange
     let components = BraintaxComponents::default()
@@ -99,6 +131,22 @@ fn generics_returns_the_value_it_was_given() {
 
     // Assert
     assert_eq!(got, 5);
+}
+
+#[test]
+fn hidden_dep_weight_returns_the_value_it_was_given() {
+    // Arrange
+    let components = BraintaxComponents::default()
+        .with_cfg_gates(2)
+        .with_cyclomatic(3)
+        .with_hidden_dep_weight(4.5)
+        .with_trait_factor(1.25);
+
+    // Act
+    let got = components.hidden_dep_weight();
+
+    // Assert
+    assert!((got - 4.5).abs() < f64::EPSILON);
 }
 
 #[test]
@@ -171,4 +219,20 @@ fn self_ref_cost_returns_the_value_it_was_given() {
 
     // Assert
     assert!((got - 0.5).abs() < f64::EPSILON);
+}
+
+#[test]
+fn trait_factor_returns_the_value_it_was_given() {
+    // Arrange
+    let components = BraintaxComponents::default()
+        .with_cfg_gates(2)
+        .with_cyclomatic(3)
+        .with_hidden_dep_weight(4.5)
+        .with_trait_factor(1.25);
+
+    // Act
+    let got = components.trait_factor();
+
+    // Assert
+    assert!((got - 1.25).abs() < f64::EPSILON);
 }

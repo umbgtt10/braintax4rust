@@ -39,7 +39,7 @@ fn fixture_braintax_ordinal_ranking() {
     let mut prev_name: Option<&str> = None;
     for &(name, expected) in fixtures {
         let report = analyzer.analyze(name).unwrap();
-        let got = report.overall().max_braintax();
+        let got = report.overall.max_braintax;
 
         assert!(
             (got - expected).abs() < 0.01,

@@ -28,6 +28,19 @@ no free function.
 - `Collector::trait_info` is `pub`, with a test of its own, where it was
   `pub(crate)`: `TraitRegistryBuilder` calls it, and stern4rust's coming
   `public-or-private` rule asks that a method be `pub` or private.
+- `FunctionComplexity`, `ModuleStats`, `OverallStats` and `BraintaxReport` are
+  records, as in 0.13.1: their fields are `pub`, with no getters, constructors
+  or `with_` steps, for stern4rust's coming `records-and-objects` rule. The
+  first three now derive `Default`, so a literal can set the fields it needs
+  and take `..Default::default()` for the rest.
+- `TraitInfo`, `ComplexityVisitor`, `HiddenDepsCounter`, `MacroCounter`,
+  `NameOpacityCounter`, `BraintaxComponents`, `Args` and `Config` now keep
+  their fields private behind getters: they have behaviour, and stern4rust's
+  coming `records-and-objects` rule asks an object to hide its fields. Each
+  field that was `pub` in 0.13.1 is read through a getter named after it;
+  `TraitInfo::new` and `Config::new` build those two, `TraitInfo::count_impl`
+  counts one more implementation, and `BraintaxComponents` is built over its
+  `Default` with a `with_<field>` step per field.
 
 ## [0.13.1] - 2026-10-10
 

@@ -32,9 +32,9 @@ fn multi_impl_trait_costs_more_than_single() {
     let report = analyze();
 
     // Assert
-    assert!(report.overall().total_functions() >= 3);
-    for func in report.functions() {
-        assert_eq!(func.cyclomatic(), 18);
-        assert!((func.braintax() - 18.56).abs() < 0.01);
+    assert!(report.overall.total_functions >= 3);
+    for func in &report.functions {
+        assert_eq!(func.cyclomatic, 18);
+        assert!((func.braintax - 18.56).abs() < 0.01);
     }
 }

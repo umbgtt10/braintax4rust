@@ -32,9 +32,9 @@ fn assoc_type_amplifies_dispatch_penalty() {
     let report = analyze();
 
     // Assert
-    assert!(report.overall().total_functions() >= 3);
-    for func in report.functions() {
-        assert_eq!(func.cyclomatic(), 18);
-        assert!((func.braintax() - 26.84).abs() < 0.01);
+    assert!(report.overall.total_functions >= 3);
+    for func in &report.functions {
+        assert_eq!(func.cyclomatic, 18);
+        assert!((func.braintax - 26.84).abs() < 0.01);
     }
 }

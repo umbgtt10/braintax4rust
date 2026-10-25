@@ -10,48 +10,9 @@ use crate::reporting::overall_stats::OverallStats;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BraintaxReport {
-    version: String,
-    target: String,
-    overall: OverallStats,
-    modules: Vec<ModuleStats>,
-    functions: Vec<FunctionComplexity>,
-}
-
-impl BraintaxReport {
-    #[must_use]
-    pub fn new(
-        version: String,
-        target: String,
-        overall: OverallStats,
-        modules: Vec<ModuleStats>,
-        functions: Vec<FunctionComplexity>,
-    ) -> Self {
-        Self {
-            version,
-            target,
-            overall,
-            modules,
-            functions,
-        }
-    }
-
-    pub fn functions(&self) -> &[FunctionComplexity] {
-        &self.functions
-    }
-
-    pub fn modules(&self) -> &[ModuleStats] {
-        &self.modules
-    }
-
-    pub fn overall(&self) -> &OverallStats {
-        &self.overall
-    }
-
-    pub fn target(&self) -> &str {
-        &self.target
-    }
-
-    pub fn version(&self) -> &str {
-        &self.version
-    }
+    pub version: String,
+    pub target: String,
+    pub overall: OverallStats,
+    pub modules: Vec<ModuleStats>,
+    pub functions: Vec<FunctionComplexity>,
 }

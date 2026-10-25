@@ -32,9 +32,9 @@ fn two_impls_higher_than_one() {
     let report = analyze();
 
     // Assert
-    assert!(report.overall().total_functions() >= 2);
-    for func in report.functions() {
-        assert_eq!(func.cyclomatic(), 18);
-        assert!((func.braintax() - 17.48).abs() < 0.01);
+    assert!(report.overall.total_functions >= 2);
+    for func in &report.functions {
+        assert_eq!(func.cyclomatic, 18);
+        assert!((func.braintax - 17.48).abs() < 0.01);
     }
 }

@@ -149,11 +149,11 @@ impl<'ast, 'a> Visit<'ast> for Collector<'a> {
 }
 
 struct FnInput {
-    trait_factor: f64,
-    param_opacity: u32,
-    generics: u32,
-    self_ref_cost: f64,
-    return_complexity: f64,
+    pub trait_factor: f64,
+    pub param_opacity: u32,
+    pub generics: u32,
+    pub self_ref_cost: f64,
+    pub return_complexity: f64,
 }
 
 impl<'a> Collector<'a> {
@@ -207,21 +207,20 @@ impl<'a> Collector<'a> {
             .with_self_ref_cost(input.self_ref_cost)
             .with_return_complexity(input.return_complexity);
         let braintax = components.compute_braintax();
-        self.functions.push(
-            FunctionComplexity::default()
-                .with_name(name)
-                .with_file(self.current_file.clone())
-                .with_module(self.current_module.clone())
-                .with_cyclomatic(visitor.complexity())
-                .with_cfg_gates(cfg_gates)
-                .with_hidden_deps(hidden.count())
-                .with_hidden_dep_weight(hidden.weight())
-                .with_hidden_dep_labels(hidden.labels().to_vec())
-                .with_depth(depth)
-                .with_trait_factor(input.trait_factor)
-                .with_braintax(braintax)
-                .with_braintax_normalized(self.normalizer.normalize(braintax)),
-        );
+        self.functions.push(FunctionComplexity {
+            name,
+            file: self.current_file.clone(),
+            module: self.current_module.clone(),
+            cyclomatic: visitor.complexity(),
+            cfg_gates,
+            hidden_deps: hidden.count(),
+            hidden_dep_weight: hidden.weight(),
+            hidden_dep_labels: hidden.labels().to_vec(),
+            depth,
+            trait_factor: input.trait_factor,
+            braintax,
+            braintax_normalized: self.normalizer.normalize(braintax),
+        });
     }
 
     fn visit_fn(&mut self, item_fn: &ItemFn) {

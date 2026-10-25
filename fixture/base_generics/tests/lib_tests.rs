@@ -32,7 +32,7 @@ fn generics_braintax_reflects_generic_penalty() {
     let report = analyze();
 
     // Assert
-    assert_eq!(report.overall().total_functions(), 1);
-    assert_eq!(report.functions()[0].cyclomatic(), 18);
-    assert_eq!(report.functions()[0].braintax(), 30.0);
+    assert_eq!(report.overall.total_functions, 1);
+    assert_eq!(report.functions[0].cyclomatic, 18);
+    assert_eq!(report.functions[0].braintax, 30.0);
 }

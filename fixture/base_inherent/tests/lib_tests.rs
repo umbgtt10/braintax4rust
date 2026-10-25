@@ -32,7 +32,7 @@ fn inherent_impl_cheaper_than_simple_trait() {
     let report = analyze();
 
     // Assert
-    assert_eq!(report.overall().total_functions(), 1);
-    assert_eq!(report.functions()[0].cyclomatic(), 18);
-    assert!((report.functions()[0].braintax() - 17.3).abs() < 0.01);
+    assert_eq!(report.overall.total_functions, 1);
+    assert_eq!(report.functions[0].cyclomatic, 18);
+    assert!((report.functions[0].braintax - 17.3).abs() < 0.01);
 }

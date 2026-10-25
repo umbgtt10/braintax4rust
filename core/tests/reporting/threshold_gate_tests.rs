@@ -6,14 +6,16 @@ use braintax::reporting::overall_stats::OverallStats;
 use braintax::reporting::threshold_gate::ThresholdGate;
 
 fn overall(max_cyclomatic: u32, avg_braintax: f64) -> OverallStats {
-    OverallStats::default()
-        .with_total_functions(1)
-        .with_avg_cyclomatic(max_cyclomatic.into())
-        .with_max_cyclomatic(max_cyclomatic)
-        .with_total_cyclomatic(max_cyclomatic)
-        .with_avg_braintax(avg_braintax)
-        .with_max_braintax(avg_braintax)
-        .with_total_braintax(avg_braintax)
+    OverallStats {
+        total_functions: 1,
+        avg_cyclomatic: max_cyclomatic.into(),
+        max_cyclomatic,
+        total_cyclomatic: max_cyclomatic,
+        avg_braintax,
+        max_braintax: avg_braintax,
+        total_braintax: avg_braintax,
+        ..Default::default()
+    }
 }
 
 #[test]

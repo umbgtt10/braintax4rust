@@ -10,51 +10,55 @@ use braintax::reporting::stdout_reporter::StdoutReporter;
 use braintax::traits::reporter::Reporter;
 
 fn sample_report() -> BraintaxReport {
-    BraintaxReport::new(
-        "0.2.0".to_string(),
-        "braintax".to_string(),
-        OverallStats::default()
-            .with_total_functions(2)
-            .with_avg_cyclomatic(3.5)
-            .with_max_cyclomatic(5)
-            .with_total_cyclomatic(7)
-            .with_avg_braintax(4.5)
-            .with_max_braintax(6.0)
-            .with_total_braintax(9.0)
-            .with_braintax_normalized(70),
-        vec![
-            ModuleStats::default()
-                .with_path("lib".to_string())
-                .with_function_count(2)
-                .with_avg_cyclomatic(3.5)
-                .with_max_cyclomatic(5)
-                .with_total_cyclomatic(7)
-                .with_avg_braintax(4.5)
-                .with_max_braintax(6.0)
-                .with_total_braintax(9.0)
-                .with_braintax_normalized(70),
+    BraintaxReport {
+        version: "0.2.0".to_string(),
+        target: "braintax".to_string(),
+        overall: OverallStats {
+            total_functions: 2,
+            avg_cyclomatic: 3.5,
+            max_cyclomatic: 5,
+            total_cyclomatic: 7,
+            avg_braintax: 4.5,
+            max_braintax: 6.0,
+            total_braintax: 9.0,
+            braintax_normalized: 70,
+        },
+        modules: vec![ModuleStats {
+            path: "lib".to_string(),
+            function_count: 2,
+            avg_cyclomatic: 3.5,
+            max_cyclomatic: 5,
+            total_cyclomatic: 7,
+            avg_braintax: 4.5,
+            max_braintax: 6.0,
+            total_braintax: 9.0,
+            braintax_normalized: 70,
+        }],
+        functions: vec![
+            FunctionComplexity {
+                name: "simple".to_string(),
+                file: "src/lib.rs".to_string(),
+                module: "lib".to_string(),
+                cyclomatic: 2,
+                depth: 1,
+                trait_factor: 1.0,
+                braintax: 2.0,
+                braintax_normalized: 87,
+                ..Default::default()
+            },
+            FunctionComplexity {
+                name: "complex".to_string(),
+                file: "src/lib.rs".to_string(),
+                module: "lib".to_string(),
+                cyclomatic: 5,
+                depth: 1,
+                trait_factor: 1.0,
+                braintax: 5.0,
+                braintax_normalized: 67,
+                ..Default::default()
+            },
         ],
-        vec![
-            FunctionComplexity::default()
-                .with_name("simple".to_string())
-                .with_file("src/lib.rs".to_string())
-                .with_module("lib".to_string())
-                .with_cyclomatic(2)
-                .with_depth(1)
-                .with_trait_factor(1.0)
-                .with_braintax(2.0)
-                .with_braintax_normalized(87),
-            FunctionComplexity::default()
-                .with_name("complex".to_string())
-                .with_file("src/lib.rs".to_string())
-                .with_module("lib".to_string())
-                .with_cyclomatic(5)
-                .with_depth(1)
-                .with_trait_factor(1.0)
-                .with_braintax(5.0)
-                .with_braintax_normalized(67),
-        ],
-    )
+    }
 }
 
 #[test]

@@ -44,9 +44,9 @@ impl MyTrait for MyStruct {
     // Assert
     assert_eq!(functions.len(), 1);
     assert!(
-        (functions[0].trait_factor() - 1.30).abs() < 0.001,
+        (functions[0].trait_factor - 1.30).abs() < 0.001,
         "expected 1.30 (assoc-type trait, cross-file), got {}",
-        functions[0].trait_factor()
+        functions[0].trait_factor
     );
 }
 
@@ -62,7 +62,7 @@ fn collect_cfg_gated_fn_has_cfg_gates_1() {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert_eq!(functions[0].cfg_gates(), 1);
+    assert_eq!(functions[0].cfg_gates, 1);
 }
 
 #[test]
@@ -76,7 +76,7 @@ fn collect_fn_with_boolean_ops_returns_correct_cc() {
     let functions = collect(source, path, root);
 
     // Assert
-    assert_eq!(functions[0].cyclomatic(), 3);
+    assert_eq!(functions[0].cyclomatic, 3);
 }
 
 #[test]
@@ -90,7 +90,7 @@ fn collect_fn_with_for_loop_returns_cc_2() {
     let functions = collect(source, path, root);
 
     // Assert
-    assert_eq!(functions[0].cyclomatic(), 2);
+    assert_eq!(functions[0].cyclomatic, 2);
 }
 
 #[test]
@@ -105,7 +105,7 @@ fn collect_fn_with_if_else_returns_cc_2() {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert_eq!(functions[0].cyclomatic(), 2);
+    assert_eq!(functions[0].cyclomatic, 2);
 }
 
 #[test]
@@ -120,7 +120,7 @@ fn collect_fn_with_if_returns_cc_2() {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert_eq!(functions[0].cyclomatic(), 2);
+    assert_eq!(functions[0].cyclomatic, 2);
 }
 
 #[test]
@@ -140,7 +140,7 @@ fn foo() {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert_eq!(functions[0].name(), "foo");
+    assert_eq!(functions[0].name, "foo");
 }
 
 #[test]
@@ -155,7 +155,7 @@ fn collect_fn_with_long_names_has_no_opacity() {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert_eq!(functions[0].braintax(), functions[0].cyclomatic() as f64);
+    assert_eq!(functions[0].braintax, functions[0].cyclomatic as f64);
 }
 
 #[test]
@@ -177,7 +177,7 @@ fn foo(x: u32) -> u32 {
     let functions = collect(source, path, root);
 
     // Assert
-    assert_eq!(functions[0].cyclomatic(), 4);
+    assert_eq!(functions[0].cyclomatic, 4);
 }
 
 #[test]
@@ -192,12 +192,9 @@ fn collect_fn_with_println_has_hidden_deps_1() {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert_eq!(functions[0].hidden_deps(), 1);
-    assert_eq!(functions[0].hidden_dep_weight(), 2.0);
-    assert_eq!(
-        functions[0].hidden_dep_labels(),
-        vec!["println".to_string()]
-    );
+    assert_eq!(functions[0].hidden_deps, 1);
+    assert_eq!(functions[0].hidden_dep_weight, 2.0);
+    assert_eq!(functions[0].hidden_dep_labels, vec!["println".to_string()]);
 }
 
 #[test]
@@ -212,7 +209,7 @@ fn collect_fn_with_single_letter_names_has_opacity() {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert!(functions[0].braintax() > functions[0].cyclomatic() as f64);
+    assert!(functions[0].braintax > functions[0].cyclomatic as f64);
 }
 
 #[test]
@@ -226,7 +223,7 @@ fn collect_fn_with_try_operator_returns_correct_cc() {
     let functions = collect(source, path, root);
 
     // Assert
-    assert_eq!(functions[0].cyclomatic(), 2);
+    assert_eq!(functions[0].cyclomatic, 2);
 }
 
 #[test]
@@ -242,7 +239,7 @@ fn collect_fn_with_two_cfg_gates_has_cfg_gates_2() {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert_eq!(functions[0].cfg_gates(), 2);
+    assert_eq!(functions[0].cfg_gates, 2);
 }
 
 #[test]
@@ -257,9 +254,9 @@ fn collect_fn_with_unsafe_block_has_hidden_deps_1() {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert_eq!(functions[0].hidden_deps(), 1);
-    assert_eq!(functions[0].hidden_dep_weight(), 8.0);
-    assert_eq!(functions[0].hidden_dep_labels(), vec!["unsafe".to_string()]);
+    assert_eq!(functions[0].hidden_deps, 1);
+    assert_eq!(functions[0].hidden_dep_weight, 8.0);
+    assert_eq!(functions[0].hidden_dep_labels, vec!["unsafe".to_string()]);
 }
 
 #[test]
@@ -273,7 +270,7 @@ fn collect_fn_with_while_returns_cc_2() {
     let functions = collect(source, path, root);
 
     // Assert
-    assert_eq!(functions[0].cyclomatic(), 3);
+    assert_eq!(functions[0].cyclomatic, 3);
 }
 
 #[test]
@@ -301,7 +298,7 @@ fn collect_module_path_uses_root() {
     let functions = collect(source, path, root);
 
     // Assert
-    assert_eq!(functions[0].module(), "bar");
+    assert_eq!(functions[0].module, "bar");
 }
 
 #[test]
@@ -323,7 +320,7 @@ fn real() { }
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert_eq!(functions[0].name(), "real");
+    assert_eq!(functions[0].name, "real");
 }
 
 #[test]
@@ -338,8 +335,8 @@ fn collect_trivial_fn_returns_cc_1() {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert_eq!(functions[0].cyclomatic(), 1);
-    assert_eq!(functions[0].name(), "foo");
+    assert_eq!(functions[0].cyclomatic, 1);
+    assert_eq!(functions[0].name, "foo");
 }
 
 #[test]
@@ -359,7 +356,7 @@ impl MyStruct {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert!((functions[0].trait_factor() - 0.95).abs() < 0.001);
+    assert!((functions[0].trait_factor - 0.95).abs() < 0.001);
 }
 
 #[test]
@@ -381,7 +378,7 @@ impl std::fmt::Debug for MyStruct {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert!((functions[0].trait_factor() - 0.80).abs() < 0.001);
+    assert!((functions[0].trait_factor - 0.80).abs() < 0.001);
 }
 
 #[test]
@@ -406,7 +403,7 @@ impl MyTrait for D { fn compute(&self) -> i32 { 4 } }
     // Assert
     assert_eq!(functions.len(), 4);
     for f in &functions {
-        assert!((f.trait_factor() - 1.08).abs() < 0.001);
+        assert!((f.trait_factor - 1.08).abs() < 0.001);
     }
 }
 
@@ -430,7 +427,7 @@ impl MyTrait for MyStruct {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert!((functions[0].trait_factor() - 0.90).abs() < 0.001);
+    assert!((functions[0].trait_factor - 0.90).abs() < 0.001);
 }
 
 #[test]
@@ -454,7 +451,7 @@ impl MyTrait for C { fn compute(&self) -> i32 { 3 } }
     // Assert
     assert_eq!(functions.len(), 3);
     for f in &functions {
-        assert!((f.trait_factor() - 1.02).abs() < 0.001);
+        assert!((f.trait_factor - 1.02).abs() < 0.001);
     }
 }
 
@@ -507,8 +504,8 @@ impl Derived for MyStruct {
     let functions = collect(source, path, root);
 
     // Assert
-    let derived_fn = functions.iter().find(|f| f.name() == "run").unwrap();
-    assert!((derived_fn.trait_factor() - 1.35).abs() < 0.001);
+    let derived_fn = functions.iter().find(|f| f.name == "run").unwrap();
+    assert!((derived_fn.trait_factor - 1.35).abs() < 0.001);
 }
 
 #[test]
@@ -533,7 +530,7 @@ impl MyTrait for MyStruct {
 
     // Assert
     assert_eq!(functions.len(), 1);
-    assert!((functions[0].trait_factor() - 1.30).abs() < 0.001);
+    assert!((functions[0].trait_factor - 1.30).abs() < 0.001);
 }
 
 #[test]
@@ -566,10 +563,10 @@ impl MyTrait for MyStruct {
     assert_eq!(functions.len(), 5);
     for f in &functions {
         assert!(
-            (f.trait_factor() - 0.92).abs() < 0.001,
+            (f.trait_factor - 0.92).abs() < 0.001,
             "expected 0.92, got {} for fn {}",
-            f.trait_factor(),
-            f.name()
+            f.trait_factor,
+            f.name
         );
     }
 }
@@ -597,8 +594,8 @@ impl Derived for MyStruct { fn compute(&self) -> i32 { 42 } }
     let functions = collect(source, path, root);
 
     // Assert
-    let derived_fn = functions.iter().find(|f| f.name() == "compute").unwrap();
-    assert!((derived_fn.trait_factor() - 1.30).abs() < 0.001);
+    let derived_fn = functions.iter().find(|f| f.name == "compute").unwrap();
+    assert!((derived_fn.trait_factor - 1.30).abs() < 0.001);
 }
 
 #[test]
@@ -620,11 +617,11 @@ impl Observer for MyObserver { fn notify(&self, event: i32) {} }
     let functions = collect(source, path, root);
 
     // Assert
-    let notify_fn = functions.iter().find(|f| f.name() == "notify").unwrap();
+    let notify_fn = functions.iter().find(|f| f.name == "notify").unwrap();
     assert!(
-        (notify_fn.trait_factor() - 0.90).abs() < 0.001,
+        (notify_fn.trait_factor - 0.90).abs() < 0.001,
         "expected 0.90 (no real dimension), got {}",
-        notify_fn.trait_factor()
+        notify_fn.trait_factor
     );
 }
 
@@ -649,12 +646,9 @@ impl Derived for MyStruct { fn compute(&self) -> i32 { 42 } }
     let functions = collect(source, path, root);
 
     // Assert
-    let derived_fn = functions.iter().find(|f| f.name() == "compute").unwrap();
-    assert!((derived_fn.trait_factor() - 1.30).abs() < 0.001);
+    let derived_fn = functions.iter().find(|f| f.name == "compute").unwrap();
+    assert!((derived_fn.trait_factor - 1.30).abs() < 0.001);
 
-    let base_fn = functions
-        .iter()
-        .find(|f| f.name() == "base_method")
-        .unwrap();
-    assert!((base_fn.trait_factor() - 0.90).abs() < 0.001);
+    let base_fn = functions.iter().find(|f| f.name == "base_method").unwrap();
+    assert!((base_fn.trait_factor - 0.90).abs() < 0.001);
 }

@@ -32,10 +32,10 @@ fn opaque_cc_is_18_like_flat() {
     let report = analyze();
 
     // Assert
-    assert_eq!(report.overall().total_functions(), 1);
-    assert_eq!(report.overall().max_cyclomatic(), 18);
-    assert_eq!(report.overall().max_braintax(), 24.0);
-    assert_eq!(report.functions()[0].name(), "f");
-    assert_eq!(report.functions()[0].cyclomatic(), 18);
-    assert_eq!(report.functions()[0].braintax(), 24.0);
+    assert_eq!(report.overall.total_functions, 1);
+    assert_eq!(report.overall.max_cyclomatic, 18);
+    assert_eq!(report.overall.max_braintax, 24.0);
+    assert_eq!(report.functions[0].name, "f");
+    assert_eq!(report.functions[0].cyclomatic, 18);
+    assert_eq!(report.functions[0].braintax, 24.0);
 }
