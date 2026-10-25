@@ -75,7 +75,7 @@ from the working tree, points it at `core/`, and hands it a ceiling of **5.0**
 on average brain tax — letting the tool render its own verdict rather than
 re-implementing the comparison in the gate, so a change that costs this codebase
 clarity is caught by the very measure the tool exists to report. `core/` scores
-**4.0** today.
+**3.3** today.
 
 It measures `core/` specifically, not the whole tree. `fixture/` holds crates
 written to score badly, because they are what braintax is *pointed at* — they
