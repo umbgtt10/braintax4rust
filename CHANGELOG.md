@@ -113,6 +113,9 @@ packaged and much of its API.
   dry4rust runs once over the workspace, over both published crates' sources;
   the measuring gates cover both crates, and the self-analysis measures `core/`
   and `cli/` each against the ceiling.
+- `.cargo/mutants.toml` scopes cargo-mutants to the core, tested by its own
+  tests: 456 mutants, where the workspace without it lists 1,797, 1,138 of
+  them in the fixtures.
 
 ## [0.13.1] - 2026-10-10
 

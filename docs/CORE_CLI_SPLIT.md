@@ -79,7 +79,7 @@ core's tests only. The fixtures, which are analysis input, are never mutated.
 | S5 | the `ReportRenderer` port and `RunOutcome`: the text report in core, the JSON report in cli, printing and the exit code in `EntryPoint`; serde leaves core; `test-utils` goes | done |
 | S6 | `#![no_std]`: alloc imports, `libm`, typed errors; anyhow leaves the workspace | done |
 | S7 | the technology-free gate, first in stage 2 | done |
-| S8 | `.cargo/mutants.toml` | |
+| S8 | `.cargo/mutants.toml` | done |
 | S9 | docs, and this record moves to `docs/history/` | |
 
 ## Tests that move
