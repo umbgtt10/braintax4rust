@@ -2,11 +2,14 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use anyhow::Result;
+use alloc::boxed::Box;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 
 use crate::analysis::collector::Collector;
 use crate::counting::function_complexity::FunctionComplexity;
 use crate::invocation::config::Config;
+use crate::invocation::run_failure::RunFailure;
 use crate::invocation::run_outcome::RunOutcome;
 use crate::reporting::braintax_report::BraintaxReport;
 use crate::reporting::threshold_gate::ThresholdGate;
@@ -41,14 +44,11 @@ impl App {
 
     // The report, the text it renders to and the verdict on it. Printing the
     // text and turning the verdict into an exit code are the caller's.
-    pub fn run(&self) -> Result<RunOutcome> {
+    pub fn run(&self) -> Result<RunOutcome, RunFailure> {
         let functions = self.collect_files()?;
 
         if functions.is_empty() {
-            return Err(anyhow::anyhow!(
-                "no Rust source files found in {}",
-                self.config.path
-            ));
+            return Err(RunFailure::NoSourceFiles(self.config.path.clone()));
         }
 
         let report = self.compute_report(functions);
@@ -61,7 +61,7 @@ impl App {
         })
     }
 
-    fn collect_files(&self) -> Result<Vec<FunctionComplexity>> {
+    fn collect_files(&self) -> Result<Vec<FunctionComplexity>, RunFailure> {
         let files = self.walker.rust_files()?;
         let traits = Collector::build_trait_registry(&files);
         let mut all_functions = Vec::new();

@@ -2,6 +2,10 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use alloc::boxed::Box;
+use alloc::string::String;
+use alloc::vec::Vec;
+
 use crate::analysis::source_path::SourcePath;
 use crate::analysis::source_read_failure::SourceReadFailure;
 use crate::traits::source_tree::SourceTree;

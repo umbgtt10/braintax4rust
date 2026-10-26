@@ -2,8 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use anyhow::Result;
 use braintax::invocation::config::Config;
+use braintax::invocation::run_failure::RunFailure;
 use braintax::reporting::braintax_report::BraintaxReport;
 use braintax_cli::invocation::entry_point::EntryPoint;
 use braintax_cli::system::portable_path::PortablePath;
@@ -18,7 +18,7 @@ impl FixtureAnalyzer {
         Self { fixture_root }
     }
 
-    pub fn analyze(&self, name: &str) -> Result<BraintaxReport> {
+    pub fn analyze(&self, name: &str) -> Result<BraintaxReport, RunFailure> {
         let path = PortablePath::of(&self.fixture_root.join(name));
         let outcome = EntryPoint::compose(Config {
             path,

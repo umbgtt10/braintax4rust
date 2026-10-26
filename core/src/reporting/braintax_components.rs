@@ -2,6 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use libm::exp2;
+
 #[derive(Debug, Clone, Default)]
 pub struct BraintaxComponents {
     cfg_gates: u32,
@@ -23,7 +25,7 @@ impl BraintaxComponents {
 
     pub fn compute_braintax(&self) -> f64 {
         let cfg_factor = if self.cfg_gates > 0 {
-            2.0f64.powi(self.cfg_gates as i32)
+            exp2(f64::from(self.cfg_gates))
         } else {
             1.0
         };

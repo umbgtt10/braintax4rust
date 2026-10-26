@@ -2,11 +2,14 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use crate::analysis::trait_info::TraitInfo;
-use crate::counting::signature_scorer::SignatureScorer;
-use std::collections::HashMap;
+use alloc::collections::BTreeMap;
+use alloc::format;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 
 use crate::analysis::source_path::SourcePath;
+use crate::analysis::trait_info::TraitInfo;
+use crate::counting::signature_scorer::SignatureScorer;
 
 use syn::Attribute;
 use syn::Block;
@@ -34,12 +37,12 @@ pub struct Collector<'a> {
     current_file: String,
     current_module: String,
     current_depth: u32,
-    traits: &'a HashMap<String, TraitInfo>,
+    traits: &'a BTreeMap<String, TraitInfo>,
     normalizer: BraintaxNormalizer,
 }
 
 impl<'a> Collector<'a> {
-    fn new(file: String, module: String, traits: &'a HashMap<String, TraitInfo>) -> Self {
+    fn new(file: String, module: String, traits: &'a BTreeMap<String, TraitInfo>) -> Self {
         let depth = Self::module_depth(&module);
         Self {
             functions: Vec::new(),
@@ -51,7 +54,7 @@ impl<'a> Collector<'a> {
         }
     }
 
-    pub fn build_trait_registry(files: &[(SourcePath, String)]) -> HashMap<String, TraitInfo> {
+    pub fn build_trait_registry(files: &[(SourcePath, String)]) -> BTreeMap<String, TraitInfo> {
         TraitRegistryBuilder::new().build(files)
     }
 
@@ -59,7 +62,7 @@ impl<'a> Collector<'a> {
         source: &str,
         path: &SourcePath,
         root: &SourcePath,
-        traits: &'a HashMap<String, TraitInfo>,
+        traits: &'a BTreeMap<String, TraitInfo>,
     ) -> Vec<FunctionComplexity> {
         let file = path.as_str().replace('\\', "/");
         let module = Self::module_from_path(path, root);

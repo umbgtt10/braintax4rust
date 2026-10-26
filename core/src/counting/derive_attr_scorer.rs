@@ -2,6 +2,10 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use alloc::format;
+use alloc::vec;
+use alloc::vec::Vec;
+
 use syn::Attribute;
 
 pub struct DeriveAttrScorer {

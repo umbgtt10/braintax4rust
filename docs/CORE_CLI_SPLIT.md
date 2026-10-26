@@ -77,7 +77,7 @@ core's tests only. The fixtures, which are analysis input, are never mutated.
 | S3 | the `SourceTree` port, `SourcePath` and `SourceWalk`; the walk becomes cli's `WalkdirSourceTree` | done |
 | S4 | -- (braintax reads no cargo metadata: there is no workspace reader) | |
 | S5 | the `ReportRenderer` port and `RunOutcome`: the text report in core, the JSON report in cli, printing and the exit code in `EntryPoint`; serde leaves core; `test-utils` goes | done |
-| S6 | `#![no_std]`: alloc imports, `libm`, typed errors; anyhow leaves the workspace | |
+| S6 | `#![no_std]`: alloc imports, `libm`, typed errors; anyhow leaves the workspace | done |
 | S7 | the technology-free gate, first in stage 2 | |
 | S8 | `.cargo/mutants.toml` | |
 | S9 | docs, and this record moves to `docs/history/` | |

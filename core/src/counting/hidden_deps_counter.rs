@@ -1,6 +1,10 @@
 // Copyright 2026 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
+
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
+
 use syn::Expr;
 use syn::ExprCall;
 use syn::ExprMacro;

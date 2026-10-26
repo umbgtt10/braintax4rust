@@ -2,6 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use alloc::string::String;
+
 use crate::reporting::braintax_report::BraintaxReport;
 
 // What one run found: the report, the text its renderer made of it, and

@@ -1,6 +1,9 @@
 // Copyright 2026 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
+
+use alloc::string::ToString;
+
 use syn::FnArg;
 use syn::Pat;
 use syn::punctuated::Punctuated;

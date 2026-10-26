@@ -378,3 +378,30 @@ fn run_with_avg_braintax_within_the_limit_returns_success() {
     // Assert
     assert!(result.unwrap().passes);
 }
+
+#[test]
+fn run_with_no_files_names_the_root_it_searched() {
+    // Arrange
+    let config = Config {
+        path: path("/work/empty"),
+        json: false,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let app = App::new(
+        Box::new(NoFilesWalk),
+        Box::new(DefaultScorer::new()),
+        Box::new(StubReportRenderer::new()),
+        config,
+    );
+
+    // Act
+    let failure = app.run().unwrap_err();
+
+    // Assert
+    assert_eq!(
+        failure.to_string(),
+        "no Rust source files found in /work/empty"
+    );
+}

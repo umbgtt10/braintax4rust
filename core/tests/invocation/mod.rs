@@ -3,3 +3,4 @@
 // SPDX-License-Identifier: MIT
 
 mod app_tests;
+mod run_failure_tests;

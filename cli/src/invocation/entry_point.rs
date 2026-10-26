@@ -6,8 +6,6 @@ use std::ffi::OsString;
 use std::io::{Write, stdout};
 use std::process::ExitCode;
 
-use anyhow::Result;
-
 use braintax::analysis::source_walk::SourceWalk;
 use braintax::invocation::app::App;
 use braintax::invocation::config::Config;
@@ -16,6 +14,7 @@ use braintax::reporting::text_report_renderer::TextReportRenderer;
 use braintax::traits::report_renderer::ReportRenderer;
 
 use crate::invocation::args::Args;
+use crate::invocation::entry_failure::EntryFailure;
 use crate::system::json_report_renderer::JsonReportRenderer;
 use crate::system::walkdir_source_tree::WalkdirSourceTree;
 
@@ -53,7 +52,7 @@ impl EntryPoint {
         }
     }
 
-    pub fn run_from_args<I, T>(args: I) -> Result<ExitCode>
+    pub fn run_from_args<I, T>(args: I) -> Result<ExitCode, EntryFailure>
     where
         I: IntoIterator<Item = T>,
         T: Into<OsString> + Clone,

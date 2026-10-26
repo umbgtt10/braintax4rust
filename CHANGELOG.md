@@ -62,6 +62,16 @@ packaged and much of its API.
   verdict, `passes` -- instead of printing and answering with an exit code.
 - `FunctionComplexity`, `ModuleStats`, `OverallStats` and `BraintaxReport` no
   longer implement `Serialize` or `Deserialize`: serde leaves the library.
+- The library is `#![no_std]` and depends on `libm` and `syn` only: no anyhow,
+  clap, serde, serde_json or walkdir. It fails with errors of its own:
+  `App::run` with `invocation::run_failure::RunFailure` (`NoSourceFiles`,
+  `Render`, `SourceRead`), and `EntryPoint::run_from_args` with
+  `braintax_cli::invocation::entry_failure::EntryFailure` (`Run`, `Write`);
+  every message is the one 0.13.1 printed. `Collector::build_trait_registry`,
+  `Collector::collect` and `TraitRegistryBuilder::build` use a `BTreeMap` for
+  the trait registry where they used a `HashMap`. `round` and the cfg factor's
+  power of two come from `libm`, bit for bit what the standard library
+  computes on every value measured, so no score moves.
 
 ### Changed
 - The free `invocation::app::run` is gone: `main.rs` hands the process's

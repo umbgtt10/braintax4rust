@@ -2,6 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use libm::round;
+
 const CEILING: f64 = 15.0;
 
 #[derive(Debug, Clone, Default)]
@@ -16,6 +18,6 @@ impl BraintaxNormalizer {
     #[must_use]
     pub fn normalize(&self, braintax: f64) -> u32 {
         let ratio = (1.0 - braintax / CEILING).clamp(0.0, 1.0);
-        (ratio * 100.0).round() as u32
+        round(ratio * 100.0) as u32
     }
 }

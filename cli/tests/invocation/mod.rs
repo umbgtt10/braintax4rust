@@ -3,4 +3,5 @@
 // SPDX-License-Identifier: MIT
 
 mod args_tests;
+mod entry_failure_tests;
 mod entry_point_tests;

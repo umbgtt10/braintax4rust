@@ -2,7 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::collections::HashMap;
+use alloc::collections::BTreeMap;
+use alloc::string::{String, ToString};
 
 use crate::analysis::collector::Collector;
 use crate::analysis::source_path::SourcePath;
@@ -11,19 +12,19 @@ use syn::Item;
 use syn::parse_file;
 
 pub struct TraitRegistryBuilder {
-    traits: HashMap<String, TraitInfo>,
+    traits: BTreeMap<String, TraitInfo>,
 }
 
 impl TraitRegistryBuilder {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            traits: HashMap::new(),
+            traits: BTreeMap::new(),
         }
     }
 
     #[must_use]
-    pub fn build(mut self, files: &[(SourcePath, String)]) -> HashMap<String, TraitInfo> {
+    pub fn build(mut self, files: &[(SourcePath, String)]) -> BTreeMap<String, TraitInfo> {
         for (_, source) in files {
             self.scan_trait_definitions(source);
         }

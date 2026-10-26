@@ -33,6 +33,5 @@ path = "tests/all_tests.rs"
 workspace = true
 
 [dependencies]
-anyhow.workspace = true
 braintax.workspace = true
 braintax-cli.workspace = true

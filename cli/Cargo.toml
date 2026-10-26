@@ -27,7 +27,6 @@ path = "tests/all_tests.rs"
 workspace = true
 
 [dependencies]
-anyhow.workspace = true
 braintax.workspace = true
 clap.workspace = true
 serde.workspace = true

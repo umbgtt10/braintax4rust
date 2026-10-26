@@ -4,4 +4,5 @@
 
 pub mod app;
 pub mod config;
+pub mod run_failure;
 pub mod run_outcome;

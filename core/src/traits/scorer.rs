@@ -2,6 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use alloc::vec::Vec;
+
 use crate::counting::function_complexity::FunctionComplexity;
 use crate::reporting::module_stats::ModuleStats;
 use crate::reporting::overall_stats::OverallStats;

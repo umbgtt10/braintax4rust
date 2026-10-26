@@ -2,6 +2,10 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use alloc::format;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
+
 use crate::counting::function_complexity::FunctionComplexity;
 use crate::reporting::braintax_report::BraintaxReport;
 use crate::reporting::module_stats::ModuleStats;

@@ -2,6 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use alloc::string::ToString;
+
 use crate::analysis::trait_info::TraitInfo;
 use syn::FnArg;
 use syn::ReturnType;
