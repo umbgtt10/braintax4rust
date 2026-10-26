@@ -106,6 +106,13 @@ packaged and much of its API.
   builds a `TraitInfo`, `TraitInfo::count_impl` counts one more implementation,
   and `BraintaxComponents` is built over its `Default` with a `with_<field>`
   step per field.
+- Stage 2 runs a new gate first, "Technology-free core": the core's manifest
+  may name only `libm` and `syn`, its crate root must carry `#![no_std]` and
+  `#![forbid(unsafe_code)]`, and no file under `core/src` or `core/tests` may
+  reach the file system, a process, the environment, the network or stdout.
+  dry4rust runs once over the workspace, over both published crates' sources;
+  the measuring gates cover both crates, and the self-analysis measures `core/`
+  and `cli/` each against the ceiling.
 
 ## [0.13.1] - 2026-10-10
 

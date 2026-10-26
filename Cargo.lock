@@ -767,6 +767,8 @@ version = "0.13.0"
 dependencies = [
  "serde",
  "serde_json",
+ "syn",
+ "tempfile",
 ]
 
 [[package]]

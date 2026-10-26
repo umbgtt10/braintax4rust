@@ -6,7 +6,12 @@ use std::env::args;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use xtask::boundary::boundary_rule::BoundaryRule;
+use xtask::boundary::crate_root_attributes::CrateRootAttributes;
+use xtask::boundary::disk_source_files::DiskSourceFiles;
+use xtask::boundary::package_dependencies::PackageDependencies;
 use xtask::crap::crap_report_parser::CrapReportParser;
+use xtask::gates::boundary_gate::BoundaryGate;
 use xtask::gates::braintax_self_gate::BraintaxSelfGate;
 use xtask::gates::crap_gate::CrapGate;
 use xtask::gates::dry_gate::DryGate;
@@ -20,6 +25,31 @@ use xtask::process::system_command_runner::SystemCommandRunner;
 
 const CLI_PACKAGE: &str = "cargo-braintax4rust";
 const CORE_PACKAGE: &str = "braintax4rust-core";
+const ALLOWED_CRATES: [&str; 2] = ["libm", "syn"];
+const CORE_DIRS: [[&str; 2]; 2] = [["core", "src"], ["core", "tests"]];
+const CORE_ROOT: [&str; 3] = ["core", "src", "lib.rs"];
+const FORBIDDEN_MODULES: [&str; 6] = [
+    "std::env",
+    "std::fs",
+    "std::io",
+    "std::net",
+    "std::os",
+    "std::process",
+];
+const FORBIDDEN_MACROS: [&str; 5] = ["dbg", "eprint", "eprintln", "print", "println"];
+const REQUIRED_ATTRIBUTES: [&str; 2] = ["no_std", "forbid(unsafe_code)"];
+const FORBIDDEN_METHODS: [&str; 10] = [
+    "canonicalize",
+    "exists",
+    "is_dir",
+    "is_file",
+    "is_symlink",
+    "metadata",
+    "read_dir",
+    "read_link",
+    "symlink_metadata",
+    "try_exists",
+];
 const CRAP_THRESHOLD: &str = "15";
 const ICEBERG_THRESHOLD: &str = "20";
 // core/ and cli/, each on its own: the ceiling is set against what the tool's
@@ -58,19 +88,47 @@ fn run_stage2() -> ExitCode {
     let runner = SystemCommandRunner::new();
     let parser = CrapReportParser::new();
 
-    // Every member, so the gate checks what a hand-run of `cargo stern4rust`
-    // checks: xtask, because it is the crate that runs the gates, and the
-    // fixtures, whose source files that break a rule by construction
-    // stern4rust.toml excludes by name. Left out, the fixtures broke
-    // named-subject six times with the gate green.
+    // First: core stays free of technology -- only its allowed crates in its
+    // manifest, `no_std` and `forbid(unsafe_code)` on its root, and no file
+    // system, process, environment or stdout in its tests -- so mutation testing
+    // it needs nothing but its own tests. A breach is fixed by moving code into
+    // cli, which changes what every later gate, stern4rust's included, measures;
+    // and it costs a second.
+    let root = workspace_root();
+    let sources = DiskSourceFiles::new();
+    let dependencies = PackageDependencies::new();
+    let attributes = CrateRootAttributes::new();
+    let boundary = BoundaryGate::new(
+        &runner,
+        &sources,
+        &dependencies,
+        &attributes,
+        manifest_path.clone(),
+        BoundaryRule {
+            package: String::from(CORE_PACKAGE),
+            source_dirs: CORE_DIRS.iter().map(|dir| below(&root, dir)).collect(),
+            allowed_crates: ALLOWED_CRATES.map(String::from).to_vec(),
+            crate_root: below(&root, &CORE_ROOT),
+            required_attributes: REQUIRED_ATTRIBUTES.map(String::from).to_vec(),
+            forbidden_modules: FORBIDDEN_MODULES.map(String::from).to_vec(),
+            forbidden_macros: FORBIDDEN_MACROS.map(String::from).to_vec(),
+            forbidden_methods: FORBIDDEN_METHODS.map(String::from).to_vec(),
+        },
+    );
+
+    // Second, every member, so the gate checks what a hand-run of
+    // `cargo stern4rust` checks: xtask, because it is the crate that runs the
+    // gates, and the fixtures, whose source files that break a rule by
+    // construction stern4rust.toml excludes by name. Left out, the fixtures
+    // broke named-subject six times with the gate green.
     let stern = SternGate::new(&runner, manifest_path.clone(), Vec::new());
 
-    // Second: every declared dependency used, in the section that uses it. Its
+    // Third: every declared dependency used, in the section that uses it. Its
     // corrections edit manifests only, so they move nothing the gates behind it
     // measure, and it costs a second.
     let shear = ShearGate::new(&runner, manifest_path.clone());
 
-    // Third, for the same reason stern4rust is first: removing a duplicate
+    // Fourth, for the same reason stern4rust runs early: removing a duplicate
     // moves code between files and functions, which changes what every gate
     // behind it measures -- the braintax self-analysis included. One run over
     // the workspace with the trees it must not judge left out, so a copy from
@@ -79,7 +137,6 @@ fn run_stage2() -> ExitCode {
     // adds. The floor leaves out the one-call `Visit` overrides and the one-
     // and two-field constructors, whose sameness is the trait's or the
     // struct's rather than a copy.
-    let root = workspace_root();
     let dry = DryGate::new(
         &runner,
         root.to_string_lossy().into_owned(),
@@ -126,6 +183,7 @@ fn run_stage2() -> ExitCode {
     );
 
     let gates: Vec<&dyn Gate> = vec![
+        &boundary,
         &stern,
         &shear,
         &dry,
