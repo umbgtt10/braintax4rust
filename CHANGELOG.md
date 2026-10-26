@@ -18,7 +18,7 @@ Windows, paths in error messages show `/`. The library is not unchanged: two
 `pub` free functions became associated functions and one moved, for
 stern4rust 0.17.0's new `owned-functions` rule -- a file with a subject holds
 no free function; and the repository splits into a technology-free core and a
-cli crate (`docs/CORE_CLI_SPLIT.md`), which changes how the library is
+cli crate (`docs/history/[IMPLEMENTED] CORE_CLI_SPLIT.md`), which changes how the library is
 packaged and much of its API.
 
 ### Changed (packages)

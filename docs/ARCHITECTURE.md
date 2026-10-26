@@ -10,16 +10,19 @@ This is a map of what exists today, not a decision record — see
 ## Pipeline
 
 ```
-Args (clap)
-  → Config
+cli/src/main.rs
+  → EntryPoint::run(argv)                     (cli)
+    → Args (clap) → Args::config() → Config
     → EntryPoint::compose(config)
-      → App::new(walker, scorer, reporter, config)
-          walker:   Box<dyn Walk>      — finds .rs files
-          scorer:   Box<dyn Scorer>    — aggregates + scores
-          reporter: Box<dyn Reporter>  — renders output
-      → App::run()
+      → App::new(walker, scorer, renderer, config)     (core)
+          walker:   Box<dyn Walk>           — SourceWalk over cli's WalkdirSourceTree
+          scorer:   Box<dyn Scorer>         — DefaultScorer
+          renderer: Box<dyn ReportRenderer> — TextReportRenderer (core) or,
+                                              with --json, JsonReportRenderer (cli)
+      → App::run() -> Result<RunOutcome, RunFailure>
           1. collect_files():
-             a. walker finds every .rs file under the target path
+             a. the walker lists every .rs file under the target path and
+                reads the ones it keeps
              b. Collector::build_trait_registry() does a whole-project
                 pre-pass over all of them, building a name -> TraitInfo
                 map (methods, associated types, supertraits, impl count)
@@ -29,20 +32,31 @@ Args (clap)
           2. compute_report(): scorer turns every function's braintax
              into OverallStats + per-module ModuleStats, assembles a
              BraintaxReport
-          3. handle_output(): hand the BraintaxReport to the reporter,
-             then ask ThresholdGate for the exit code — the report is
-             always written, whether or not a threshold is set
+          3. the renderer turns the report into text, and ThresholdGate
+             gives the verdict -- the report is always rendered, whether
+             or not a threshold is set
+    → EntryPoint writes RunOutcome.output and a newline to stdout and
+      turns RunOutcome.passes into the exit code
 ```
 
-`EntryPoint::compose` (`entry_point.rs`) is the only place that wires
-concrete types to trait objects — everywhere else in the codebase, `App`
-included, depends on the `traits/` interfaces, never on
-`FsWalk`/`DefaultScorer`/`StdoutReporter` directly. `App::new` takes every
-seam as a parameter and builds none of them, as stern4rust's
+The workspace has two crates that matter here. `core/` (`braintax4rust-core`,
+library `braintax`) is the analysis: `#![no_std]`, depending on `libm` and `syn`
+only, touching no file system, process or stdout. `cli/`
+(`cargo-braintax4rust`, library `braintax_cli`) is the command: the binary,
+`Args`, `EntryPoint` and the adapters. `cli` depends on `core`, never the
+reverse.
+
+`EntryPoint::compose` (`cli/src/invocation/entry_point.rs`) is the only place
+that wires concrete types to trait objects — everywhere else in the codebase,
+`App` included, depends on the `traits/` interfaces, never on
+`SourceWalk`/`DefaultScorer`/a renderer directly. `App::new` takes every seam
+as a parameter and builds none of them, as stern4rust's
 `injected-dependencies` rule asks; it builds only its concrete
 `ThresholdGate`, from the bounds `Config` carries. See
 `docs/ADRs/ADR-DynDispatchAppOverGenerics.md` for why these are
-`Box<dyn Trait>` fields rather than generic parameters.
+`Box<dyn Trait>` fields rather than generic parameters, and
+`docs/ADRs/ADR-TechnologyFreeCore.md` for why the analysis is a crate of its
+own.
 
 The two-pass split (registry first, then scoring) exists specifically so
 `trait_factor` is correct even when a trait is defined in a different
@@ -50,18 +64,29 @@ file than its `impl` — a single-pass design can only see a trait's shape
 when both live in the same file, which is the uncommon case in a
 realistically-organized crate.
 
-## The three injected seams (`traits/`)
+## The seams (`core/src/traits/`)
 
-| Trait | Concrete impl | Responsibility |
+| Trait | Implementation | Responsibility |
 |---|---|---|
-| `Walk` | `FsWalk` | Recursively find `.rs` files under the target path, excluding `target/`, `tests/`, `examples/`, `benches/` by path component. |
-| `Scorer` | `DefaultScorer` | Combine each function's `braintax` into `OverallStats`/`ModuleStats`; hold the `HiddenDepSeverity`/`BraintaxNormalizer` used per function. |
-| `Reporter` | `StdoutReporter` | Render a `BraintaxReport` as human-readable text or JSON. |
+| `SourceTree` | cli `WalkdirSourceTree` | List the `.rs` files under a root, and read one. A root that does not exist lists nothing; an entry the walk cannot read is passed over. |
+| `Walk` | core `SourceWalk`, over a `SourceTree` | The files to analyse, with their text: everything listed but a `build.rs` and whatever sits below a `target/`, `.git/`, `tests/`, `examples/` or `benches/` directory, by path component -- never read. |
+| `Scorer` | core `DefaultScorer` | Combine each function's `braintax` into `OverallStats`/`ModuleStats`; with the `BraintaxNormalizer` for the overall and per-module figures. |
+| `ReportRenderer` | core `TextReportRenderer`; cli `JsonReportRenderer` | Render a `BraintaxReport` as human-readable text, or as the `--json` document, whose serde records are cli's own. |
 
-Every fixture crate under `fixture/` exercises `App::new()` with a
-mix of real and fake implementations of these three traits — that's the
-seam the whole test suite is built around. `test-utils`' `CaptureReporter`
-is the one fake shared across all of them.
+Paths in core are `SourcePath`s: text with `/` as the only separator, read
+component by component the way `std::path` reads them, so a root such as
+`core/.` still names its report `core`. cli's `PortablePath` makes one of a
+platform path at the edge, lossily: a scanned file whose name is not UTF-8
+cannot be read back under that name and fails the run naming it. Failures are
+typed: `SourceReadFailure` ("failed to read <path>"), `RenderFailure`, and
+`RunFailure`, which wraps them or says no Rust source was found; cli's
+`EntryFailure` adds a failed write to stdout.
+
+Core's tests use in-memory fakes from `core/tests/support/`
+(`InMemorySourceTree`, `StubReportRenderer`) and touch no disk. Every fixture
+crate under `fixture/` analyses its own directory through cli's
+`EntryPoint::compose` and reads the report `App::run` returns -- the real
+walk, scorer and renderer, end to end.
 
 ## Per-file analysis: `Collector`
 
@@ -97,7 +122,7 @@ delegates to it once per invocation, before any file is scored:
    files, incrementing that trait's `impl_count`.
 3. `record_impl` — the shared bookkeeping step both scans above call into.
 
-The result (`HashMap<String, TraitInfo>`) is passed by reference into
+The result (`BTreeMap<String, TraitInfo>`) is passed by reference into
 every `Collector::collect` call for the rest of the run.
 
 ## Data model
@@ -108,19 +133,22 @@ every `Collector::collect` call for the rest of the run.
 | `OverallStats` / `ModuleStats` | repo / module | `avg_braintax`, `max_braintax`, `total_braintax` (sum across every in-scope function), `braintax_normalized` |
 | `BraintaxReport` | one CLI invocation | `overall`, `modules: Vec<ModuleStats>`, `functions: Vec<FunctionComplexity>` |
 
-`BraintaxReport` is what `Reporter::render` turns into either the
+`BraintaxReport` is what a `ReportRenderer` turns into either the
 human-readable summary or the `--json` output — it's the single shape
-both output modes are projections of.
+both output modes are projections of. `App::run` returns it in a
+`RunOutcome`, with its rendering and the verdict `passes`.
 
 ## CLI layer
 
-`Args` (`args.rs`, `clap::Parser`) parses argv into flags; `Config`
-(`config.rs`) is the plain-data form `App` actually consumes, built once
-via `Config::from_args(args)`. `main.rs` hands the process's arguments to
-`EntryPoint::run`, which strips the name cargo repeats, turns an error into a
-failing exit code and calls `EntryPoint::run_from_args`; that parses the
-arguments and runs the `App` `EntryPoint::compose` builds. They are thin entry
-points — all real logic lives in `App` and below.
+`Args` (`cli/src/invocation/args.rs`, `clap::Parser`) parses argv into flags;
+`Config` (`core/src/invocation/config.rs`) is the plain-data record `App`
+actually consumes, built once by `Args::config()`. `main.rs` hands the
+process's arguments to `EntryPoint::run`, which strips the name cargo repeats,
+prints `error: <message>` and fails on an error, and calls
+`EntryPoint::run_from_args`; that parses the arguments, runs the `App`
+`EntryPoint::compose` builds, writes its output and maps its verdict to the
+exit code. They are thin entry points — all real logic lives in `App` and
+below.
 
 `ThresholdGate` (`threshold_gate.rs`) owns the exit-code decision. It is
 constructed from the two bounds `Config` carries — `threshold`

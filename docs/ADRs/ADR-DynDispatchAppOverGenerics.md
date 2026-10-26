@@ -89,6 +89,18 @@ fields, the box explicit at every construction site. Where the text above says
 `with_deps()`, read `App::new()`; where it says `App::new()`, read
 `EntryPoint::compose()`.
 
+## Amendment -- 2026-10-26
+
+The split into a technology-free core and a cli crate keeps the decision and
+changes what the boxes hold: `App::new(Box<dyn Walk>, Box<dyn Scorer>,
+Box<dyn ReportRenderer>, Config)`, `ReportRenderer` being the rendering half of
+the old `Reporter` -- writing to stdout is `EntryPoint`'s, in `cli`. `App::run`
+returns a `RunOutcome` holding the report itself, so no test needs to read
+anything back out of a reporter: `CaptureReporter` and the `test-utils` crate
+that shared it are gone, and the fixtures and core's tests read the outcome's
+report. The `Arc<Mutex<String>>` handle described above went with them.
+`EntryPoint` is `braintax_cli::invocation::entry_point::EntryPoint`.
+
 ## Related
 
 - `grip`'s own `ADR-DynDispatchAppOverGenerics.md` — the identical

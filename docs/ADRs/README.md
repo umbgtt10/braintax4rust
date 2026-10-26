@@ -3,8 +3,8 @@
 Each ADR documents one load-bearing decision behind `cargo-braintax4rust` —
 succinct, self-contained, citable on its own. Unlike the larger `etheram`
 ecosystem repos, these are not priority-tiered; `braintax` is a
-single-crate CLI tool with a small enough decision surface that a flat
-list is sufficient.
+small CLI tool -- a core library and its command -- with a small enough
+decision surface that a flat list is sufficient.
 
 Further deferred/unstarted design decisions are tracked in
 `docs/OPEN_POINTS.md`, not here — an ADR records a decision already made,
@@ -17,6 +17,7 @@ not one still being weighed.
 | [ADR-AstOnlyNoTypeResolution](ADR-AstOnlyNoTypeResolution.md) | `braintax` analyzes via `syn` AST parsing only, never type resolution — trait-factor and hidden-dep classification is name-based, with known, accepted blind spots for anything off the hardcoded known-lists. |
 | [ADR-DynDispatchAppOverGenerics](ADR-DynDispatchAppOverGenerics.md) | `App` holds `Box<dyn Trait>` fields rather than generic type parameters — one nameable type instead of `App<W, S, R>` noise at every one of 17 fixture-crate call sites. |
 | [ADR-SeverityWeightedHiddenDeps](ADR-SeverityWeightedHiddenDeps.md) | Hidden dependencies cost a severity-weighted sum (`unsafe` +8 down to print-family +2), not a flat per-occurrence penalty — matches what `README.md` already documented. Bundled with a suffix-based path-matching fix for the same detection code. |
+| [ADR-TechnologyFreeCore](ADR-TechnologyFreeCore.md) | The analysis is a crate of its own, `braintax4rust-core`: `#![no_std]`, `libm` and `syn` only, a trait for every piece of technology it needs, implemented in `cli` -- so mutation testing builds and tests the analysis alone. |
 
 ## Template
 

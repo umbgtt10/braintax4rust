@@ -64,22 +64,31 @@ just stage2
 Both must be green before a change is complete. Stage 1 is formatting, clippy
 and tests — cargo built-ins only, so it works on a fresh checkout with none of
 the tools below installed. Stage 2 is `cargo xtask stage2`, which runs, in
-order: `cargo stern4rust` (house coding rules), `cargo shear` (every declared
-dependency used), `cargo dry4rust` (no duplication
-in `core/src` beyond `dry4rust-baseline.json`), **braintax self-analysis**,
-`cargo crap4rust` (complexity against coverage), `cargo twin4rust` (every source
-file has a mirrored test file) and `cargo iceberg4rust` (file risk).
+order: a **technology-free core** check (the analysis crate, `core/`, depends
+on `libm` and `syn` only, is `#![no_std]`, and none of its files reaches the
+file system, a process or stdout), `cargo stern4rust` (house coding rules),
+`cargo shear` (every declared dependency used), `cargo dry4rust` (no
+duplication in `core/src` and `cli/src` beyond `dry4rust-baseline.json`),
+**braintax self-analysis**, `cargo crap4rust` (complexity against coverage),
+`cargo twin4rust` (every source file has a mirrored test file) and
+`cargo iceberg4rust` (file risk).
 
 The self-analysis gate is this repository's own. It builds `cargo-braintax4rust`
-from the working tree, points it at `core/`, and hands it a ceiling of **5.0**
-on average brain tax — letting the tool render its own verdict rather than
-re-implementing the comparison in the gate, so a change that costs this codebase
-clarity is caught by the very measure the tool exists to report. `core/` scores
-**3.3** today.
+from the working tree, points it at `core/` and then at `cli/`, and hands it a
+ceiling of **5.0** on average brain tax — letting the tool render its own
+verdict rather than re-implementing the comparison in the gate, so a change that
+costs this codebase clarity is caught by the very measure the tool exists to
+report. `core/` scores **3.2** today and `cli/` **3.1**.
 
-It measures `core/` specifically, not the whole tree. `fixture/` holds crates
-written to score badly, because they are what braintax is *pointed at* — they
-are the question, not the answer.
+It measures the tool's two crates specifically, not the whole tree. `fixture/`
+holds crates written to score badly, because they are what braintax is
+*pointed at* — they are the question, not the answer.
+
+The workspace's members: `core/` is the analysis, published as
+`braintax4rust-core` (library `braintax`); `cli/` is the command, published as
+`cargo-braintax4rust` (library `braintax_cli`); `xtask/` runs the gates;
+`validation/` holds the ordinal ranking over the fixtures; `fixture/` the
+analysis input. `.cargo/mutants.toml` scopes cargo-mutants to `core/src`.
 
 `xtask` is itself a workspace member and is gated like everything else. The
 crate that runs the gates is not exempt from them.
