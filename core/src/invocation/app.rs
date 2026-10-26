@@ -46,7 +46,7 @@ impl App {
         if functions.is_empty() {
             return Err(anyhow::anyhow!(
                 "no Rust source files found in {}",
-                self.config.path.display()
+                self.config.path
             ));
         }
 
@@ -68,13 +68,7 @@ impl App {
     fn compute_report(&self, functions: Vec<FunctionComplexity>) -> BraintaxReport {
         let overall = self.scorer.overall_stats(&functions);
         let module_stats = self.scorer.module_stats(&functions);
-        let target = self
-            .config
-            .path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or(".")
-            .to_string();
+        let target = self.config.path.file_name().unwrap_or(".").to_string();
 
         BraintaxReport {
             version: env!("CARGO_PKG_VERSION").to_string(),

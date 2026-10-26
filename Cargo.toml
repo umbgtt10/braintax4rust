@@ -36,6 +36,7 @@ repository = "https://github.com/umbgtt10/braintax4rust"
 
 [workspace.dependencies]
 braintax = { path = "core", package = "braintax4rust-core", version = "0.13.1" }
+braintax-cli = { path = "cli", package = "cargo-braintax4rust" }
 braintax-test-utils = { path = "test-utils" }
 
 anyhow = "1"

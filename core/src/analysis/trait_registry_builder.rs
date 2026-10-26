@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: MIT
 
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 use crate::analysis::collector::Collector;
+use crate::analysis::source_path::SourcePath;
 use crate::analysis::trait_info::TraitInfo;
 use syn::Item;
 use syn::parse_file;
@@ -23,7 +23,7 @@ impl TraitRegistryBuilder {
     }
 
     #[must_use]
-    pub fn build(mut self, files: &[(PathBuf, String)]) -> HashMap<String, TraitInfo> {
+    pub fn build(mut self, files: &[(SourcePath, String)]) -> HashMap<String, TraitInfo> {
         for (_, source) in files {
             self.scan_trait_definitions(source);
         }

@@ -8,6 +8,8 @@ use std::path::PathBuf;
 use braintax::invocation::config::Config;
 use clap::Parser;
 
+use crate::system::portable_path::PortablePath;
+
 #[derive(Debug, Clone, Parser)]
 #[command(name = "cargo-braintax4rust")]
 #[command(version = concat!("v", env!("CARGO_PKG_VERSION")))]
@@ -41,7 +43,7 @@ impl Args {
     // `--top 0` would show nothing, so it shows one.
     pub fn config(&self) -> Config {
         Config {
-            path: self.path.clone(),
+            path: PortablePath::of(&self.path),
             json: self.json,
             threshold: self.threshold,
             max_avg_braintax: self.max_avg_braintax,

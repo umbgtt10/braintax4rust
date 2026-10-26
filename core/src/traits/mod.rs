@@ -4,4 +4,5 @@
 
 pub mod reporter;
 pub mod scorer;
+pub mod source_tree;
 pub mod walk;

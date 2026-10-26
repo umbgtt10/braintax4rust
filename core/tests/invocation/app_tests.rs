@@ -2,7 +2,10 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use anyhow::Result;
+use crate::support::in_memory_source_tree::InMemorySourceTree;
+use braintax::analysis::source_path::SourcePath;
+use braintax::analysis::source_read_failure::SourceReadFailure;
+use braintax::analysis::source_walk::SourceWalk;
 use braintax::invocation::app::App;
 use braintax::invocation::config::Config;
 use braintax::reporting::braintax_report::BraintaxReport;
@@ -10,25 +13,28 @@ use braintax::reporting::default_scorer::DefaultScorer;
 use braintax::traits::walk::Walk;
 use braintax_test_utils::capture_reporter::CaptureReporter;
 use serde_json::from_str;
-use std::path::PathBuf;
 use std::process::ExitCode;
 
 #[derive(Debug, Clone)]
 struct NoFilesWalk;
 
 impl Walk for NoFilesWalk {
-    fn rust_files(&self) -> Result<Vec<(PathBuf, String)>> {
+    fn rust_files(&self) -> Result<Vec<(SourcePath, String)>, SourceReadFailure> {
         Ok(vec![])
     }
 }
 
+fn path(text: &str) -> SourcePath {
+    SourcePath::new(String::from(text))
+}
+
 #[derive(Debug, Clone)]
 struct TestWalk {
-    files: Vec<(PathBuf, String)>,
+    files: Vec<(SourcePath, String)>,
 }
 
 impl Walk for TestWalk {
-    fn rust_files(&self) -> Result<Vec<(PathBuf, String)>> {
+    fn rust_files(&self) -> Result<Vec<(SourcePath, String)>, SourceReadFailure> {
         Ok(self.files.clone())
     }
 }
@@ -45,12 +51,12 @@ fn with_if(x: bool) {
 "#
     .to_string();
     let walk = TestWalk {
-        files: vec![(PathBuf::from("src/lib.rs"), source)],
+        files: vec![(path("src/lib.rs"), source)],
     };
     let scorer = DefaultScorer::new();
     let reporter = CaptureReporter::new();
     let config = Config {
-        path: PathBuf::from("."),
+        path: path("."),
         json: true,
         threshold: None,
         max_avg_braintax: None,
@@ -74,7 +80,7 @@ fn app_with_no_files_returns_error() {
     let scorer = DefaultScorer::new();
     let reporter = CaptureReporter::new();
     let config = Config {
-        path: PathBuf::from("."),
+        path: path("."),
         json: false,
         threshold: None,
         max_avg_braintax: None,
@@ -108,20 +114,20 @@ fn complex(a: bool, b: bool) {
 "#
     .to_string();
     let walk = TestWalk {
-        files: vec![(PathBuf::from("src/lib.rs"), source)],
+        files: vec![(path("src/lib.rs"), source)],
     };
     let scorer = DefaultScorer::new();
     let reporter1 = CaptureReporter::new();
     let reporter2 = CaptureReporter::new();
     let config_ok = Config {
-        path: PathBuf::from("."),
+        path: path("."),
         json: false,
         threshold: Some(10),
         max_avg_braintax: None,
         top: 10,
     };
     let config_fail = Config {
-        path: PathBuf::from("."),
+        path: path("."),
         json: false,
         threshold: Some(3),
         max_avg_braintax: None,
@@ -163,12 +169,12 @@ fn trivial() {
 "#
     .to_string();
     let walk = TestWalk {
-        files: vec![(PathBuf::from("src/lib.rs"), source)],
+        files: vec![(path("src/lib.rs"), source)],
     };
     let scorer = DefaultScorer::new();
     let reporter = CaptureReporter::new();
     let config = Config {
-        path: PathBuf::from("."),
+        path: path("."),
         json: true,
         threshold: None,
         max_avg_braintax: None,
@@ -187,15 +193,71 @@ fn trivial() {
 }
 
 #[test]
-fn run_with_a_threshold_set_still_writes_the_report() {
+fn run_names_the_report_after_the_last_component_of_its_root() {
     // Arrange
     let walk = TestWalk {
-        files: vec![(PathBuf::from("src/lib.rs"), "fn trivial() {}".to_string())],
+        files: vec![(path("./core/./src/lib.rs"), "fn trivial() {}".to_string())],
     };
     let reporter = CaptureReporter::new();
     let captured = reporter.captured();
     let config = Config {
-        path: PathBuf::from("."),
+        path: path("./core/."),
+        json: false,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let app = App::new(
+        Box::new(walk),
+        Box::new(DefaultScorer::new()),
+        Box::new(reporter),
+        config,
+    );
+
+    // Act
+    app.run().unwrap();
+
+    // Assert
+    let report: BraintaxReport = from_str(&captured.lock().unwrap()).expect("report json");
+    assert_eq!(report.target, "core");
+    assert_eq!(report.functions[0].module, ".");
+}
+
+#[test]
+fn run_with_a_file_that_cannot_be_read_names_it() {
+    // Arrange
+    let tree = InMemorySourceTree::new().with_unreadable_file("/work/src/lib.rs");
+    let config = Config {
+        path: path("/work"),
+        json: false,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let app = App::new(
+        Box::new(SourceWalk::new(Box::new(tree), path("/work"))),
+        Box::new(DefaultScorer::new()),
+        Box::new(CaptureReporter::new()),
+        config,
+    );
+
+    // Act
+    let failure = app.run().unwrap_err();
+
+    // Assert
+    assert_eq!(failure.to_string(), "failed to read /work/src/lib.rs");
+}
+
+#[test]
+fn run_with_a_threshold_set_still_writes_the_report() {
+    // Arrange
+    let walk = TestWalk {
+        files: vec![(path("src/lib.rs"), "fn trivial() {}".to_string())],
+    };
+    let reporter = CaptureReporter::new();
+    let captured = reporter.captured();
+    let config = Config {
+        path: path("."),
         json: false,
         threshold: Some(1),
         max_avg_braintax: None,
@@ -220,10 +282,10 @@ fn run_with_a_threshold_set_still_writes_the_report() {
 fn run_with_avg_braintax_above_the_limit_returns_failure() {
     // Arrange
     let walk = TestWalk {
-        files: vec![(PathBuf::from("src/lib.rs"), "fn trivial() {}".to_string())],
+        files: vec![(path("src/lib.rs"), "fn trivial() {}".to_string())],
     };
     let config = Config {
-        path: PathBuf::from("."),
+        path: path("."),
         json: false,
         threshold: None,
         max_avg_braintax: Some(0.0),
@@ -247,10 +309,10 @@ fn run_with_avg_braintax_above_the_limit_returns_failure() {
 fn run_with_avg_braintax_within_the_limit_returns_success() {
     // Arrange
     let walk = TestWalk {
-        files: vec![(PathBuf::from("src/lib.rs"), "fn trivial() {}".to_string())],
+        files: vec![(path("src/lib.rs"), "fn trivial() {}".to_string())],
     };
     let config = Config {
-        path: PathBuf::from("."),
+        path: path("."),
         json: false,
         threshold: None,
         max_avg_braintax: Some(100.0),

@@ -14,7 +14,7 @@ fn config_has_default_path() {
     let config = args.config();
 
     // Assert
-    assert_eq!(config.path.to_string_lossy(), ".");
+    assert_eq!(config.path.as_str(), ".");
     assert!(!config.json);
     assert!(config.threshold.is_none());
     assert!(config.max_avg_braintax.is_none());

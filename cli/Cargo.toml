@@ -30,6 +30,7 @@ workspace = true
 anyhow.workspace = true
 braintax.workspace = true
 clap.workspace = true
+walkdir.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

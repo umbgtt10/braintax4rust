@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: MIT
 
 mod collector_tests;
-mod fs_walk_tests;
+mod source_path_tests;
+mod source_read_failure_tests;
+mod source_walk_tests;
 mod trait_info_tests;
 mod trait_registry_builder_tests;

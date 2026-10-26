@@ -5,7 +5,8 @@
 use crate::analysis::trait_info::TraitInfo;
 use crate::counting::signature_scorer::SignatureScorer;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+
+use crate::analysis::source_path::SourcePath;
 
 use syn::Attribute;
 use syn::Block;
@@ -50,17 +51,17 @@ impl<'a> Collector<'a> {
         }
     }
 
-    pub fn build_trait_registry(files: &[(PathBuf, String)]) -> HashMap<String, TraitInfo> {
+    pub fn build_trait_registry(files: &[(SourcePath, String)]) -> HashMap<String, TraitInfo> {
         TraitRegistryBuilder::new().build(files)
     }
 
     pub fn collect(
         source: &str,
-        path: &Path,
-        root: &Path,
+        path: &SourcePath,
+        root: &SourcePath,
         traits: &'a HashMap<String, TraitInfo>,
     ) -> Vec<FunctionComplexity> {
-        let file = path.to_string_lossy().replace('\\', "/");
+        let file = path.as_str().replace('\\', "/");
         let module = Self::module_from_path(path, root);
         let syntax = match parse_file(source) {
             Ok(s) => s,
@@ -102,9 +103,9 @@ impl<'a> Collector<'a> {
         }
     }
 
-    fn module_from_path(path: &Path, root: &Path) -> String {
-        let relative = path.strip_prefix(root).unwrap_or(path);
-        let s = relative.to_string_lossy().replace('\\', "/");
+    fn module_from_path(path: &SourcePath, root: &SourcePath) -> String {
+        let relative = path.strip_prefix(root).unwrap_or(path.as_str());
+        let s = relative.replace('\\', "/");
         let without_src = s.strip_prefix("src/").map(|s| s.to_string()).unwrap_or(s);
         if let Some(pos) = without_src.rfind('/') {
             without_src[..pos].to_string()

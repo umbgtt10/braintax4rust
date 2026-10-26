@@ -4,6 +4,7 @@
 
 use braintax::invocation::config::Config;
 use braintax_cli::invocation::entry_point::EntryPoint;
+use braintax_cli::system::portable_path::PortablePath;
 use std::ffi::OsString;
 use std::fs;
 use std::process::ExitCode;
@@ -14,7 +15,7 @@ fn compose_with_empty_dir_returns_error() {
     // Arrange
     let dir = TempDir::new().unwrap();
     let config = Config {
-        path: dir.path().to_path_buf(),
+        path: PortablePath::of(dir.path()),
         json: false,
         threshold: None,
         max_avg_braintax: None,
@@ -40,7 +41,7 @@ fn compose_with_valid_dir_returns_success() {
     )
     .unwrap();
     let config = Config {
-        path: dir.path().to_path_buf(),
+        path: PortablePath::of(dir.path()),
         json: false,
         threshold: None,
         max_avg_braintax: None,

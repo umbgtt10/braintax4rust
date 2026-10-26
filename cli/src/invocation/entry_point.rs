@@ -7,13 +7,14 @@ use std::process::ExitCode;
 
 use anyhow::Result;
 
-use braintax::analysis::fs_walk::FsWalk;
+use braintax::analysis::source_walk::SourceWalk;
 use braintax::invocation::app::App;
 use braintax::invocation::config::Config;
 use braintax::reporting::default_scorer::DefaultScorer;
 use braintax::reporting::stdout_reporter::StdoutReporter;
 
 use crate::invocation::args::Args;
+use crate::system::walkdir_source_tree::WalkdirSourceTree;
 
 pub struct EntryPoint;
 
@@ -21,7 +22,10 @@ impl EntryPoint {
     #[must_use]
     pub fn compose(config: Config) -> App {
         App::new(
-            Box::new(FsWalk::new(&config.path)),
+            Box::new(SourceWalk::new(
+                Box::new(WalkdirSourceTree::new()),
+                config.path.clone(),
+            )),
             Box::new(DefaultScorer::new()),
             Box::new(StdoutReporter::new(config.json, config.top)),
             config,

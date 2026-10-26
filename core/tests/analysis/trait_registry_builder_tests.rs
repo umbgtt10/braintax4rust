@@ -2,8 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use braintax::analysis::source_path::SourcePath;
 use braintax::analysis::trait_registry_builder::TraitRegistryBuilder;
-use std::path::PathBuf;
 
 #[test]
 fn build_impls_across_multiple_files_sum_impl_count() {
@@ -19,11 +19,17 @@ impl Greet for B { fn hello(&self) {} }
 "#;
     let files = vec![
         (
-            PathBuf::from("src/traits/greet.rs"),
+            SourcePath::new(String::from("src/traits/greet.rs")),
             trait_source.to_string(),
         ),
-        (PathBuf::from("src/a.rs"), impl_a.to_string()),
-        (PathBuf::from("src/b.rs"), impl_b.to_string()),
+        (
+            SourcePath::new(String::from("src/a.rs")),
+            impl_a.to_string(),
+        ),
+        (
+            SourcePath::new(String::from("src/b.rs")),
+            impl_b.to_string(),
+        ),
     ];
 
     // Act
@@ -51,10 +57,13 @@ impl MyTrait for MyStruct {
 "#;
     let files = vec![
         (
-            PathBuf::from("src/traits/my_trait.rs"),
+            SourcePath::new(String::from("src/traits/my_trait.rs")),
             trait_source.to_string(),
         ),
-        (PathBuf::from("src/my_struct.rs"), impl_source.to_string()),
+        (
+            SourcePath::new(String::from("src/my_struct.rs")),
+            impl_source.to_string(),
+        ),
     ];
 
     // Act
@@ -71,7 +80,7 @@ fn build_trait_with_no_impls_registers_with_zero_impl_count() {
     // Arrange
     let trait_source = "trait Unused { fn never_called(&self); }";
     let files = vec![(
-        PathBuf::from("src/traits/unused.rs"),
+        SourcePath::new(String::from("src/traits/unused.rs")),
         trait_source.to_string(),
     )];
 

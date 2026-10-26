@@ -10,7 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 The command line, output and exit codes are unchanged: stdout, stderr and
-exit codes are compared byte for byte against 0.13.1. The library is not: two
+exit codes are compared byte for byte against 0.13.1. One exception is
+deliberate: a scanned `.rs` file whose path is not UTF-8 fails the run naming
+it (`error: failed to read <path>`, exit 1), where 0.13.1 scored it under a
+name it does not have; a file the walk leaves out is still never read. On
+Windows, paths in error messages show `/`. The library is not unchanged: two
 `pub` free functions became associated functions and one moved, for
 stern4rust 0.17.0's new `owned-functions` rule -- a file with a subject holds
 no free function; and the repository splits into a technology-free core and a
@@ -30,7 +34,20 @@ packaged and much of its API.
 - `invocation::entry_point::EntryPoint` moves to
   `braintax_cli::invocation::entry_point::EntryPoint`.
 - `invocation::config::Config` stays a record, as in 0.13.1, without
-  `from_args`.
+  `from_args`; its `path` is a `SourcePath`.
+- `analysis::fs_walk::FsWalk` is split in two: which files are read --
+  everything but a build script and what sits below a `target`, `.git`,
+  `tests`, `examples` or `benches` directory -- is
+  `analysis::source_walk::SourceWalk::new(Box<dyn SourceTree>, SourcePath)`,
+  and the disk is `braintax_cli::system::walkdir_source_tree::WalkdirSourceTree`,
+  an implementation of the new port `traits::source_tree::SourceTree`
+  (`rust_files`, `read_source`).
+- Paths are `analysis::source_path::SourcePath`, text with `/` as its only
+  separator, which cli's `system::portable_path::PortablePath` makes of a
+  platform path: `Walk::rust_files` returns `Vec<(SourcePath, String)>` and
+  fails with `analysis::source_read_failure::SourceReadFailure` ("failed to
+  read <path>"); `Collector::collect`, `Collector::build_trait_registry` and
+  `TraitRegistryBuilder::build` take `SourcePath`s.
 
 ### Changed
 - The free `invocation::app::run` is gone: `main.rs` hands the process's
