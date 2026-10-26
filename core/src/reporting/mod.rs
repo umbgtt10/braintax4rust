@@ -8,5 +8,6 @@ pub mod braintax_report;
 pub mod default_scorer;
 pub mod module_stats;
 pub mod overall_stats;
-pub mod stdout_reporter;
+pub mod render_failure;
+pub mod text_report_renderer;
 pub mod threshold_gate;

@@ -2,47 +2,25 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::io::{Write, stdout};
-
-use anyhow::Result;
-
 use crate::counting::function_complexity::FunctionComplexity;
 use crate::reporting::braintax_report::BraintaxReport;
 use crate::reporting::module_stats::ModuleStats;
-use crate::traits::reporter::Reporter;
-use serde_json::to_string_pretty;
+use crate::reporting::render_failure::RenderFailure;
+use crate::traits::report_renderer::ReportRenderer;
 
+// The report as a reader sees it: the overall figures, one line per module and
+// the `top` most taxing functions.
 #[derive(Debug, Clone)]
-pub struct StdoutReporter {
-    json: bool,
+pub struct TextReportRenderer {
     top: usize,
 }
 
-impl StdoutReporter {
+impl TextReportRenderer {
     #[must_use]
-    pub fn new(json: bool, top: usize) -> Self {
-        Self { json, top }
-    }
-}
-
-impl Reporter for StdoutReporter {
-    fn render(&self, report: &BraintaxReport) -> Result<String> {
-        if self.json {
-            Ok(to_string_pretty(report)?)
-        } else {
-            Ok(self.render_human(report))
-        }
+    pub fn new(top: usize) -> Self {
+        Self { top }
     }
 
-    fn write(&self, report: &BraintaxReport) -> Result<()> {
-        let out = self.render(report)?;
-        stdout().write_all(out.as_bytes())?;
-        stdout().write_all(b"\n")?;
-        Ok(())
-    }
-}
-
-impl StdoutReporter {
     fn render_human(&self, report: &BraintaxReport) -> String {
         let mut lines = Vec::new();
         let target = &report.target;
@@ -145,5 +123,11 @@ impl StdoutReporter {
         sorted.sort_by(|a, b| b.braintax.partial_cmp(&a.braintax).unwrap());
         sorted.truncate(self.top);
         sorted
+    }
+}
+
+impl ReportRenderer for TextReportRenderer {
+    fn render(&self, report: &BraintaxReport) -> Result<String, RenderFailure> {
+        Ok(self.render_human(report))
     }
 }

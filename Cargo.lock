@@ -65,22 +65,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
 
 [[package]]
-name = "braintax-test-utils"
-version = "0.9.0"
-dependencies = [
- "anyhow",
- "braintax4rust-core",
- "serde_json",
-]
-
-[[package]]
 name = "braintax4rust-core"
 version = "0.13.1"
 dependencies = [
  "anyhow",
- "braintax-test-utils",
- "serde",
- "serde_json",
  "syn",
 ]
 
@@ -91,6 +79,8 @@ dependencies = [
  "anyhow",
  "braintax4rust-core",
  "clap",
+ "serde",
+ "serde_json",
  "tempfile",
  "walkdir",
 ]
@@ -173,180 +163,144 @@ checksum = "9f1f227452a390804cdb637b74a86990f2a7d7ba4b7d5693aac9b4dd6defd8d6"
 name = "fixture-base_assoc_only"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_cfg"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_depth1"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_flat"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_generics"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_hidden_deps"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_inherent"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_known_trait"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_macros"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_many_methods"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_opaque"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_super_only"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_trait"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_trait_assoc_dispatch"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_trait_four_impls"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_trait_multi"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_trait_refined"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
 name = "fixture-base_trait_two_impls"
 version = "0.0.0"
 dependencies = [
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]
@@ -619,10 +573,8 @@ name = "validation"
 version = "0.12.0"
 dependencies = [
  "anyhow",
- "braintax-test-utils",
  "braintax4rust-core",
  "cargo-braintax4rust",
- "serde_json",
 ]
 
 [[package]]

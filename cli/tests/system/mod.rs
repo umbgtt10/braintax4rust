@@ -2,5 +2,6 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+mod json_report_renderer_tests;
 mod portable_path_tests;
 mod walkdir_source_tree_tests;

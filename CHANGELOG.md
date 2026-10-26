@@ -48,6 +48,20 @@ packaged and much of its API.
   fails with `analysis::source_read_failure::SourceReadFailure` ("failed to
   read <path>"); `Collector::collect`, `Collector::build_trait_registry` and
   `TraitRegistryBuilder::build` take `SourcePath`s.
+- `traits::reporter::Reporter` (`render`, `write`) is
+  `traits::report_renderer::ReportRenderer`, which only renders: `render(&self,
+  &BraintaxReport) -> Result<String, RenderFailure>`
+  (`reporting::render_failure::RenderFailure`). Writing to stdout is
+  `EntryPoint`'s.
+- `reporting::stdout_reporter::StdoutReporter::new(json, top)` is two
+  renderers: `reporting::text_report_renderer::TextReportRenderer::new(top)`,
+  the text report, and `braintax_cli::system::json_report_renderer::JsonReportRenderer`,
+  the JSON one, with serde records of its own in today's field order.
+- `App::new` takes a `Box<dyn ReportRenderer>`; `App::run` returns an
+  `invocation::run_outcome::RunOutcome` -- the report, its rendering and the
+  verdict, `passes` -- instead of printing and answering with an exit code.
+- `FunctionComplexity`, `ModuleStats`, `OverallStats` and `BraintaxReport` no
+  longer implement `Serialize` or `Deserialize`: serde leaves the library.
 
 ### Changed
 - The free `invocation::app::run` is gone: `main.rs` hands the process's

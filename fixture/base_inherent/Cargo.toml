@@ -14,5 +14,3 @@ path = "tests/all_tests.rs"
 [dev-dependencies]
 braintax.workspace = true
 braintax-cli.workspace = true
-braintax-test-utils.workspace = true
-serde_json.workspace = true

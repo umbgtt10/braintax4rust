@@ -2,7 +2,7 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-pub mod reporter;
+pub mod report_renderer;
 pub mod scorer;
 pub mod source_tree;
 pub mod walk;

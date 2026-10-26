@@ -29,13 +29,12 @@ const BRAINTAX_CORE_TARGET: &str = "core";
 const BRAINTAX_CLI_TARGET: &str = "cli";
 const BRAINTAX_CEILING: &str = "5.0";
 // Every tree dry4rust must not judge, below the workspace root it scans:
-// tests repeat their arrangement by design, and xtask, the fixtures, validation
-// and test-utils are not published.
-const DRY_EXCLUDES: [&[&str]; 6] = [
+// tests repeat their arrangement by design, and xtask, the fixtures and
+// validation are not published.
+const DRY_EXCLUDES: [&[&str]; 5] = [
     &["xtask"],
     &["fixture"],
     &["validation"],
-    &["test-utils"],
     &["core", "tests"],
     &["cli", "tests"],
 ];

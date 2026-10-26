@@ -2,11 +2,9 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use anyhow::Result;
-
 use crate::reporting::braintax_report::BraintaxReport;
+use crate::reporting::render_failure::RenderFailure;
 
-pub trait Reporter {
-    fn render(&self, report: &BraintaxReport) -> Result<String>;
-    fn write(&self, report: &BraintaxReport) -> Result<()>;
+pub trait ReportRenderer {
+    fn render(&self, report: &BraintaxReport) -> Result<String, RenderFailure>;
 }

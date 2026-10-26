@@ -6,8 +6,8 @@ use braintax::counting::function_complexity::FunctionComplexity;
 use braintax::reporting::braintax_report::BraintaxReport;
 use braintax::reporting::module_stats::ModuleStats;
 use braintax::reporting::overall_stats::OverallStats;
-use braintax::reporting::stdout_reporter::StdoutReporter;
-use braintax::traits::reporter::Reporter;
+use braintax::reporting::text_report_renderer::TextReportRenderer;
+use braintax::traits::report_renderer::ReportRenderer;
 
 fn sample_report() -> BraintaxReport {
     BraintaxReport {
@@ -64,7 +64,7 @@ fn sample_report() -> BraintaxReport {
 #[test]
 fn reporter_human_shows_top_functions() {
     // Arrange
-    let reporter = StdoutReporter::new(false, 1);
+    let reporter = TextReportRenderer::new(1);
     let report = sample_report();
 
     // Act
@@ -76,22 +76,9 @@ fn reporter_human_shows_top_functions() {
 }
 
 #[test]
-fn reporter_render_error_on_failed_serialization() {
-    // Arrange
-    let reporter = StdoutReporter::new(true, 10);
-    let report = sample_report();
-
-    // Act
-    let rendered = reporter.render(&report).unwrap();
-
-    // Assert
-    assert!(!rendered.is_empty());
-}
-
-#[test]
 fn reporter_renders_human_output() {
     // Arrange
-    let reporter = StdoutReporter::new(false, 10);
+    let reporter = TextReportRenderer::new(10);
     let report = sample_report();
 
     // Act
@@ -104,19 +91,4 @@ fn reporter_renders_human_output() {
     assert!(rendered.contains("Top"));
     assert!(rendered.contains("simple"));
     assert!(rendered.contains("complex"));
-}
-
-#[test]
-fn reporter_renders_json_output() {
-    // Arrange
-    let reporter = StdoutReporter::new(true, 10);
-    let report = sample_report();
-
-    // Act
-    let rendered = reporter.render(&report).unwrap();
-
-    // Assert
-    assert!(rendered.starts_with('{'));
-    assert!(rendered.contains("\"version\": \"0.2.0\""));
-    assert!(rendered.contains("\"cyclomatic\": 5"));
 }

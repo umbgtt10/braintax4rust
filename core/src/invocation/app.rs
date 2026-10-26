@@ -2,23 +2,22 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use std::process::ExitCode;
-
 use anyhow::Result;
 
 use crate::analysis::collector::Collector;
 use crate::counting::function_complexity::FunctionComplexity;
 use crate::invocation::config::Config;
+use crate::invocation::run_outcome::RunOutcome;
 use crate::reporting::braintax_report::BraintaxReport;
 use crate::reporting::threshold_gate::ThresholdGate;
-use crate::traits::reporter::Reporter;
+use crate::traits::report_renderer::ReportRenderer;
 use crate::traits::scorer::Scorer;
 use crate::traits::walk::Walk;
 
 pub struct App {
     walker: Box<dyn Walk>,
     scorer: Box<dyn Scorer>,
-    reporter: Box<dyn Reporter>,
+    renderer: Box<dyn ReportRenderer>,
     gate: ThresholdGate,
     config: Config,
 }
@@ -28,19 +27,21 @@ impl App {
     pub fn new(
         walker: Box<dyn Walk>,
         scorer: Box<dyn Scorer>,
-        reporter: Box<dyn Reporter>,
+        renderer: Box<dyn ReportRenderer>,
         config: Config,
     ) -> Self {
         Self {
             walker,
             scorer,
-            reporter,
+            renderer,
             gate: ThresholdGate::new(config.threshold, config.max_avg_braintax),
             config,
         }
     }
 
-    pub fn run(&self) -> Result<ExitCode> {
+    // The report, the text it renders to and the verdict on it. Printing the
+    // text and turning the verdict into an exit code are the caller's.
+    pub fn run(&self) -> Result<RunOutcome> {
         let functions = self.collect_files()?;
 
         if functions.is_empty() {
@@ -51,7 +52,13 @@ impl App {
         }
 
         let report = self.compute_report(functions);
-        self.handle_output(&report)
+        let output = self.renderer.render(&report)?;
+        let passes = self.gate.passes(&report.overall);
+        Ok(RunOutcome {
+            report,
+            output,
+            passes,
+        })
     }
 
     fn collect_files(&self) -> Result<Vec<FunctionComplexity>> {
@@ -71,21 +78,11 @@ impl App {
         let target = self.config.path.file_name().unwrap_or(".").to_string();
 
         BraintaxReport {
-            version: env!("CARGO_PKG_VERSION").to_string(),
+            version: String::from(env!("CARGO_PKG_VERSION")),
             target,
             overall,
             modules: module_stats,
             functions,
         }
-    }
-
-    fn handle_output(&self, report: &BraintaxReport) -> Result<ExitCode> {
-        self.reporter.write(report)?;
-
-        Ok(if self.gate.passes(&report.overall) {
-            ExitCode::SUCCESS
-        } else {
-            ExitCode::FAILURE
-        })
     }
 }

@@ -3,17 +3,14 @@
 // SPDX-License-Identifier: MIT
 
 use crate::support::in_memory_source_tree::InMemorySourceTree;
+use crate::support::stub_report_renderer::StubReportRenderer;
 use braintax::analysis::source_path::SourcePath;
 use braintax::analysis::source_read_failure::SourceReadFailure;
 use braintax::analysis::source_walk::SourceWalk;
 use braintax::invocation::app::App;
 use braintax::invocation::config::Config;
-use braintax::reporting::braintax_report::BraintaxReport;
 use braintax::reporting::default_scorer::DefaultScorer;
 use braintax::traits::walk::Walk;
-use braintax_test_utils::capture_reporter::CaptureReporter;
-use serde_json::from_str;
-use std::process::ExitCode;
 
 #[derive(Debug, Clone)]
 struct NoFilesWalk;
@@ -54,7 +51,7 @@ fn with_if(x: bool) {
         files: vec![(path("src/lib.rs"), source)],
     };
     let scorer = DefaultScorer::new();
-    let reporter = CaptureReporter::new();
+    let renderer = StubReportRenderer::new();
     let config = Config {
         path: path("."),
         json: true,
@@ -62,23 +59,22 @@ fn with_if(x: bool) {
         max_avg_braintax: None,
         top: 10,
     };
-    let captured = reporter.captured();
-    let app = App::new(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
+    let app = App::new(Box::new(walk), Box::new(scorer), Box::new(renderer), config);
 
     // Act
     let result = app.run();
 
     // Assert
-    assert_eq!(result.unwrap(), ExitCode::SUCCESS);
-    let report: BraintaxReport = from_str(&captured.lock().unwrap()).expect("report json");
-    assert_eq!(report.overall.max_cyclomatic, 2);
+    let outcome = result.unwrap();
+    assert!(outcome.passes);
+    assert_eq!(outcome.report.overall.max_cyclomatic, 2);
 }
 
 #[test]
 fn app_with_no_files_returns_error() {
     // Arrange
     let scorer = DefaultScorer::new();
-    let reporter = CaptureReporter::new();
+    let renderer = StubReportRenderer::new();
     let config = Config {
         path: path("."),
         json: false,
@@ -89,7 +85,7 @@ fn app_with_no_files_returns_error() {
     let app = App::new(
         Box::new(NoFilesWalk),
         Box::new(scorer),
-        Box::new(reporter),
+        Box::new(renderer),
         config,
     );
 
@@ -117,8 +113,8 @@ fn complex(a: bool, b: bool) {
         files: vec![(path("src/lib.rs"), source)],
     };
     let scorer = DefaultScorer::new();
-    let reporter1 = CaptureReporter::new();
-    let reporter2 = CaptureReporter::new();
+    let renderer1 = StubReportRenderer::new();
+    let renderer2 = StubReportRenderer::new();
     let config_ok = Config {
         path: path("."),
         json: false,
@@ -138,25 +134,25 @@ fn complex(a: bool, b: bool) {
     let app_ok = App::new(
         Box::new(walk.clone()),
         Box::new(scorer),
-        Box::new(reporter1),
+        Box::new(renderer1),
         config_ok,
     );
     let result_ok = app_ok.run();
 
     // Assert
-    assert_eq!(result_ok.unwrap(), ExitCode::SUCCESS);
+    assert!(result_ok.unwrap().passes);
 
     // Act
     let app_fail = App::new(
         Box::new(walk),
         Box::new(DefaultScorer::new()),
-        Box::new(reporter2),
+        Box::new(renderer2),
         config_fail,
     );
     let result_fail = app_fail.run();
 
     // Assert
-    assert_eq!(result_fail.unwrap(), ExitCode::FAILURE);
+    assert!(!result_fail.unwrap().passes);
 }
 
 #[test]
@@ -172,7 +168,7 @@ fn trivial() {
         files: vec![(path("src/lib.rs"), source)],
     };
     let scorer = DefaultScorer::new();
-    let reporter = CaptureReporter::new();
+    let renderer = StubReportRenderer::new();
     let config = Config {
         path: path("."),
         json: true,
@@ -180,16 +176,43 @@ fn trivial() {
         max_avg_braintax: None,
         top: 10,
     };
-    let captured = reporter.captured();
-    let app = App::new(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
+    let app = App::new(Box::new(walk), Box::new(scorer), Box::new(renderer), config);
 
     // Act
     let result = app.run();
 
     // Assert
-    assert_eq!(result.unwrap(), ExitCode::SUCCESS);
-    let report: BraintaxReport = from_str(&captured.lock().unwrap()).expect("report json");
-    assert_eq!(report.overall.max_cyclomatic, 1);
+    let outcome = result.unwrap();
+    assert!(outcome.passes);
+    assert_eq!(outcome.report.overall.max_cyclomatic, 1);
+}
+
+#[test]
+fn run_hands_back_what_the_renderer_made_of_the_report() {
+    // Arrange
+    let walk = TestWalk {
+        files: vec![(path("/work/core/src/lib.rs"), "fn trivial() {}".to_string())],
+    };
+    let config = Config {
+        path: path("/work/core"),
+        json: false,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let app = App::new(
+        Box::new(walk),
+        Box::new(DefaultScorer::new()),
+        Box::new(StubReportRenderer::new()),
+        config,
+    );
+
+    // Act
+    let outcome = app.run().unwrap();
+
+    // Assert
+    assert_eq!(outcome.output, "core: 1 functions");
+    assert_eq!(outcome.report.version, env!("CARGO_PKG_VERSION"));
 }
 
 #[test]
@@ -198,8 +221,6 @@ fn run_names_the_report_after_the_last_component_of_its_root() {
     let walk = TestWalk {
         files: vec![(path("./core/./src/lib.rs"), "fn trivial() {}".to_string())],
     };
-    let reporter = CaptureReporter::new();
-    let captured = reporter.captured();
     let config = Config {
         path: path("./core/."),
         json: false,
@@ -210,17 +231,16 @@ fn run_names_the_report_after_the_last_component_of_its_root() {
     let app = App::new(
         Box::new(walk),
         Box::new(DefaultScorer::new()),
-        Box::new(reporter),
+        Box::new(StubReportRenderer::new()),
         config,
     );
 
     // Act
-    app.run().unwrap();
+    let outcome = app.run().unwrap();
 
     // Assert
-    let report: BraintaxReport = from_str(&captured.lock().unwrap()).expect("report json");
-    assert_eq!(report.target, "core");
-    assert_eq!(report.functions[0].module, ".");
+    assert_eq!(outcome.report.target, "core");
+    assert_eq!(outcome.report.functions[0].module, ".");
 }
 
 #[test]
@@ -237,7 +257,7 @@ fn run_with_a_file_that_cannot_be_read_names_it() {
     let app = App::new(
         Box::new(SourceWalk::new(Box::new(tree), path("/work"))),
         Box::new(DefaultScorer::new()),
-        Box::new(CaptureReporter::new()),
+        Box::new(StubReportRenderer::new()),
         config,
     );
 
@@ -249,13 +269,39 @@ fn run_with_a_file_that_cannot_be_read_names_it() {
 }
 
 #[test]
+fn run_with_a_renderer_that_fails_returns_its_failure() {
+    // Arrange
+    let walk = TestWalk {
+        files: vec![(path("src/lib.rs"), "fn trivial() {}".to_string())],
+    };
+    let config = Config {
+        path: path("."),
+        json: false,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let app = App::new(
+        Box::new(walk),
+        Box::new(DefaultScorer::new()),
+        Box::new(StubReportRenderer::failing()),
+        config,
+    );
+
+    // Act
+    let failure = app.run().unwrap_err();
+
+    // Assert
+    assert_eq!(failure.to_string(), "failed to render the report");
+}
+
+#[test]
 fn run_with_a_threshold_set_still_writes_the_report() {
     // Arrange
     let walk = TestWalk {
         files: vec![(path("src/lib.rs"), "fn trivial() {}".to_string())],
     };
-    let reporter = CaptureReporter::new();
-    let captured = reporter.captured();
+    let renderer = StubReportRenderer::new();
     let config = Config {
         path: path("."),
         json: false,
@@ -266,7 +312,7 @@ fn run_with_a_threshold_set_still_writes_the_report() {
     let app = App::new(
         Box::new(walk),
         Box::new(DefaultScorer::new()),
-        Box::new(reporter),
+        Box::new(renderer),
         config,
     );
 
@@ -274,8 +320,9 @@ fn run_with_a_threshold_set_still_writes_the_report() {
     let result = app.run();
 
     // Assert
-    assert_eq!(result.unwrap(), ExitCode::SUCCESS);
-    assert!(!captured.lock().unwrap().is_empty());
+    let outcome = result.unwrap();
+    assert!(outcome.passes);
+    assert!(!outcome.output.is_empty());
 }
 
 #[test]
@@ -294,7 +341,7 @@ fn run_with_avg_braintax_above_the_limit_returns_failure() {
     let app = App::new(
         Box::new(walk),
         Box::new(DefaultScorer::new()),
-        Box::new(CaptureReporter::new()),
+        Box::new(StubReportRenderer::new()),
         config,
     );
 
@@ -302,7 +349,7 @@ fn run_with_avg_braintax_above_the_limit_returns_failure() {
     let result = app.run();
 
     // Assert
-    assert_eq!(result.unwrap(), ExitCode::FAILURE);
+    assert!(!result.unwrap().passes);
 }
 
 #[test]
@@ -321,7 +368,7 @@ fn run_with_avg_braintax_within_the_limit_returns_success() {
     let app = App::new(
         Box::new(walk),
         Box::new(DefaultScorer::new()),
-        Box::new(CaptureReporter::new()),
+        Box::new(StubReportRenderer::new()),
         config,
     );
 
@@ -329,5 +376,5 @@ fn run_with_avg_braintax_within_the_limit_returns_success() {
     let result = app.run();
 
     // Assert
-    assert_eq!(result.unwrap(), ExitCode::SUCCESS);
+    assert!(result.unwrap().passes);
 }

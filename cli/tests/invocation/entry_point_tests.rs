@@ -49,10 +49,10 @@ fn compose_with_valid_dir_returns_success() {
     };
 
     // Act
-    let exit_code = EntryPoint::compose(config).run().unwrap();
+    let outcome = EntryPoint::compose(config).run().unwrap();
 
     // Assert
-    assert_eq!(exit_code, ExitCode::SUCCESS);
+    assert!(outcome.passes);
 }
 
 #[test]

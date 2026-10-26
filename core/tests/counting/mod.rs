@@ -4,7 +4,6 @@
 
 mod complexity_visitor_tests;
 mod derive_attr_scorer_tests;
-mod function_complexity_tests;
 mod generics_counter_tests;
 mod hidden_dep_severity_tests;
 mod hidden_deps_counter_tests;

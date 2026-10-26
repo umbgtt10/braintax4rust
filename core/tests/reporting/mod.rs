@@ -4,9 +4,7 @@
 
 mod braintax_components_tests;
 mod braintax_normalizer_tests;
-mod braintax_report_tests;
 mod default_scorer_tests;
-mod module_stats_tests;
-mod overall_stats_tests;
-mod stdout_reporter_tests;
+mod render_failure_tests;
+mod text_report_renderer_tests;
 mod threshold_gate_tests;
