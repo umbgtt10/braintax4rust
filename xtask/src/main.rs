@@ -25,7 +25,16 @@ const ICEBERG_THRESHOLD: &str = "20";
 // rather than against the fixture-inflated 8.0 the old default produced.
 const BRAINTAX_TARGET: &str = "core";
 const BRAINTAX_CEILING: &str = "5.0";
-const DRY_PATH: &str = "core/src";
+// Every tree dry4rust must not judge, below the workspace root it scans:
+// tests repeat their arrangement by design, and xtask, the fixtures, validation
+// and test-utils are not published.
+const DRY_EXCLUDES: [&[&str]; 5] = [
+    &["xtask"],
+    &["fixture"],
+    &["validation"],
+    &["test-utils"],
+    &["core", "tests"],
+];
 const DRY_BASELINE: &str = "dry4rust-baseline.json";
 const DRY_MIN_NODES: &str = "25";
 
@@ -60,16 +69,21 @@ fn run_stage2() -> ExitCode {
 
     // Third, for the same reason stern4rust is first: removing a duplicate
     // moves code between files and functions, which changes what every gate
-    // behind it measures -- the braintax self-analysis included. The published
-    // crate's source only -- tests repeat their arrangement by design --
-    // against a baseline of what was already duplicated when the gate arrived,
-    // so it fails on what a change adds. The floor leaves out the one-call
-    // `Visit` overrides and the one- and two-field constructors, whose sameness
-    // is the trait's or the struct's rather than a copy.
+    // behind it measures -- the braintax self-analysis included. One run over
+    // the workspace with the trees it must not judge left out, so a copy from
+    // one published crate into another is seen, against a baseline of what was
+    // already duplicated when the gate arrived, so it fails on what a change
+    // adds. The floor leaves out the one-call `Visit` overrides and the one-
+    // and two-field constructors, whose sameness is the trait's or the
+    // struct's rather than a copy.
     let root = workspace_root();
     let dry = DryGate::new(
         &runner,
-        root.join(DRY_PATH).to_string_lossy().into_owned(),
+        root.to_string_lossy().into_owned(),
+        DRY_EXCLUDES
+            .iter()
+            .map(|exclude| below(&root, exclude).to_string_lossy().into_owned())
+            .collect(),
         root.join(DRY_BASELINE).to_string_lossy().into_owned(),
         String::from(DRY_MIN_NODES),
     );
@@ -119,6 +133,14 @@ fn workspace_manifest_path() -> String {
         .join("Cargo.toml")
         .to_string_lossy()
         .into_owned()
+}
+
+// Joined a component at a time, so the path carries the platform's separator
+// throughout -- dry4rust matches its exclusions as text.
+fn below(root: &Path, components: &[&str]) -> PathBuf {
+    components
+        .iter()
+        .fold(root.to_path_buf(), |path, component| path.join(component))
 }
 
 fn workspace_root() -> PathBuf {

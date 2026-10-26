@@ -72,7 +72,7 @@ core's tests only. The fixtures, which are analysis input, are never mutated.
 | # | slice | status |
 |---|---|---|
 | S0 | this record | done |
-| S1 | `DryGate`: one run over the workspace, with the trees it must not judge excluded by full path; the ignore file moves to the root it is read from | |
+| S1 | `DryGate`: one run over the workspace, with the trees it must not judge excluded by full path; the ignore file moves to the root it is read from | done |
 | S2 | the split: `cli` takes `main.rs`, `Args` and `EntryPoint`; core is renamed; one workspace version; `[workspace.lints]` forbids unsafe code; `Config` becomes a record and the ignore file goes | |
 | S3 | the `SourceTree` port, `SourcePath` and `SourceWalk`; the walk becomes cli's `WalkdirSourceTree` | |
 | S4 | -- (braintax reads no cargo metadata: there is no workspace reader) | |
