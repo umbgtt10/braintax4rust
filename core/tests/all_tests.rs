@@ -5,5 +5,4 @@
 mod analysis;
 mod counting;
 mod invocation;
-mod main_tests;
 mod reporting;

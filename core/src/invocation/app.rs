@@ -35,7 +35,7 @@ impl App {
             walker,
             scorer,
             reporter,
-            gate: ThresholdGate::new(config.threshold(), config.max_avg_braintax()),
+            gate: ThresholdGate::new(config.threshold, config.max_avg_braintax),
             config,
         }
     }
@@ -46,7 +46,7 @@ impl App {
         if functions.is_empty() {
             return Err(anyhow::anyhow!(
                 "no Rust source files found in {}",
-                self.config.path().display()
+                self.config.path.display()
             ));
         }
 
@@ -59,7 +59,7 @@ impl App {
         let traits = Collector::build_trait_registry(&files);
         let mut all_functions = Vec::new();
         for (path, source) in &files {
-            let functions = Collector::collect(source, path, self.config.path(), &traits);
+            let functions = Collector::collect(source, path, &self.config.path, &traits);
             all_functions.extend(functions);
         }
         Ok(all_functions)
@@ -70,7 +70,7 @@ impl App {
         let module_stats = self.scorer.module_stats(&functions);
         let target = self
             .config
-            .path()
+            .path
             .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or(".")

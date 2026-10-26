@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "core",
+    "cli",
     "validation",
     "test-utils",
     "xtask",
@@ -25,8 +26,16 @@ members = [
 ]
 resolver = "2"
 
+# The two published crates release together.
+[workspace.package]
+version = "0.13.1"
+edition = "2024"
+authors = ["Umberto Gotti <umberto.gotti@umbertogotti.dev>"]
+license = "MIT"
+repository = "https://github.com/umbgtt10/braintax4rust"
+
 [workspace.dependencies]
-braintax = { path = "core", package = "cargo-braintax4rust" }
+braintax = { path = "core", package = "braintax4rust-core", version = "0.13.1" }
 braintax-test-utils = { path = "test-utils" }
 
 anyhow = "1"
@@ -36,3 +45,9 @@ serde_json = "1"
 syn = { version = "2", features = ["full", "visit"] }
 walkdir = "2"
 tempfile = "3"
+
+# No `unsafe` in the tool's own crates, tests included; core says so at its
+# crate root as well. The fixtures do not opt in: base_hidden_deps weighs an
+# `unsafe` block by construction.
+[workspace.lints.rust]
+unsafe_code = "forbid"

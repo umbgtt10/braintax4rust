@@ -3,6 +3,4 @@
 // SPDX-License-Identifier: MIT
 
 pub mod app;
-pub mod args;
 pub mod config;
-pub mod entry_point;

@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: MIT
 
 use std::ffi::OsString;
-use std::path::Path;
 use std::path::PathBuf;
 
+use braintax::invocation::config::Config;
 use clap::Parser;
 
 #[derive(Debug, Clone, Parser)]
@@ -38,24 +38,15 @@ impl Args {
         Self::parse_from(args)
     }
 
-    pub fn json(&self) -> bool {
-        self.json
-    }
-
-    pub fn max_avg_braintax(&self) -> Option<f64> {
-        self.max_avg_braintax
-    }
-
-    pub fn path(&self) -> &Path {
-        &self.path
-    }
-
-    pub fn threshold(&self) -> Option<u32> {
-        self.threshold
-    }
-
-    pub fn top(&self) -> usize {
-        self.top
+    // `--top 0` would show nothing, so it shows one.
+    pub fn config(&self) -> Config {
+        Config {
+            path: self.path.clone(),
+            json: self.json,
+            threshold: self.threshold,
+            max_avg_braintax: self.max_avg_braintax,
+            top: self.top.max(1),
+        }
     }
 
     // Cargo runs `cargo braintax4rust ...` as `cargo-braintax4rust

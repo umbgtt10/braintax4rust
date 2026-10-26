@@ -18,22 +18,26 @@ use xtask::gates::stern_gate::SternGate;
 use xtask::gates::twin_gate::TwinGate;
 use xtask::process::system_command_runner::SystemCommandRunner;
 
-const CORE_PACKAGE: &str = "cargo-braintax4rust";
+const CLI_PACKAGE: &str = "cargo-braintax4rust";
+const CORE_PACKAGE: &str = "braintax4rust-core";
 const CRAP_THRESHOLD: &str = "15";
 const ICEBERG_THRESHOLD: &str = "20";
-// core/ alone, and the ceiling is set against what core actually scores (4.1)
-// rather than against the fixture-inflated 8.0 the old default produced.
-const BRAINTAX_TARGET: &str = "core";
+// core/ and cli/, each on its own: the ceiling is set against what the tool's
+// own code scores rather than against the fixture-inflated 8.0 the old default
+// produced.
+const BRAINTAX_CORE_TARGET: &str = "core";
+const BRAINTAX_CLI_TARGET: &str = "cli";
 const BRAINTAX_CEILING: &str = "5.0";
 // Every tree dry4rust must not judge, below the workspace root it scans:
 // tests repeat their arrangement by design, and xtask, the fixtures, validation
 // and test-utils are not published.
-const DRY_EXCLUDES: [&[&str]; 5] = [
+const DRY_EXCLUDES: [&[&str]; 6] = [
     &["xtask"],
     &["fixture"],
     &["validation"],
     &["test-utils"],
     &["core", "tests"],
+    &["cli", "tests"],
 ];
 const DRY_BASELINE: &str = "dry4rust-baseline.json";
 const DRY_MIN_NODES: &str = "25";
@@ -88,33 +92,50 @@ fn run_stage2() -> ExitCode {
         String::from(DRY_MIN_NODES),
     );
 
-    let braintax = BraintaxSelfGate::new(
+    // The binary is cli's; it measures each published crate's source in turn.
+    let braintax_core = BraintaxSelfGate::new(
         &runner,
-        String::from(CORE_PACKAGE),
-        String::from(BRAINTAX_TARGET),
+        String::from(CLI_PACKAGE),
+        String::from(BRAINTAX_CORE_TARGET),
+        String::from(BRAINTAX_CEILING),
+    );
+    let braintax_cli = BraintaxSelfGate::new(
+        &runner,
+        String::from(CLI_PACKAGE),
+        String::from(BRAINTAX_CLI_TARGET),
         String::from(BRAINTAX_CEILING),
     );
 
-    // core only. CRAP scores source functions against their coverage, and the
-    // fixtures carry one acceptance test each rather than a mirrored suite.
-    let core_only = vec![String::from(CORE_PACKAGE)];
+    // The two published crates. CRAP scores source functions against their
+    // coverage, and the fixtures carry one acceptance test each rather than a
+    // mirrored suite.
+    let published = vec![String::from(CORE_PACKAGE), String::from(CLI_PACKAGE)];
 
     let crap = CrapGate::new(
         &runner,
         &parser,
         manifest_path.clone(),
-        core_only.clone(),
+        published.clone(),
         String::from(CRAP_THRESHOLD),
     );
-    let twin = TwinGate::new(&runner, manifest_path.clone(), core_only.clone());
+    let twin = TwinGate::new(&runner, manifest_path.clone(), published.clone());
     let iceberg = IcebergGate::new(
         &runner,
         manifest_path,
-        core_only,
+        published,
         String::from(ICEBERG_THRESHOLD),
     );
 
-    let gates: Vec<&dyn Gate> = vec![&stern, &shear, &dry, &braintax, &crap, &twin, &iceberg];
+    let gates: Vec<&dyn Gate> = vec![
+        &stern,
+        &shear,
+        &dry,
+        &braintax_core,
+        &braintax_cli,
+        &crap,
+        &twin,
+        &iceberg,
+    ];
 
     match Stage2::new(gates).run() {
         Ok(()) => {

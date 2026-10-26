@@ -49,7 +49,13 @@ fn with_if(x: bool) {
     };
     let scorer = DefaultScorer::new();
     let reporter = CaptureReporter::new();
-    let config = Config::new(PathBuf::from("."), true, None, None, 10);
+    let config = Config {
+        path: PathBuf::from("."),
+        json: true,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
     let captured = reporter.captured();
     let app = App::new(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
 
@@ -67,7 +73,13 @@ fn app_with_no_files_returns_error() {
     // Arrange
     let scorer = DefaultScorer::new();
     let reporter = CaptureReporter::new();
-    let config = Config::new(PathBuf::from("."), false, None, None, 10);
+    let config = Config {
+        path: PathBuf::from("."),
+        json: false,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
     let app = App::new(
         Box::new(NoFilesWalk),
         Box::new(scorer),
@@ -101,8 +113,20 @@ fn complex(a: bool, b: bool) {
     let scorer = DefaultScorer::new();
     let reporter1 = CaptureReporter::new();
     let reporter2 = CaptureReporter::new();
-    let config_ok = Config::new(PathBuf::from("."), false, Some(10), None, 10);
-    let config_fail = Config::new(PathBuf::from("."), false, Some(3), None, 10);
+    let config_ok = Config {
+        path: PathBuf::from("."),
+        json: false,
+        threshold: Some(10),
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let config_fail = Config {
+        path: PathBuf::from("."),
+        json: false,
+        threshold: Some(3),
+        max_avg_braintax: None,
+        top: 10,
+    };
 
     // Act
     let app_ok = App::new(
@@ -143,7 +167,13 @@ fn trivial() {
     };
     let scorer = DefaultScorer::new();
     let reporter = CaptureReporter::new();
-    let config = Config::new(PathBuf::from("."), true, None, None, 10);
+    let config = Config {
+        path: PathBuf::from("."),
+        json: true,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
     let captured = reporter.captured();
     let app = App::new(Box::new(walk), Box::new(scorer), Box::new(reporter), config);
 
@@ -164,7 +194,13 @@ fn run_with_a_threshold_set_still_writes_the_report() {
     };
     let reporter = CaptureReporter::new();
     let captured = reporter.captured();
-    let config = Config::new(PathBuf::from("."), false, Some(1), None, 10);
+    let config = Config {
+        path: PathBuf::from("."),
+        json: false,
+        threshold: Some(1),
+        max_avg_braintax: None,
+        top: 10,
+    };
     let app = App::new(
         Box::new(walk),
         Box::new(DefaultScorer::new()),
@@ -186,7 +222,13 @@ fn run_with_avg_braintax_above_the_limit_returns_failure() {
     let walk = TestWalk {
         files: vec![(PathBuf::from("src/lib.rs"), "fn trivial() {}".to_string())],
     };
-    let config = Config::new(PathBuf::from("."), false, None, Some(0.0), 10);
+    let config = Config {
+        path: PathBuf::from("."),
+        json: false,
+        threshold: None,
+        max_avg_braintax: Some(0.0),
+        top: 10,
+    };
     let app = App::new(
         Box::new(walk),
         Box::new(DefaultScorer::new()),
@@ -207,7 +249,13 @@ fn run_with_avg_braintax_within_the_limit_returns_success() {
     let walk = TestWalk {
         files: vec![(PathBuf::from("src/lib.rs"), "fn trivial() {}".to_string())],
     };
-    let config = Config::new(PathBuf::from("."), false, None, Some(100.0), 10);
+    let config = Config {
+        path: PathBuf::from("."),
+        json: false,
+        threshold: None,
+        max_avg_braintax: Some(100.0),
+        top: 10,
+    };
     let app = App::new(
         Box::new(walk),
         Box::new(DefaultScorer::new()),

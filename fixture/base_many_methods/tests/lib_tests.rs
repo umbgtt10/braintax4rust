@@ -19,7 +19,13 @@ fn analyze() -> BraintaxReport {
         Box::new(FsWalk::new(&path)),
         Box::new(DefaultScorer::new()),
         Box::new(reporter),
-        Config::new(path, true, None, None, 10),
+        Config {
+            path,
+            json: true,
+            threshold: None,
+            max_avg_braintax: None,
+            top: 10,
+        },
     );
     app.run().unwrap();
     let json = captured.lock().unwrap().clone();

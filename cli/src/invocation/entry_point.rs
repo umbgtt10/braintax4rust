@@ -7,12 +7,13 @@ use std::process::ExitCode;
 
 use anyhow::Result;
 
-use crate::analysis::fs_walk::FsWalk;
-use crate::invocation::app::App;
+use braintax::analysis::fs_walk::FsWalk;
+use braintax::invocation::app::App;
+use braintax::invocation::config::Config;
+use braintax::reporting::default_scorer::DefaultScorer;
+use braintax::reporting::stdout_reporter::StdoutReporter;
+
 use crate::invocation::args::Args;
-use crate::invocation::config::Config;
-use crate::reporting::default_scorer::DefaultScorer;
-use crate::reporting::stdout_reporter::StdoutReporter;
 
 pub struct EntryPoint;
 
@@ -20,9 +21,9 @@ impl EntryPoint {
     #[must_use]
     pub fn compose(config: Config) -> App {
         App::new(
-            Box::new(FsWalk::new(config.path())),
+            Box::new(FsWalk::new(&config.path)),
             Box::new(DefaultScorer::new()),
-            Box::new(StdoutReporter::new(config.json(), config.top())),
+            Box::new(StdoutReporter::new(config.json, config.top)),
             config,
         )
     }
@@ -42,6 +43,6 @@ impl EntryPoint {
         I: IntoIterator<Item = T>,
         T: Into<OsString> + Clone,
     {
-        Self::compose(Config::from_args(Args::parse_from_args(args))).run()
+        Self::compose(Args::parse_from_args(args).config()).run()
     }
 }

@@ -1,3 +1,0 @@
-[[ignore]]
-fingerprint = "90f3755ee64d59bb"
-reason = "Plain constructors of four and five fields, a near-duplicate group: TraitInfo and Config are objects under stern4rust's records-and-objects (R035), so their fields are private and each constructor is its struct's shape, not copied logic. dry4rust leaves plain constructors out from its next release (ADR-PlainConstructorsAreTheStructsShape); delete this entry then."

@@ -1,0 +1,35 @@
+[package]
+name = "cargo-braintax4rust"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "A cognitive tax estimator for Rust code -- quantify the mental effort required to understand a function"
+readme = "../README.md"
+keywords = ["cargo", "subcommand", "complexity", "cognitive", "cli"]
+categories = ["development-tools::cargo-plugins", "command-line-utilities"]
+
+autotests = false
+
+[lib]
+name = "braintax_cli"
+
+[[bin]]
+name = "cargo-braintax4rust"
+path = "src/main.rs"
+
+[[test]]
+name = "all_tests"
+path = "tests/all_tests.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow.workspace = true
+braintax.workspace = true
+clap.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

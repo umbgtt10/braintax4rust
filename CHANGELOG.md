@@ -9,10 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-The command line, output and exit codes are unchanged. The library is not:
-two `pub` free functions became associated functions and one moved, for
+The command line, output and exit codes are unchanged: stdout, stderr and
+exit codes are compared byte for byte against 0.13.1. The library is not: two
+`pub` free functions became associated functions and one moved, for
 stern4rust 0.17.0's new `owned-functions` rule -- a file with a subject holds
-no free function.
+no free function; and the repository splits into a technology-free core and a
+cli crate (`docs/CORE_CLI_SPLIT.md`), which changes how the library is
+packaged and much of its API.
+
+### Changed (packages)
+- `cargo-braintax4rust` is now the command-line crate (`cli/`): the
+  `cargo-braintax4rust` binary and a library, `braintax_cli`. The analysis
+  library `braintax` is published by a new package, `braintax4rust-core`
+  (`core/`); a dependent replaces `cargo-braintax4rust` with
+  `braintax4rust-core`, and paths under `braintax::` stay for what remains
+  there. Both crates share the workspace's version.
+- `invocation::args::Args` moves to `braintax_cli::invocation::args::Args`. Its
+  fields, `pub` in 0.13.1, are private, and `Args::config` builds the `Config`
+  that `Config::from_args` built.
+- `invocation::entry_point::EntryPoint` moves to
+  `braintax_cli::invocation::entry_point::EntryPoint`.
+- `invocation::config::Config` stays a record, as in 0.13.1, without
+  `from_args`.
 
 ### Changed
 - The free `invocation::app::run` is gone: `main.rs` hands the process's
@@ -40,13 +58,13 @@ no free function.
   first three now derive `Default`, so a literal can set the fields it needs
   and take `..Default::default()` for the rest.
 - `TraitInfo`, `ComplexityVisitor`, `HiddenDepsCounter`, `MacroCounter`,
-  `NameOpacityCounter`, `BraintaxComponents`, `Args` and `Config` now keep
-  their fields private behind getters: they have behaviour, and stern4rust's
-  coming `records-and-objects` rule asks an object to hide its fields. Each
-  field that was `pub` in 0.13.1 is read through a getter named after it;
-  `TraitInfo::new` and `Config::new` build those two, `TraitInfo::count_impl`
-  counts one more implementation, and `BraintaxComponents` is built over its
-  `Default` with a `with_<field>` step per field.
+  `NameOpacityCounter` and `BraintaxComponents` now keep their fields private
+  behind getters: they have behaviour, and stern4rust's coming
+  `records-and-objects` rule asks an object to hide its fields. Each field that
+  was `pub` in 0.13.1 is read through a getter named after it; `TraitInfo::new`
+  builds a `TraitInfo`, `TraitInfo::count_impl` counts one more implementation,
+  and `BraintaxComponents` is built over its `Default` with a `with_<field>`
+  step per field.
 
 ## [0.13.1] - 2026-10-10
 

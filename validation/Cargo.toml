@@ -29,6 +29,9 @@ autotests = false
 name = "all_tests"
 path = "tests/all_tests.rs"
 
+[lints]
+workspace = true
+
 [dependencies]
 anyhow.workspace = true
 braintax.workspace = true

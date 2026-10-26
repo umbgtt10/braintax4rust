@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use braintax::invocation::config::Config;
-use braintax::invocation::entry_point::EntryPoint;
+use braintax_cli::invocation::entry_point::EntryPoint;
 use std::ffi::OsString;
 use std::fs;
 use std::process::ExitCode;
@@ -13,7 +13,13 @@ use tempfile::TempDir;
 fn compose_with_empty_dir_returns_error() {
     // Arrange
     let dir = TempDir::new().unwrap();
-    let config = Config::new(dir.path().to_path_buf(), false, None, None, 10);
+    let config = Config {
+        path: dir.path().to_path_buf(),
+        json: false,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
 
     // Act
     let result = EntryPoint::compose(config).run();
@@ -33,7 +39,13 @@ fn compose_with_valid_dir_returns_success() {
         "pub fn greet() -> &'static str { \"hello\" }\n",
     )
     .unwrap();
-    let config = Config::new(dir.path().to_path_buf(), false, None, None, 10);
+    let config = Config {
+        path: dir.path().to_path_buf(),
+        json: false,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
 
     // Act
     let exit_code = EntryPoint::compose(config).run().unwrap();
