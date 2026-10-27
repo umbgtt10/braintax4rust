@@ -31,5 +31,5 @@ fn binary_prints_version() {
 
     // Assert
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("0.13.1"));
+    assert!(stdout.contains("0.14.0"));
 }

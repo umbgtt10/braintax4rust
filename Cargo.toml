@@ -27,14 +27,14 @@ resolver = "2"
 
 # The two published crates release together.
 [workspace.package]
-version = "0.13.1"
+version = "0.14.0"
 edition = "2024"
 authors = ["Umberto Gotti <umberto.gotti@umbertogotti.dev>"]
 license = "MIT"
 repository = "https://github.com/umbgtt10/braintax4rust"
 
 [workspace.dependencies]
-braintax = { path = "core", package = "braintax4rust-core", version = "0.13.1" }
+braintax = { path = "core", package = "braintax4rust-core", version = "0.14.0" }
 braintax-cli = { path = "cli", package = "cargo-braintax4rust" }
 
 clap = { version = "4", features = ["derive"] }

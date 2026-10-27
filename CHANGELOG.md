@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-27
+
 The command line, output and exit codes are unchanged: stdout, stderr and
 exit codes are compared byte for byte against 0.13.1. One exception is
 deliberate: a scanned `.rs` file whose path is not UTF-8 fails the run naming
