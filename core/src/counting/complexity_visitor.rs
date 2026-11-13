@@ -5,6 +5,7 @@
 use alloc::string::ToString;
 
 use syn::Attribute;
+use syn::BinOp;
 use syn::ExprBinary;
 use syn::ExprBreak;
 use syn::ExprContinue;
@@ -97,7 +98,7 @@ impl<'ast> Visit<'ast> for ComplexityVisitor {
     }
 
     fn visit_expr_binary(&mut self, expr: &'ast ExprBinary) {
-        if matches!(expr.op, syn::BinOp::And(_) | syn::BinOp::Or(_)) {
+        if matches!(expr.op, BinOp::And(_) | BinOp::Or(_)) {
             self.complexity += 1;
         }
         visit_expr_binary(self, expr);

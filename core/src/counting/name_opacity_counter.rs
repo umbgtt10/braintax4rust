@@ -6,6 +6,7 @@ use alloc::string::ToString;
 
 use syn::FnArg;
 use syn::Pat;
+use syn::Token;
 use syn::punctuated::Punctuated;
 
 use syn::visit::{Visit, visit_pat};
@@ -25,10 +26,10 @@ impl NameOpacityCounter {
         self.score
     }
 
-    pub fn visit_params(&mut self, inputs: &Punctuated<FnArg, syn::Token![,]>) {
+    pub fn visit_params(&mut self, inputs: &Punctuated<FnArg, Token![,]>) {
         for input in inputs {
-            if let syn::FnArg::Typed(pat_type) = input
-                && let syn::Pat::Ident(pat_ident) = pat_type.pat.as_ref()
+            if let FnArg::Typed(pat_type) = input
+                && let Pat::Ident(pat_ident) = pat_type.pat.as_ref()
             {
                 self.score += Self::score_ident(&pat_ident.ident.to_string());
             }
@@ -46,7 +47,7 @@ impl NameOpacityCounter {
 
 impl<'ast> Visit<'ast> for NameOpacityCounter {
     fn visit_pat(&mut self, pat: &'ast Pat) {
-        if let syn::Pat::Ident(pat_ident) = pat {
+        if let Pat::Ident(pat_ident) = pat {
             self.score += Self::score_ident(&pat_ident.ident.to_string());
         }
         visit_pat(self, pat);

@@ -6,7 +6,9 @@ use alloc::string::ToString;
 
 use crate::analysis::trait_info::TraitInfo;
 use syn::FnArg;
+use syn::PathArguments;
 use syn::ReturnType;
+use syn::Token;
 use syn::Type;
 use syn::TypeParamBound;
 use syn::TypePath;
@@ -42,8 +44,8 @@ impl SignatureScorer {
     #[must_use]
     pub fn is_marker_supertrait(bound: &TypeParamBound) -> bool {
         match bound {
-            syn::TypeParamBound::Lifetime(_) => true,
-            syn::TypeParamBound::Trait(trait_bound) => {
+            TypeParamBound::Lifetime(_) => true,
+            TypeParamBound::Trait(trait_bound) => {
                 trait_bound.path.segments.last().is_some_and(|segment| {
                     MARKER_TRAITS.contains(&segment.ident.to_string().as_str())
                 })
@@ -55,15 +57,15 @@ impl SignatureScorer {
     #[must_use]
     pub fn return_complexity(return_type: &ReturnType) -> f64 {
         match return_type {
-            syn::ReturnType::Default => 0.0,
-            syn::ReturnType::Type(_, ty) => Self::type_complexity(ty),
+            ReturnType::Default => 0.0,
+            ReturnType::Type(_, ty) => Self::type_complexity(ty),
         }
     }
 
     #[must_use]
-    pub fn self_ref_cost(inputs: &Punctuated<FnArg, syn::Token![,]>) -> f64 {
+    pub fn self_ref_cost(inputs: &Punctuated<FnArg, Token![,]>) -> f64 {
         match inputs.first() {
-            Some(syn::FnArg::Receiver(receiver)) => {
+            Some(FnArg::Receiver(receiver)) => {
                 if receiver.mutability.is_some() {
                     0.4
                 } else {
@@ -119,7 +121,7 @@ impl SignatureScorer {
             cost += 1.0;
         }
         for segment in &type_path.path.segments {
-            if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
+            if let PathArguments::AngleBracketed(args) = &segment.arguments {
                 cost += args.args.len() as f64 * 0.3;
             }
         }
@@ -128,9 +130,9 @@ impl SignatureScorer {
 
     fn type_complexity(ty: &Type) -> f64 {
         match ty {
-            syn::Type::ImplTrait(_) => 1.5,
-            syn::Type::TraitObject(_) => 1.0,
-            syn::Type::Path(type_path) => Self::path_type_complexity(type_path),
+            Type::ImplTrait(_) => 1.5,
+            Type::TraitObject(_) => 1.0,
+            Type::Path(type_path) => Self::path_type_complexity(type_path),
             _ => 0.0,
         }
     }

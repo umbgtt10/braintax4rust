@@ -35,7 +35,7 @@ impl TraitRegistryBuilder {
     }
 
     fn record_impl(&mut self, item: &Item) {
-        let syn::Item::Impl(item_impl) = item else {
+        let Item::Impl(item_impl) = item else {
             return;
         };
         let Some((_, path, _)) = &item_impl.trait_ else {
@@ -56,7 +56,7 @@ impl TraitRegistryBuilder {
             return;
         };
         for item in &syntax.items {
-            if let syn::Item::Trait(trait_item) = item {
+            if let Item::Trait(trait_item) = item {
                 let name = trait_item.ident.to_string();
                 self.traits.insert(name, Collector::trait_info(trait_item));
             }

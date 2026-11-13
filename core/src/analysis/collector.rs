@@ -29,6 +29,7 @@ use crate::counting::macro_counter::MacroCounter;
 use crate::counting::name_opacity_counter::NameOpacityCounter;
 use crate::reporting::braintax_components::BraintaxComponents;
 use crate::reporting::braintax_normalizer::BraintaxNormalizer;
+use syn::TraitItem;
 use syn::parse_file;
 
 #[derive(Debug)]
@@ -83,12 +84,12 @@ impl<'a> Collector<'a> {
         let methods = trait_item
             .items
             .iter()
-            .filter(|i| matches!(i, syn::TraitItem::Fn(_)))
+            .filter(|i| matches!(i, TraitItem::Fn(_)))
             .count() as u32;
         let assoc_types = trait_item
             .items
             .iter()
-            .filter(|i| matches!(i, syn::TraitItem::Type(_)))
+            .filter(|i| matches!(i, TraitItem::Type(_)))
             .count() as u32;
         let supertraits = trait_item
             .supertraits
@@ -121,13 +122,13 @@ impl<'a> Collector<'a> {
 impl<'ast, 'a> Visit<'ast> for Collector<'a> {
     fn visit_item(&mut self, item: &'ast Item) {
         match item {
-            syn::Item::Fn(item_fn) if !Self::has_test_attr(&item_fn.attrs) => {
+            Item::Fn(item_fn) if !Self::has_test_attr(&item_fn.attrs) => {
                 self.visit_fn(item_fn);
             }
-            syn::Item::Mod(item_mod) if !Self::has_test_attr(&item_mod.attrs) => {
+            Item::Mod(item_mod) if !Self::has_test_attr(&item_mod.attrs) => {
                 self.visit_mod(item_mod);
             }
-            syn::Item::Impl(item_impl) => {
+            Item::Impl(item_impl) => {
                 let trait_factor = if let Some((_, path, _)) = &item_impl.trait_ {
                     let name = path
                         .segments
@@ -250,7 +251,7 @@ impl<'a> Collector<'a> {
     }
 
     fn visit_impl_item(&mut self, item: &ImplItem, trait_factor: f64) {
-        if let syn::ImplItem::Fn(item_fn) = item
+        if let ImplItem::Fn(item_fn) = item
             && !Self::has_test_attr(&item_fn.attrs)
         {
             let mut names = NameOpacityCounter::new();
