@@ -63,7 +63,7 @@ impl HiddenDepsCounter {
 
 impl<'ast> Visit<'ast> for HiddenDepsCounter {
     fn visit_stmt(&mut self, stmt: &'ast Stmt) {
-        if let syn::Stmt::Macro(stmt_macro) = stmt {
+        if let Stmt::Macro(stmt_macro) = stmt {
             let mac_name = stmt_macro
                 .mac
                 .path
@@ -110,7 +110,7 @@ impl HiddenDepsCounter {
     }
 
     fn hidden_call_label(expr: &Expr) -> Option<String> {
-        let syn::Expr::Path(path_expr) = expr else {
+        let Expr::Path(path_expr) = expr else {
             return None;
         };
         let segments: Vec<String> = path_expr

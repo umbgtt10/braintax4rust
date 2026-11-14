@@ -2,6 +2,8 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use syn::Token;
+use syn::WherePredicate;
 use syn::punctuated::Punctuated;
 use syn::{GenericParam, WhereClause};
 
@@ -9,7 +11,7 @@ pub struct GenericsCounter;
 
 impl GenericsCounter {
     pub fn score_generics(
-        params: &Punctuated<GenericParam, syn::Token![,]>,
+        params: &Punctuated<GenericParam, Token![,]>,
         where_clause: &Option<WhereClause>,
     ) -> u32 {
         let mut total = 0;
@@ -27,7 +29,7 @@ impl GenericsCounter {
         }
         if let Some(clause) = where_clause {
             for predicate in &clause.predicates {
-                if let syn::WherePredicate::Type(pred_type) = predicate {
+                if let WherePredicate::Type(pred_type) = predicate {
                     total += pred_type.bounds.len() as u32;
                 }
             }
