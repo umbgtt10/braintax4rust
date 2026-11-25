@@ -62,6 +62,34 @@ fn sample_report() -> BraintaxReport {
 }
 
 #[test]
+fn render_function_in_the_root_module_shows_its_name() {
+    // Arrange
+    let reporter = TextReportRenderer::new(1);
+    let report = BraintaxReport {
+        functions: vec![FunctionComplexity {
+            name: "root_fn".to_string(),
+            file: "src/lib.rs".to_string(),
+            module: ".".to_string(),
+            cyclomatic: 2,
+            depth: 1,
+            trait_factor: 1.0,
+            braintax: 2.0,
+            braintax_normalized: 87,
+            ..Default::default()
+        }],
+        ..sample_report()
+    };
+
+    // Act
+    let rendered = reporter.render(&report).unwrap();
+
+    // Assert
+    assert!(rendered.lines().any(|line| line
+        == "  root_fn                                             .                 2     2.0     87"));
+    assert!(!rendered.contains("src/lib.rs"));
+}
+
+#[test]
 fn render_lists_each_module_on_a_line_of_its_own() {
     // Arrange
     let reporter = TextReportRenderer::new(10);

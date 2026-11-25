@@ -9,6 +9,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-25
+
+Scoring fixes: the bugs sentinel4rust's mutation round at 61eaa96 pointed
+at, each fixed test-first, two of them as the owner decided. Scores move,
+deliberately, so a 0.15.0 score does not compare with a 0.14.0 one: a doc
+comment or a built-in attribute no longer costs anything, an unknown
+attribute on the function itself now does, a trait object returned behind
+its pointer costs 1.0, and a function inside an inline module is that much
+deeper. No fixture's score moves -- none has a shape these fixes reach --
+and `core/`'s own total goes from 431.45 to 438.31, by the code the fixes
+add (`pointee`, `inner_module`, a longer `type_complexity`) less the
+shorter `is_known_attr`. The flags and exit codes are unchanged and the
+JSON keeps its shape; its `module` and `depth` now count inline modules,
+and the text report's top table names a root-module function. Minor rather
+than patch because scores move; no `pub` item of either library changed
+signature.
+
+### Fixed
+- **Attributes are charged by a list of their own.** `MacroCounter` charged
+  every attribute outside the function-like macro list -- plus `cfg_attr`,
+  `allow`, `deny` and `warn` -- 3 apiece. A doc comment, which is a
+  `#[doc]` attribute, cost 3 a line: a nested item under three `///` lines
+  scored braintax 10.0 where `//` scored 1.0. `#[inline]`, `#[must_use]` and
+  every other built-in attribute cost 3, while `#[println]` cost nothing.
+  The known attributes are now every built-in attribute of the Rust
+  reference's index whose name is one identifier -- `doc` among them, so a
+  doc comment is never charged. A path of more segments is still not
+  counted.
+- **A function's own attributes count** by the same rule as attributes on
+  items inside its body (the owner's decision); only the body was walked.
+  `#[my_attr] fn tagged() {}` scores 4.0 where it scored 1.0; doc comments,
+  `#[inline]` and `#[must_use]` on it add nothing, and its `cfg` and
+  `cfg_attr` stay its cfg gates.
+- **A trait object is charged where it is returned.** Only a bare
+  `-> dyn Trait`, which does not compile, reached the trait-object cost:
+  `Box<dyn Trait>` scored 0.3, as a path with one generic argument, and
+  `&dyn Trait` 0.0. A reference, a parenthesised type, and a `Box`, `Rc` or
+  `Arc` (by its first type argument) now cost what they point to, so a
+  trait object behind any of them costs 1.0 -- and `impl Trait` costs more
+  than a trait object for the reason the test of it names, 1.5 > 1.0. The
+  look-through applies to anything pointed to: `&Self::Output` costs 1.0
+  where it cost 0.0, and `Box<u32>` 0.0 where it cost 0.3. No other
+  generic type is looked into.
+- **Inline modules count toward a function's module and depth** (the
+  owner's decision). `mod a { mod b { fn deep() {} } }` in `src/lib.rs`
+  reported module `.` at depth 1; `deep` is now in module `a/b`, at depth
+  3, with a depth factor of 1.3. An inline module extends the module path
+  of the file it sits in: `mod inner` in `src/bar/baz.rs` is `bar/inner`.
+- **The text report's top table names a root-module function.** It showed
+  the function's file path, so every function of `src/lib.rs` read
+  `src/lib.rs`; it now shows the function's name.
+
+### Changed
+- `dispatch_penalty` drops a final `.min(0.27)` that could never take
+  effect: its base is capped at 0.18 and its amplifier is at most 1.5, and
+  0.18 × 1.5 is 0.27 exactly in f64. No value moves.
+- `Collector` derives a function's depth from its module, so the two cannot
+  disagree; the depth it kept beside the module is gone.
+- sentinel4rust's round at 61eaa96 found 51 surviving mutants in `core`:
+  45 are killed by 18 new tests; five could not die and are restated
+  without the redundancy that let them live -- `is_known_attr`'s second
+  check of `cfg`, a match's arm count as `saturating_sub(1)`, the time and
+  randomness arm of `HiddenDepSeverity::severity` left to the fallback of
+  the same value, the cfg factor as `exp2(gates)` alone, and
+  `module_stats`'s average cyclomatic count divided unguarded, as its
+  average braintax already was; the last, the unreachable trait-object
+  arm, is fixed above. No score moved.
+- FORMULA.md documents each fix, and corrects two statements: the terms
+  are combined by `BraintaxComponents::compute_braintax`, not a free
+  function in `default_scorer.rs`, and `impl Iterator<Item = T>` costs
+  1.5, not 1.8 -- an `impl Trait`'s bounds were never looked into.
+- Stage 2 gains a ninth gate, `cargo deny`, last: advisories, licences,
+  bans and sources against `deny.toml`, the advisory database fetched
+  first, up to three times, then checked `--frozen`.
+- Stage 1 starts with `just sync`: `cargo update`, every dependency to its
+  newest compatible version, in the lock file only, committed on its own.
+- Every commit carries `core`'s grip and braintax and their ratio, scored
+  as staged by `cargo xtask grip-braintax` from `.githooks/commit-msg`;
+  `just hooks` enables it, once a clone.
+- Every path stern4rust's coming `imported-paths` rule reports -- syn's
+  enum variants in patterns, three macros' own paths -- is reached through
+  an import. No change in behaviour.
+- README's sample report, last printed by 0.11.0 with every function shown
+  as its file, is the report 0.15.0 prints for its own `core/`.
+- `binary_prints_version` asserted the literal `0.14.0`, so the bump moved
+  it to `0.15.0`.
+
+### Deferred (`docs/OPEN_POINTS.md`)
+- `DefaultScorer::compute_braintax` has no caller outside its own test and
+  combines 5 of the 10 components. The owner decided to remove it, but its
+  one test tests nothing else and a test is removed only with the owner's
+  OK, so it stays, its retirement recorded.
+- One shared "is this test code?" check, deferred by the owner as a
+  cross-tool item: `Collector::has_test_attr` takes a `cfg` mentioning
+  "test" anywhere -- `not(test)` included -- for test code, and misses
+  `#[tokio::test]`.
+- A trait object or `impl Trait` inside another type's generic arguments,
+  `Option<Box<dyn Error>>`, costs only the 0.3 of the argument.
+
 ## [0.14.0] - 2026-10-27
 
 The command line, output and exit codes are unchanged: stdout, stderr and

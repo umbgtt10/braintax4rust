@@ -54,6 +54,15 @@ fn is_marker_supertrait_for_an_auto_trait_returns_true() {
 }
 
 #[test]
+fn return_complexity_for_a_box_of_a_plain_type_returns_zero() {
+    // Arrange & Act
+    let complexity = SignatureScorer::return_complexity(&signature("fn f() -> Box<u32> {}").output);
+
+    // Assert
+    assert!(complexity.abs() < f64::EPSILON);
+}
+
+#[test]
 fn return_complexity_for_a_plain_type_returns_zero() {
     // Arrange & Act
     let complexity = SignatureScorer::return_complexity(&signature("fn f() -> u32 {}").output);
@@ -73,6 +82,16 @@ fn return_complexity_for_a_qualified_self_path_returns_1() {
 }
 
 #[test]
+fn return_complexity_for_a_reference_to_a_self_path_returns_1() {
+    // Arrange & Act
+    let complexity =
+        SignatureScorer::return_complexity(&signature("fn f(&self) -> &Self::Output {}").output);
+
+    // Assert
+    assert!((complexity - 1.0).abs() < 1e-9);
+}
+
+#[test]
 fn return_complexity_for_a_self_path_returns_1() {
     // Arrange & Act
     let complexity =
@@ -80,6 +99,27 @@ fn return_complexity_for_a_self_path_returns_1() {
 
     // Assert
     assert!((complexity - 1.0).abs() < 1e-9);
+}
+
+#[test]
+fn return_complexity_for_a_trait_object_behind_a_pointer_returns_1() {
+    // Arrange
+    let pointers = [
+        "&dyn Display",
+        "&mut dyn Display",
+        "&(dyn Display + Send)",
+        "Box<dyn Display>",
+        "Rc<dyn Display>",
+        "Arc<dyn Display>",
+        "std::sync::Arc<dyn Display>",
+    ];
+
+    // Act & Assert
+    for pointer in pointers {
+        let source = format!("fn f() -> {pointer} {{}}");
+        let complexity = SignatureScorer::return_complexity(&signature(&source).output);
+        assert!((complexity - 1.0).abs() < 1e-9, "{pointer}: {complexity}");
+    }
 }
 
 #[test]
@@ -190,6 +230,15 @@ fn trait_factor_with_an_associated_type_and_five_methods_adds_the_method_penalty
 
     // Assert
     assert!((factor - 1.32).abs() < 1e-9);
+}
+
+#[test]
+fn trait_factor_with_an_associated_type_and_many_impls_caps_the_dispatch_penalty_at_0_27() {
+    // Arrange & Act
+    let factor = SignatureScorer::trait_factor("MyTrait", &info(1, 1, 0, 400));
+
+    // Assert
+    assert!((factor - 1.57).abs() < 1e-9);
 }
 
 #[test]

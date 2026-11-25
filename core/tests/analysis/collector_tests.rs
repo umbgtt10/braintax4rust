@@ -66,6 +66,55 @@ fn collect_cfg_gated_fn_has_cfg_gates_1() {
 }
 
 #[test]
+fn collect_fn_after_an_inline_module_is_back_in_the_file_module() {
+    // Arrange
+    let source = "mod inner {\n    fn inside() {}\n}\n\nfn after() {}";
+    let path = SourcePath::new(String::from("src/lib.rs"));
+    let root = SourcePath::new(String::from("."));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    let after = functions.iter().find(|f| f.name == "after").unwrap();
+    assert_eq!(after.module, ".");
+    assert_eq!(after.depth, 1);
+}
+
+#[test]
+fn collect_fn_in_an_inline_module_of_a_directory_module_extends_its_path() {
+    // Arrange
+    let source = "mod inner {\n    fn nested() {}\n}";
+    let path = SourcePath::new(String::from("/project/src/bar/baz.rs"));
+    let root = SourcePath::new(String::from("/project"));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].module, "bar/inner");
+    assert_eq!(functions[0].depth, 3);
+}
+
+#[test]
+fn collect_fn_in_nested_inline_modules_has_their_module_path_and_depth() {
+    // Arrange
+    let source = "mod outer {\n    mod inner {\n        fn deep() {}\n    }\n}";
+    let path = SourcePath::new(String::from("src/lib.rs"));
+    let root = SourcePath::new(String::from("."));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].module, "outer/inner");
+    assert_eq!(functions[0].depth, 3);
+    assert!((functions[0].braintax - 1.3).abs() < 1e-9);
+}
+
+#[test]
 fn collect_fn_inside_an_inline_module_is_collected() {
     // Arrange
     let source = "mod inner {\n    fn nested() {}\n}";
@@ -96,6 +145,21 @@ fn collect_fn_one_module_below_the_crate_root_has_depth_2() {
 }
 
 #[test]
+fn collect_fn_with_a_doc_commented_nested_item_has_braintax_1() {
+    // Arrange
+    let source = "fn outer() {\n    /// One.\n    /// Two.\n    /// Three.\n    fn inner() {}\n}";
+    let path = SourcePath::new(String::from("src/lib.rs"));
+    let root = SourcePath::new(String::from("."));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].braintax, 1.0);
+}
+
+#[test]
 fn collect_fn_with_a_single_letter_parameter_adds_its_opacity_to_braintax() {
     // Arrange
     let source = "fn compute(x: i32) {}";
@@ -111,6 +175,21 @@ fn collect_fn_with_a_single_letter_parameter_adds_its_opacity_to_braintax() {
 }
 
 #[test]
+fn collect_fn_with_an_unknown_attribute_of_its_own_adds_3_to_its_braintax() {
+    // Arrange
+    let source = "#[my_attr]\nfn tagged() {}";
+    let path = SourcePath::new(String::from("src/lib.rs"));
+    let root = SourcePath::new(String::from("."));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].braintax, 4.0);
+}
+
+#[test]
 fn collect_fn_with_boolean_ops_returns_correct_cc() {
     // Arrange
     let source = "fn foo(a: bool, b: bool) { if a && b { } }";
@@ -122,6 +201,21 @@ fn collect_fn_with_boolean_ops_returns_correct_cc() {
 
     // Assert
     assert_eq!(functions[0].cyclomatic, 3);
+}
+
+#[test]
+fn collect_fn_with_doc_comments_and_built_in_attributes_of_its_own_has_braintax_1() {
+    // Arrange
+    let source = "/// Docs.\n#[inline]\n#[must_use]\nfn tagged() {}";
+    let path = SourcePath::new(String::from("src/lib.rs"));
+    let root = SourcePath::new(String::from("."));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].braintax, 1.0);
 }
 
 #[test]
@@ -330,6 +424,21 @@ fn collect_invalid_syntax_returns_empty() {
 
     // Assert
     assert!(functions.is_empty());
+}
+
+#[test]
+fn collect_method_with_an_unknown_attribute_of_its_own_adds_3_to_its_braintax() {
+    // Arrange
+    let source = "struct Tagged;\nimpl Tagged {\n    #[my_attr]\n    fn tagged() {}\n}";
+    let path = SourcePath::new(String::from("src/lib.rs"));
+    let root = SourcePath::new(String::from("."));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert!((functions[0].braintax - 3.95).abs() < 1e-9);
 }
 
 #[test]

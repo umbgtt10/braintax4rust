@@ -6,8 +6,9 @@ points here for the complete picture — this is the document that stays in
 sync with `core/src/`, not the other way around.
 
 Every number here is read directly from the source that computes it
-(`collector.rs`, `default_scorer.rs`, `hidden_dep_severity.rs`,
-`braintax_normalizer.rs`, and the per-dimension counters), not transcribed
+(`collector.rs`, `braintax_components.rs`, `default_scorer.rs`,
+`hidden_dep_severity.rs`, `braintax_normalizer.rs`, and the per-dimension
+counters), not transcribed
 from memory — if this document and the source ever disagree, the source is
 right and this file is stale. Two terms below (`self_ref_cost`,
 `return_complexity`) are not in `README.md` at all today; this is the only
@@ -35,8 +36,10 @@ happening at once, and the reader pays for all of them simultaneously.
 The remaining terms are independent costs layered on top, so they add.
 
 Every term is computed in `Collector::push_fn` (`collector.rs`) per
-function and combined by the free function `compute_braintax` in
-`default_scorer.rs`.
+function and combined by `BraintaxComponents::compute_braintax`
+(`braintax_components.rs`). `DefaultScorer::compute_braintax` combines
+only five of the ten and scores nothing that is reported; its retirement
+is in `docs/OPEN_POINTS.md`.
 
 ---
 
@@ -68,6 +71,14 @@ depth_factor = 1.0 + (module_depth − 1) × 0.15
 function at the crate surface: `depth_factor = 1.0`. Three modules deep:
 `1.3`.
 
+A function's module is the directory of its file below `src/` -- so
+`src/a/b.rs` is module `a`, at depth 2, and `src/a.rs` is the root, `.` --
+extended by every inline module it sits in. In `src/lib.rs`,
+`mod outer { mod inner { fn deep() {} } }` puts `deep` in module
+`outer/inner`, at depth 3; in `src/a/b.rs`, `mod inner { .. }` is module
+`a/inner`, also at depth 3. The report's per-module figures follow the same
+module path.
+
 ## `trait_factor`
 
 Computed by `compute_trait_factor(name, info)`, where `info` comes from
@@ -87,8 +98,9 @@ For a custom trait, `trait_factor` is built from four parts:
 base            = 1.15 if (has associated types OR supertraits) else 0.90
                   + 0.01 × max(0, methods − 3)
 dimension_penalty = 0.0 (neither) | 0.15 (one of assoc types/supertraits) | 0.20 (both)
-dispatch_penalty  = min(0.27, min(0.18, 0.06 × max(0, impl_count − 1)) × amplifier)
+dispatch_penalty  = min(0.18, 0.06 × max(0, impl_count − 1)) × amplifier
                     amplifier = 1.5 if has associated types else 1.0
+                    (so at most 0.18 without associated types, 0.27 with them)
 
 trait_factor = base + dimension_penalty + dispatch_penalty
 ```
@@ -124,18 +136,40 @@ binding (`NameOpacityCounter`):
 ## `macro_density`
 
 Each macro invocation, attribute, or `#[derive(...)]` entry outside a
-known list costs **+3** (`MacroCounter`, `DeriveAttrScorer`):
+known list costs **+3** (`MacroCounter`, `DeriveAttrScorer`). Attributes
+are counted by one rule wherever they sit: on the function itself and on
+anything inside its body.
 
-- Known macros/attributes (cost 0): `println`, `eprintln`, `print`,
-  `eprint`, `format`, `write`, `writeln`, `vec`, `assert`, `assert_eq`,
+- Known macros (cost 0): `println`, `eprintln`, `print`, `eprint`,
+  `format`, `write`, `writeln`, `vec`, `assert`, `assert_eq`,
   `assert_ne`, `panic`, `unreachable`, `unimplemented`, `todo`,
   `include`, `include_str`, `include_bytes`, `concat`, `stringify`,
   `matches`, `cfg`, `file`, `line`, `column`, `compile_error`, `env`,
-  `option_env`, plus the attributes `cfg_attr`, `allow`, `deny`, `warn`.
+  `option_env`.
+- Known attributes (cost 0), a list of their own: every built-in
+  attribute in the Rust reference's index whose name is one identifier
+  -- `allow`, `automatically_derived`, `cfg`, `cfg_attr`, `cold`,
+  `collapse_debuginfo`, `crate_name`, `crate_type`,
+  `debugger_visualizer`, `deny`, `deprecated`, `derive`, `doc`, `expect`,
+  `export_name`, `feature`, `forbid`, `global_allocator`, `ignore`,
+  `inline`, `instruction_set`, `link`, `link_name`, `link_ordinal`,
+  `link_section`, `macro_export`, `macro_use`, `must_use`, `naked`,
+  `no_builtins`, `no_implicit_prelude`, `no_link`, `no_main`,
+  `no_mangle`, `no_std`, `non_exhaustive`, `panic_handler`, `path`,
+  `proc_macro`, `proc_macro_attribute`, `proc_macro_derive`,
+  `recursion_limit`, `repr`, `should_panic`, `target_feature`, `test`,
+  `track_caller`, `type_length_limit`, `used`, `warn`,
+  `windows_subsystem`. A doc comment (`///`, `//!`) is a `#[doc]`
+  attribute, so it never costs anything. An attribute whose path has
+  more than one segment (`#[tokio::main]`, `#[rustfmt::skip]`,
+  `#[diagnostic::on_unimplemented]`) is not counted.
 - Known derives (cost 0): `Debug`, `Clone`, `Copy`, `Default`, `Eq`,
   `PartialEq`, `Ord`, `PartialOrd`, `Hash`. Each *other* name inside a
-  `#[derive(...)]` list costs +3 per name, independently of the macro
-  list above.
+  `#[derive(...)]` list costs +3 per name, independently of the lists
+  above.
+
+A function's own `#[cfg(...)]` and `#[cfg_attr(...)]` cost nothing here:
+they are its cfg gates, priced by `cfg_factor`.
 
 Opaque or unfamiliar macros force the reader to go look up what they
 expand to before trusting what the code does; the known lists are things
@@ -203,15 +237,25 @@ Computed by `type_complexity` on the function's return type:
 |---|---|
 | No return type (`()`, implicit) | 0.0 |
 | `impl Trait` | 1.5 |
-| `dyn Trait` (trait object) | 1.0 |
+| `dyn Trait` (trait object), behind the pointer that holds it | 1.0 |
+| A reference (`&T`, `&mut T`), or a `Box`, `Rc` or `Arc` | what the type it points to costs |
 | Path type qualified as `<T as Trait>::...` (has a `qself`) | +1.0 |
 | Path type starting with `Self` | +1.0 |
 | Each generic argument on any path segment (`Vec<T>`, `Result<T, E>`, …) | +0.3 each |
 | Plain concrete type (`i32`, `String`, a local struct by name) | 0.0 |
 
-A function returning `impl Iterator<Item = T>` costs `1.5 + 0.3 = 1.8` —
-the reader must both understand what the opaque type actually is *and*
-track the generic parameter inside it.
+A trait object is only ever returned behind a pointer -- `&dyn Trait`,
+`Box<dyn Trait>`, `Arc<dyn Trait>` -- so a pointer is looked through: a
+reference, a parenthesised type, and a `Box`, `Rc` or `Arc` (by its first
+type argument, however the path is qualified) cost what they point to.
+`Box<dyn Iterator>` and `&(dyn Display + Send)` cost 1.0, `&Self::Output`
+1.0, `Box<u32>` 0.0. No other generic type is looked into:
+`Option<Box<dyn Error>>` costs the 0.3 of its one argument, not the trait
+object inside it (see `docs/OPEN_POINTS.md`).
+
+A function returning `impl Iterator<Item = T>` costs `1.5`: the bounds of
+an `impl Trait` are not looked into, so the opaque type is the whole
+cost.
 
 ---
 

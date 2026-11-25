@@ -6,6 +6,7 @@ use alloc::string::ToString;
 
 use crate::analysis::trait_info::TraitInfo;
 use syn::FnArg;
+use syn::GenericArgument;
 use syn::PathArguments;
 use syn::ReturnType;
 use syn::Token;
@@ -34,6 +35,8 @@ const KNOWN_TRAITS: &[&str] = &[
 ];
 
 const MARKER_TRAITS: &[&str] = &["Send", "Sync", "Unpin", "Sized"];
+
+const POINTER_TYPES: &[&str] = &["Arc", "Box", "Rc"];
 
 pub struct SignatureScorer;
 
@@ -104,7 +107,7 @@ impl SignatureScorer {
     fn dispatch_penalty(info: &TraitInfo) -> f64 {
         let base = ((info.impl_count().saturating_sub(1)) as f64 * 0.06).min(0.18);
         let amplifier = if info.assoc_types() > 0 { 1.5 } else { 1.0 };
-        (base * amplifier).min(0.27)
+        base * amplifier
     }
 
     fn path_type_complexity(type_path: &TypePath) -> f64 {
@@ -128,11 +131,31 @@ impl SignatureScorer {
         cost
     }
 
+    fn pointee(type_path: &TypePath) -> Option<&Type> {
+        let segment = type_path.path.segments.last()?;
+        let PathArguments::AngleBracketed(args) = &segment.arguments else {
+            return None;
+        };
+        match args.args.first() {
+            Some(GenericArgument::Type(pointee))
+                if POINTER_TYPES.contains(&segment.ident.to_string().as_str()) =>
+            {
+                Some(pointee)
+            }
+            _ => None,
+        }
+    }
+
     fn type_complexity(ty: &Type) -> f64 {
         match ty {
             Type::ImplTrait(_) => 1.5,
             Type::TraitObject(_) => 1.0,
-            Type::Path(type_path) => Self::path_type_complexity(type_path),
+            Type::Paren(paren) => Self::type_complexity(&paren.elem),
+            Type::Reference(reference) => Self::type_complexity(&reference.elem),
+            Type::Path(type_path) => Self::pointee(type_path).map_or_else(
+                || Self::path_type_complexity(type_path),
+                Self::type_complexity,
+            ),
             _ => 0.0,
         }
     }

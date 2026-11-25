@@ -154,33 +154,36 @@ cargo braintax4rust --json --threshold 10 --top 5
 ## Output
 
 ```
-cargo-braintax4rust 0.11.0 -- core
+cargo-braintax4rust 0.15.0 -- core
 ══════════════════════════════════════════════
 
-  Overall braintax:            4.0
-  Maximum braintax:           15.2
-  Total braintax:             360.3
-  Normalized braintax:        73 / 100
+  Overall braintax:            3.1
+  Maximum braintax:           15.3
+  Total braintax:             438.3
+  Normalized braintax:        79 / 100
 
 Cyclomatic complexity:
-  Total functions:             90
-  Average complexity:         2.5
+  Total functions:             140
+  Average complexity:         2.0
   Maximum complexity:         9
-  Total complexity:           229
+  Total complexity:           284
 
 Per module:
   Module                          Funcs   Avg BT    Max
   ------------------------------  ------  --------  -----
-  .                                90      4.0       15.2
+  analysis                        38      3.4       11.7
+  counting                        56      3.2       8.7
+  invocation                      8       3.3       6.3
+  reporting                       38      2.7       15.3
 
 Top 5 most complex functions:
-  Function                                            Module          CC     BT    BT%
+  Function                                            Module           CC      BT    BT%
   --------------------------------------------------  ------------  -----  ------  -----
-  core/src/default_scorer.rs                          .                3    15.2      0
-  core/src/default_scorer.rs                          .                3    14.9      1
-  core/src/collector.rs                               .                9    12.5     16
-  core/src/fs_walk.rs                                 .                6    11.9     21
-  core/src/collector.rs                                .                9    10.5     30
+  reporting::overall_stats                            reporting         3    15.3      0
+  reporting::module_stats                             reporting         2    14.6      3
+  analysis::visit_item                                analysis          9    11.7     22
+  analysis::strip_prefix                              analysis          7     9.1     39
+  counting::score_generics                            counting          8     8.7     42
 ```
 
 (`braintax`'s own `core/` source, analyzed by itself. `BT%` is that
