@@ -6,8 +6,9 @@ points here for the complete picture — this is the document that stays in
 sync with `core/src/`, not the other way around.
 
 Every number here is read directly from the source that computes it
-(`collector.rs`, `default_scorer.rs`, `hidden_dep_severity.rs`,
-`braintax_normalizer.rs`, and the per-dimension counters), not transcribed
+(`collector.rs`, `braintax_components.rs`, `default_scorer.rs`,
+`hidden_dep_severity.rs`, `braintax_normalizer.rs`, and the per-dimension
+counters), not transcribed
 from memory — if this document and the source ever disagree, the source is
 right and this file is stale. Two terms below (`self_ref_cost`,
 `return_complexity`) are not in `README.md` at all today; this is the only
@@ -35,8 +36,10 @@ happening at once, and the reader pays for all of them simultaneously.
 The remaining terms are independent costs layered on top, so they add.
 
 Every term is computed in `Collector::push_fn` (`collector.rs`) per
-function and combined by the free function `compute_braintax` in
-`default_scorer.rs`.
+function and combined by `BraintaxComponents::compute_braintax`
+(`braintax_components.rs`). `DefaultScorer::compute_braintax` combines
+only five of the ten and scores nothing that is reported; its retirement
+is in `docs/OPEN_POINTS.md`.
 
 ---
 
