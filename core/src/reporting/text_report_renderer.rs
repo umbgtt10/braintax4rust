@@ -98,7 +98,7 @@ impl TextReportRenderer {
             ));
             for func in &top_n {
                 let location = if func.module == "." {
-                    func.file.clone()
+                    func.name.clone()
                 } else {
                     format!("{}::{}", func.module, func.name)
                 };
