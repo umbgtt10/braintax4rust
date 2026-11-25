@@ -62,6 +62,40 @@ fn sample_report() -> BraintaxReport {
 }
 
 #[test]
+fn render_lists_each_module_on_a_line_of_its_own() {
+    // Arrange
+    let reporter = TextReportRenderer::new(10);
+    let report = sample_report();
+
+    // Act
+    let rendered = reporter.render(&report).unwrap();
+
+    // Assert
+    assert!(rendered.contains("Per module:"));
+    assert!(
+        rendered
+            .lines()
+            .any(|line| line == "  lib                             2       4.5       6.0  ")
+    );
+}
+
+#[test]
+fn render_without_modules_omits_the_per_module_section() {
+    // Arrange
+    let reporter = TextReportRenderer::new(10);
+    let report = BraintaxReport {
+        modules: Vec::new(),
+        ..sample_report()
+    };
+
+    // Act
+    let rendered = reporter.render(&report).unwrap();
+
+    // Assert
+    assert!(!rendered.contains("Per module:"));
+}
+
+#[test]
 fn reporter_human_shows_top_functions() {
     // Arrange
     let reporter = TextReportRenderer::new(1);

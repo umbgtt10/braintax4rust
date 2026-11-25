@@ -83,11 +83,7 @@ impl Scorer for DefaultScorer {
                 let count = funcs.len();
                 let total_cc: u32 = funcs.iter().map(|f| f.cyclomatic).sum();
                 let max_cc = funcs.iter().map(|f| f.cyclomatic).max().unwrap_or(0);
-                let avg_cc = if count > 0 {
-                    total_cc as f64 / count as f64
-                } else {
-                    0.0
-                };
+                let avg_cc = total_cc as f64 / count as f64;
                 let max_bt = funcs
                     .iter()
                     .map(|f| f.braintax)

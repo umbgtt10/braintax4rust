@@ -70,6 +70,18 @@ fn compute_braintax_doubles_once_per_cfg_gate() {
 }
 
 #[test]
+fn compute_braintax_scales_the_cyclomatic_count_by_the_trait_factor() {
+    // Arrange
+    let components = neutral_components().with_trait_factor(1.25);
+
+    // Act
+    let braintax = components.compute_braintax();
+
+    // Assert
+    assert!((braintax - 1.25).abs() < 1e-9);
+}
+
+#[test]
 fn compute_braintax_with_neutral_components_returns_the_cyclomatic_count() {
     // Arrange
     let components = neutral_components();
