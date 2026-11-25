@@ -124,18 +124,40 @@ binding (`NameOpacityCounter`):
 ## `macro_density`
 
 Each macro invocation, attribute, or `#[derive(...)]` entry outside a
-known list costs **+3** (`MacroCounter`, `DeriveAttrScorer`):
+known list costs **+3** (`MacroCounter`, `DeriveAttrScorer`). Attributes
+are counted by one rule wherever they sit: on the function itself and on
+anything inside its body.
 
-- Known macros/attributes (cost 0): `println`, `eprintln`, `print`,
-  `eprint`, `format`, `write`, `writeln`, `vec`, `assert`, `assert_eq`,
+- Known macros (cost 0): `println`, `eprintln`, `print`, `eprint`,
+  `format`, `write`, `writeln`, `vec`, `assert`, `assert_eq`,
   `assert_ne`, `panic`, `unreachable`, `unimplemented`, `todo`,
   `include`, `include_str`, `include_bytes`, `concat`, `stringify`,
   `matches`, `cfg`, `file`, `line`, `column`, `compile_error`, `env`,
-  `option_env`, plus the attributes `cfg_attr`, `allow`, `deny`, `warn`.
+  `option_env`.
+- Known attributes (cost 0), a list of their own: every built-in
+  attribute in the Rust reference's index whose name is one identifier
+  -- `allow`, `automatically_derived`, `cfg`, `cfg_attr`, `cold`,
+  `collapse_debuginfo`, `crate_name`, `crate_type`,
+  `debugger_visualizer`, `deny`, `deprecated`, `derive`, `doc`, `expect`,
+  `export_name`, `feature`, `forbid`, `global_allocator`, `ignore`,
+  `inline`, `instruction_set`, `link`, `link_name`, `link_ordinal`,
+  `link_section`, `macro_export`, `macro_use`, `must_use`, `naked`,
+  `no_builtins`, `no_implicit_prelude`, `no_link`, `no_main`,
+  `no_mangle`, `no_std`, `non_exhaustive`, `panic_handler`, `path`,
+  `proc_macro`, `proc_macro_attribute`, `proc_macro_derive`,
+  `recursion_limit`, `repr`, `should_panic`, `target_feature`, `test`,
+  `track_caller`, `type_length_limit`, `used`, `warn`,
+  `windows_subsystem`. A doc comment (`///`, `//!`) is a `#[doc]`
+  attribute, so it never costs anything. An attribute whose path has
+  more than one segment (`#[tokio::main]`, `#[rustfmt::skip]`,
+  `#[diagnostic::on_unimplemented]`) is not counted.
 - Known derives (cost 0): `Debug`, `Clone`, `Copy`, `Default`, `Eq`,
   `PartialEq`, `Ord`, `PartialOrd`, `Hash`. Each *other* name inside a
-  `#[derive(...)]` list costs +3 per name, independently of the macro
-  list above.
+  `#[derive(...)]` list costs +3 per name, independently of the lists
+  above.
+
+A function's own `#[cfg(...)]` and `#[cfg_attr(...)]` cost nothing here:
+they are its cfg gates, priced by `cfg_factor`.
 
 Opaque or unfamiliar macros force the reader to go look up what they
 expand to before trusting what the code does; the known lists are things

@@ -44,6 +44,60 @@ const KNOWN_STD_MACROS: &[&str] = &[
     "option_env",
 ];
 
+const KNOWN_ATTRIBUTES: &[&str] = &[
+    "allow",
+    "automatically_derived",
+    "cfg",
+    "cfg_attr",
+    "cold",
+    "collapse_debuginfo",
+    "crate_name",
+    "crate_type",
+    "debugger_visualizer",
+    "deny",
+    "deprecated",
+    "derive",
+    "doc",
+    "expect",
+    "export_name",
+    "feature",
+    "forbid",
+    "global_allocator",
+    "ignore",
+    "inline",
+    "instruction_set",
+    "link",
+    "link_name",
+    "link_ordinal",
+    "link_section",
+    "macro_export",
+    "macro_use",
+    "must_use",
+    "naked",
+    "no_builtins",
+    "no_implicit_prelude",
+    "no_link",
+    "no_main",
+    "no_mangle",
+    "no_std",
+    "non_exhaustive",
+    "panic_handler",
+    "path",
+    "proc_macro",
+    "proc_macro_attribute",
+    "proc_macro_derive",
+    "recursion_limit",
+    "repr",
+    "should_panic",
+    "target_feature",
+    "test",
+    "track_caller",
+    "type_length_limit",
+    "used",
+    "warn",
+    "windows_subsystem",
+];
+
 #[derive(Default)]
 pub struct MacroCounter {
     count: u32,
@@ -99,11 +153,7 @@ impl<'ast> Visit<'ast> for MacroCounter {
 
 impl MacroCounter {
     fn is_known_attr(name: &str) -> bool {
-        Self::is_known_macro(name)
-            || name == "cfg_attr"
-            || name == "allow"
-            || name == "deny"
-            || name == "warn"
+        KNOWN_ATTRIBUTES.contains(&name)
     }
 
     fn score_derive_attr(&mut self, attr: &Attribute) {

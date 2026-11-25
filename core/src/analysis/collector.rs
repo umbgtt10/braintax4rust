@@ -198,6 +198,7 @@ impl<'a> Collector<'a> {
         let name_opacity = input.param_opacity + names.score();
         let mut macros = MacroCounter::new();
         macros.visit_block(block);
+        attrs.iter().for_each(|attr| macros.visit_attribute(attr));
         let cfg_gates = Self::count_cfg_gates(attrs);
         let depth = self.current_depth;
         let components = BraintaxComponents::default()

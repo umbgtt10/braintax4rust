@@ -87,12 +87,93 @@ fn unknown_custom_macro_in_expr_scores_3() {
 }
 
 #[test]
+fn visit_block_attribute_named_after_a_function_like_macro_scores_3() {
+    // Arrange & Act
+    let score = score_block("{ #[println] fn inner() {} }");
+
+    // Assert
+    assert_eq!(score, 3);
+}
+
+#[test]
+fn visit_block_built_in_attributes_score_zero() {
+    // Arrange
+    let built_in = [
+        "allow",
+        "automatically_derived",
+        "cfg",
+        "cfg_attr",
+        "cold",
+        "collapse_debuginfo",
+        "crate_name",
+        "crate_type",
+        "debugger_visualizer",
+        "deny",
+        "deprecated",
+        "doc",
+        "expect",
+        "export_name",
+        "feature",
+        "forbid",
+        "global_allocator",
+        "ignore",
+        "inline",
+        "instruction_set",
+        "link",
+        "link_name",
+        "link_ordinal",
+        "link_section",
+        "macro_export",
+        "macro_use",
+        "must_use",
+        "naked",
+        "no_builtins",
+        "no_implicit_prelude",
+        "no_link",
+        "no_main",
+        "no_mangle",
+        "no_std",
+        "non_exhaustive",
+        "panic_handler",
+        "path",
+        "proc_macro",
+        "proc_macro_attribute",
+        "proc_macro_derive",
+        "recursion_limit",
+        "repr",
+        "should_panic",
+        "target_feature",
+        "test",
+        "track_caller",
+        "type_length_limit",
+        "used",
+        "warn",
+        "windows_subsystem",
+    ];
+
+    // Act & Assert
+    for name in built_in {
+        let block = format!("{{ #[{name}] fn inner() {{}} }}");
+        assert_eq!(score_block(&block), 0, "#[{name}]");
+    }
+}
+
+#[test]
 fn visit_block_derive_of_non_std_traits_scores_3_each() {
     // Arrange & Act
     let score = score_block("{ #[derive(Clone, Serialize, Deserialize)] struct Point; }");
 
     // Assert
     assert_eq!(score, 6);
+}
+
+#[test]
+fn visit_block_doc_comments_score_zero() {
+    // Arrange & Act
+    let score = score_block("{\n    /// One.\n    /// Two.\n    /// Three.\n    fn inner() {}\n}");
+
+    // Assert
+    assert_eq!(score, 0);
 }
 
 #[test]
