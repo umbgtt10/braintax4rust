@@ -100,7 +100,6 @@ impl<'ast> Visit<'ast> for MacroCounter {
 impl MacroCounter {
     fn is_known_attr(name: &str) -> bool {
         Self::is_known_macro(name)
-            || name == "cfg"
             || name == "cfg_attr"
             || name == "allow"
             || name == "deny"
