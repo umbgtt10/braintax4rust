@@ -21,3 +21,17 @@ diverge enough that "braintax score" stops meaning anything shared
 across projects unless the config itself is captured in output.
 
 Not started.
+
+## Trait objects and `impl Trait` inside generic arguments
+
+`return_complexity` looks through a reference and through `Box`, `Rc`
+and `Arc`, so since 0.15.0 a trait object costs 1.0 where it is returned
+behind its pointer. It does not look into any other type's generic
+arguments: `Option<Box<dyn Iterator>>`, `Result<Box<dyn Error>, E>` and
+`Option<impl Iterator>` each cost the 0.3 of a generic argument, never
+the trait object or the opaque type inside. Recursing into every generic
+argument would charge them, but would also move every nested generic --
+`Vec<Vec<u32>>` from 0.3 to 0.6 -- so which it should be is the owner's
+decision.
+
+Not started.

@@ -225,15 +225,25 @@ Computed by `type_complexity` on the function's return type:
 |---|---|
 | No return type (`()`, implicit) | 0.0 |
 | `impl Trait` | 1.5 |
-| `dyn Trait` (trait object) | 1.0 |
+| `dyn Trait` (trait object), behind the pointer that holds it | 1.0 |
+| A reference (`&T`, `&mut T`), or a `Box`, `Rc` or `Arc` | what the type it points to costs |
 | Path type qualified as `<T as Trait>::...` (has a `qself`) | +1.0 |
 | Path type starting with `Self` | +1.0 |
 | Each generic argument on any path segment (`Vec<T>`, `Result<T, E>`, …) | +0.3 each |
 | Plain concrete type (`i32`, `String`, a local struct by name) | 0.0 |
 
-A function returning `impl Iterator<Item = T>` costs `1.5 + 0.3 = 1.8` —
-the reader must both understand what the opaque type actually is *and*
-track the generic parameter inside it.
+A trait object is only ever returned behind a pointer -- `&dyn Trait`,
+`Box<dyn Trait>`, `Arc<dyn Trait>` -- so a pointer is looked through: a
+reference, a parenthesised type, and a `Box`, `Rc` or `Arc` (by its first
+type argument, however the path is qualified) cost what they point to.
+`Box<dyn Iterator>` and `&(dyn Display + Send)` cost 1.0, `&Self::Output`
+1.0, `Box<u32>` 0.0. No other generic type is looked into:
+`Option<Box<dyn Error>>` costs the 0.3 of its one argument, not the trait
+object inside it (see `docs/OPEN_POINTS.md`).
+
+A function returning `impl Iterator<Item = T>` costs `1.5`: the bounds of
+an `impl Trait` are not looked into, so the opaque type is the whole
+cost.
 
 ---
 
