@@ -85,10 +85,7 @@ impl<'ast> Visit<'ast> for ComplexityVisitor {
 
     fn visit_expr_match(&mut self, expr: &'ast ExprMatch) {
         self.complexity += 1;
-        let arm_count = expr.arms.len();
-        if arm_count > 1 {
-            self.complexity += (arm_count - 1) as u32;
-        }
+        self.complexity += expr.arms.len().saturating_sub(1) as u32;
         for arm in &expr.arms {
             if arm.guard.is_some() {
                 self.complexity += 1;

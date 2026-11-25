@@ -63,6 +63,26 @@ fn return_complexity_for_a_plain_type_returns_zero() {
 }
 
 #[test]
+fn return_complexity_for_a_qualified_self_path_returns_1() {
+    // Arrange & Act
+    let complexity =
+        SignatureScorer::return_complexity(&signature("fn f() -> <T as Iterator>::Item {}").output);
+
+    // Assert
+    assert!((complexity - 1.0).abs() < 1e-9);
+}
+
+#[test]
+fn return_complexity_for_a_self_path_returns_1() {
+    // Arrange & Act
+    let complexity =
+        SignatureScorer::return_complexity(&signature("fn f() -> Self::Output {}").output);
+
+    // Assert
+    assert!((complexity - 1.0).abs() < 1e-9);
+}
+
+#[test]
 fn return_complexity_for_impl_trait_costs_more_than_a_trait_object() {
     // Arrange & Act
     let impl_trait = SignatureScorer::return_complexity(
@@ -82,6 +102,15 @@ fn return_complexity_for_no_return_type_returns_zero() {
 
     // Assert
     assert!(complexity.abs() < f64::EPSILON);
+}
+
+#[test]
+fn return_complexity_for_one_generic_argument_returns_0_3() {
+    // Arrange & Act
+    let complexity = SignatureScorer::return_complexity(&signature("fn f() -> Vec<u32> {}").output);
+
+    // Assert
+    assert!((complexity - 0.3).abs() < 1e-9);
 }
 
 #[test]
@@ -152,6 +181,24 @@ fn trait_factor_for_a_plain_custom_trait_returns_the_base_factor() {
 
     // Assert
     assert!((factor - 0.90).abs() < 1e-9);
+}
+
+#[test]
+fn trait_factor_with_an_associated_type_and_five_methods_adds_the_method_penalty() {
+    // Arrange & Act
+    let factor = SignatureScorer::trait_factor("MyTrait", &info(5, 1, 0, 1));
+
+    // Assert
+    assert!((factor - 1.32).abs() < 1e-9);
+}
+
+#[test]
+fn trait_factor_with_an_associated_type_and_three_impls_amplifies_the_dispatch_penalty() {
+    // Arrange & Act
+    let factor = SignatureScorer::trait_factor("MyTrait", &info(1, 1, 0, 3));
+
+    // Assert
+    assert!((factor - 1.48).abs() < 1e-9);
 }
 
 #[test]

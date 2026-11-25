@@ -24,11 +24,7 @@ impl BraintaxComponents {
     }
 
     pub fn compute_braintax(&self) -> f64 {
-        let cfg_factor = if self.cfg_gates > 0 {
-            exp2(f64::from(self.cfg_gates))
-        } else {
-            1.0
-        };
+        let cfg_factor = exp2(f64::from(self.cfg_gates));
         let depth_factor = 1.0 + (self.depth.saturating_sub(1) as f64) * 0.15;
         self.cyclomatic as f64 * cfg_factor * depth_factor * self.trait_factor
             + self.hidden_dep_weight

@@ -214,6 +214,42 @@ fn try_operator_adds_1() {
 }
 
 #[test]
+fn visit_block_match_arm_guard_adds_1() {
+    // Arrange
+    let block: Block = parse_quote!({
+        match x {
+            n if n > 0 => {}
+            _ => {}
+        }
+    });
+
+    // Act
+    let mut visitor = ComplexityVisitor::new();
+    visitor.visit_block(&block);
+
+    // Assert
+    assert_eq!(visitor.complexity(), 4);
+}
+
+#[test]
+fn visit_block_match_with_two_arms_adds_2() {
+    // Arrange
+    let block: Block = parse_quote!({
+        match x {
+            1 => {}
+            _ => {}
+        }
+    });
+
+    // Act
+    let mut visitor = ComplexityVisitor::new();
+    visitor.visit_block(&block);
+
+    // Assert
+    assert_eq!(visitor.complexity(), 3);
+}
+
+#[test]
 fn while_loop_adds_1() {
     // Arrange
     let block: Block = parse_quote!({

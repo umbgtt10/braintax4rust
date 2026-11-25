@@ -17,8 +17,6 @@ impl HiddenDepSeverity {
             "unsafe" => 8.0,
             "process::exit" | "process::abort" | "abort" => 6.0,
             "fs::read" | "fs::write" | "File::open" | "File::create" => 5.0,
-            "Instant::now" | "SystemTime::now" | "random" | "rand::random" | "thread_rng"
-            | "rand::thread_rng" => 4.0,
             "env::var" | "env::args" | "thread::sleep" => 3.0,
             "println" | "eprintln" | "print" | "eprint" => 2.0,
             _ => 4.0,

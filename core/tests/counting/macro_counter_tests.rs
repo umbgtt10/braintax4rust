@@ -85,3 +85,33 @@ fn unknown_custom_macro_in_expr_scores_3() {
     // Assert
     assert_eq!(score, 3);
 }
+
+#[test]
+fn visit_block_derive_of_non_std_traits_scores_3_each() {
+    // Arrange & Act
+    let score = score_block("{ #[derive(Clone, Serialize, Deserialize)] struct Point; }");
+
+    // Assert
+    assert_eq!(score, 6);
+}
+
+#[test]
+fn visit_block_known_lint_and_cfg_attributes_score_zero() {
+    // Arrange & Act
+    let score = score_block(
+        "{ #[allow(unused)] #[deny(warnings)] #[warn(missing_docs)] #[cfg(test)] \
+         #[cfg_attr(test, inline)] let x = 1; }",
+    );
+
+    // Assert
+    assert_eq!(score, 0);
+}
+
+#[test]
+fn visit_block_unknown_attribute_scores_3() {
+    // Arrange & Act
+    let score = score_block("{ #[my_attr] fn inner() {} }");
+
+    // Assert
+    assert_eq!(score, 3);
+}

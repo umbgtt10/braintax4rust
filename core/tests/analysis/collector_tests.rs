@@ -66,6 +66,51 @@ fn collect_cfg_gated_fn_has_cfg_gates_1() {
 }
 
 #[test]
+fn collect_fn_inside_an_inline_module_is_collected() {
+    // Arrange
+    let source = "mod inner {\n    fn nested() {}\n}";
+    let path = SourcePath::new(String::from("src/lib.rs"));
+    let root = SourcePath::new(String::from("."));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].name, "nested");
+}
+
+#[test]
+fn collect_fn_one_module_below_the_crate_root_has_depth_2() {
+    // Arrange
+    let source = "fn foo() {}";
+    let path = SourcePath::new(String::from("/project/src/bar/baz.rs"));
+    let root = SourcePath::new(String::from("/project"));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].depth, 2);
+}
+
+#[test]
+fn collect_fn_with_a_single_letter_parameter_adds_its_opacity_to_braintax() {
+    // Arrange
+    let source = "fn compute(x: i32) {}";
+    let path = SourcePath::new(String::from("src/lib.rs"));
+    let root = SourcePath::new(String::from("."));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].braintax, 3.0);
+}
+
+#[test]
 fn collect_fn_with_boolean_ops_returns_correct_cc() {
     // Arrange
     let source = "fn foo(a: bool, b: bool) { if a && b { } }";
@@ -299,6 +344,28 @@ fn collect_module_path_uses_root() {
 
     // Assert
     assert_eq!(functions[0].module, "bar");
+}
+
+#[test]
+fn collect_skips_a_cfg_test_module() {
+    // Arrange
+    let source = r#"
+#[cfg(test)]
+mod tests {
+    fn helper() {}
+}
+
+fn real() {}
+"#;
+    let path = SourcePath::new(String::from("src/lib.rs"));
+    let root = SourcePath::new(String::from("."));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].name, "real");
 }
 
 #[test]
