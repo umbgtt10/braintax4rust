@@ -107,7 +107,7 @@ impl SignatureScorer {
     fn dispatch_penalty(info: &TraitInfo) -> f64 {
         let base = ((info.impl_count().saturating_sub(1)) as f64 * 0.06).min(0.18);
         let amplifier = if info.assoc_types() > 0 { 1.5 } else { 1.0 };
-        (base * amplifier).min(0.27)
+        base * amplifier
     }
 
     fn path_type_complexity(type_path: &TypePath) -> f64 {

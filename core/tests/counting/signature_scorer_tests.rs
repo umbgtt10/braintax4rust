@@ -233,6 +233,15 @@ fn trait_factor_with_an_associated_type_and_five_methods_adds_the_method_penalty
 }
 
 #[test]
+fn trait_factor_with_an_associated_type_and_many_impls_caps_the_dispatch_penalty_at_0_27() {
+    // Arrange & Act
+    let factor = SignatureScorer::trait_factor("MyTrait", &info(1, 1, 0, 400));
+
+    // Assert
+    assert!((factor - 1.57).abs() < 1e-9);
+}
+
+#[test]
 fn trait_factor_with_an_associated_type_and_three_impls_amplifies_the_dispatch_penalty() {
     // Arrange & Act
     let factor = SignatureScorer::trait_factor("MyTrait", &info(1, 1, 0, 3));

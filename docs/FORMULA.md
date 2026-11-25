@@ -87,8 +87,9 @@ For a custom trait, `trait_factor` is built from four parts:
 base            = 1.15 if (has associated types OR supertraits) else 0.90
                   + 0.01 × max(0, methods − 3)
 dimension_penalty = 0.0 (neither) | 0.15 (one of assoc types/supertraits) | 0.20 (both)
-dispatch_penalty  = min(0.27, min(0.18, 0.06 × max(0, impl_count − 1)) × amplifier)
+dispatch_penalty  = min(0.18, 0.06 × max(0, impl_count − 1)) × amplifier
                     amplifier = 1.5 if has associated types else 1.0
+                    (so at most 0.18 without associated types, 0.27 with them)
 
 trait_factor = base + dimension_penalty + dispatch_penalty
 ```
