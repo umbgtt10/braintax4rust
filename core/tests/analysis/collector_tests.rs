@@ -66,6 +66,55 @@ fn collect_cfg_gated_fn_has_cfg_gates_1() {
 }
 
 #[test]
+fn collect_fn_after_an_inline_module_is_back_in_the_file_module() {
+    // Arrange
+    let source = "mod inner {\n    fn inside() {}\n}\n\nfn after() {}";
+    let path = SourcePath::new(String::from("src/lib.rs"));
+    let root = SourcePath::new(String::from("."));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    let after = functions.iter().find(|f| f.name == "after").unwrap();
+    assert_eq!(after.module, ".");
+    assert_eq!(after.depth, 1);
+}
+
+#[test]
+fn collect_fn_in_an_inline_module_of_a_directory_module_extends_its_path() {
+    // Arrange
+    let source = "mod inner {\n    fn nested() {}\n}";
+    let path = SourcePath::new(String::from("/project/src/bar/baz.rs"));
+    let root = SourcePath::new(String::from("/project"));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].module, "bar/inner");
+    assert_eq!(functions[0].depth, 3);
+}
+
+#[test]
+fn collect_fn_in_nested_inline_modules_has_their_module_path_and_depth() {
+    // Arrange
+    let source = "mod outer {\n    mod inner {\n        fn deep() {}\n    }\n}";
+    let path = SourcePath::new(String::from("src/lib.rs"));
+    let root = SourcePath::new(String::from("."));
+
+    // Act
+    let functions = collect(source, &path, &root);
+
+    // Assert
+    assert_eq!(functions.len(), 1);
+    assert_eq!(functions[0].module, "outer/inner");
+    assert_eq!(functions[0].depth, 3);
+    assert!((functions[0].braintax - 1.3).abs() < 1e-9);
+}
+
+#[test]
 fn collect_fn_inside_an_inline_module_is_collected() {
     // Arrange
     let source = "mod inner {\n    fn nested() {}\n}";

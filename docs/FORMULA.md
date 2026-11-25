@@ -68,6 +68,14 @@ depth_factor = 1.0 + (module_depth − 1) × 0.15
 function at the crate surface: `depth_factor = 1.0`. Three modules deep:
 `1.3`.
 
+A function's module is the directory of its file below `src/` -- so
+`src/a/b.rs` is module `a`, at depth 2, and `src/a.rs` is the root, `.` --
+extended by every inline module it sits in. In `src/lib.rs`,
+`mod outer { mod inner { fn deep() {} } }` puts `deep` in module
+`outer/inner`, at depth 3; in `src/a/b.rs`, `mod inner { .. }` is module
+`a/inner`, also at depth 3. The report's per-module figures follow the same
+module path.
+
 ## `trait_factor`
 
 Computed by `compute_trait_factor(name, info)`, where `info` comes from

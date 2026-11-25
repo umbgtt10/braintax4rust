@@ -37,19 +37,16 @@ pub struct Collector<'a> {
     functions: Vec<FunctionComplexity>,
     current_file: String,
     current_module: String,
-    current_depth: u32,
     traits: &'a BTreeMap<String, TraitInfo>,
     normalizer: BraintaxNormalizer,
 }
 
 impl<'a> Collector<'a> {
     fn new(file: String, module: String, traits: &'a BTreeMap<String, TraitInfo>) -> Self {
-        let depth = Self::module_depth(&module);
         Self {
             functions: Vec::new(),
             current_file: file,
             current_module: module,
-            current_depth: depth,
             traits,
             normalizer: BraintaxNormalizer::new(),
         }
@@ -188,6 +185,14 @@ impl<'a> Collector<'a> {
         })
     }
 
+    fn inner_module(outer: &str, name: &str) -> String {
+        if outer == "." {
+            name.to_string()
+        } else {
+            format!("{outer}/{name}")
+        }
+    }
+
     fn push_fn(&mut self, name: String, block: &Block, attrs: &[Attribute], input: FnInput) {
         let mut visitor = ComplexityVisitor::new();
         visitor.visit_block(block);
@@ -200,7 +205,7 @@ impl<'a> Collector<'a> {
         macros.visit_block(block);
         attrs.iter().for_each(|attr| macros.visit_attribute(attr));
         let cfg_gates = Self::count_cfg_gates(attrs);
-        let depth = self.current_depth;
+        let depth = Self::module_depth(&self.current_module);
         let components = BraintaxComponents::default()
             .with_cfg_gates(cfg_gates)
             .with_cyclomatic(visitor.complexity())
@@ -280,9 +285,12 @@ impl<'a> Collector<'a> {
 
     fn visit_mod(&mut self, item_mod: &ItemMod) {
         if let Some((_, items)) = &item_mod.content {
+            let outer = self.current_module.clone();
+            self.current_module = Self::inner_module(&outer, &item_mod.ident.to_string());
             for inner in items {
                 self.visit_item(inner);
             }
+            self.current_module = outer;
         }
     }
 }
