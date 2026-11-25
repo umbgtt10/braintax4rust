@@ -198,3 +198,12 @@ fn unsafe_block_weight_is_8() {
     // Assert
     assert_eq!(counter.weight(), 8.0);
 }
+
+#[test]
+fn visit_block_println_in_expression_position_counts_1() {
+    // Arrange & Act
+    let count = count_hidden("{ match x { _ => println!(\"hello\"), } }");
+
+    // Assert
+    assert_eq!(count, 1);
+}
