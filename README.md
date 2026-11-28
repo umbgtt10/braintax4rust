@@ -232,6 +232,13 @@ measured anything:
 
 Up to 0.15.0 an error of the tool's own exited 1, like a breach.
 
+Rust files that hold no function with a body -- a crate of traits alone --
+are measured, not refused: the report has 0 functions and every figure at 0,
+text and JSON alike, and the run exits 0, under any bound, since nothing
+breaches one. Up to 0.16.0 such a crate failed with `error: no Rust source
+files found`, which is still the error, exit 2, for a path holding no Rust file
+at all.
+
 ---
 
 ## Limitations

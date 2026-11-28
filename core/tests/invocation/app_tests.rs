@@ -379,6 +379,77 @@ fn run_with_avg_braintax_within_the_limit_returns_success() {
     assert!(result.unwrap().passes);
 }
 
+// A crate of traits alone holds Rust files but no function with a body: it is
+// measured, not refused, and scores nothing.
+#[test]
+fn run_with_files_holding_no_function_holds_both_bounds_at_0() {
+    // Arrange
+    let walk = TestWalk {
+        files: vec![(
+            path("src/lib.rs"),
+            "pub trait T {\n    fn f(&self);\n}\n".to_string(),
+        )],
+    };
+    let config = Config {
+        path: path("."),
+        json: false,
+        threshold: Some(0),
+        max_avg_braintax: Some(0.0),
+        top: 10,
+    };
+    let app = App::new(
+        Box::new(walk),
+        Box::new(DefaultScorer::new()),
+        Box::new(StubReportRenderer::new()),
+        config,
+    );
+
+    // Act
+    let outcome = app.run().unwrap();
+
+    // Assert
+    assert!(outcome.passes);
+}
+
+#[test]
+fn run_with_files_holding_no_function_reports_none_and_a_braintax_of_0() {
+    // Arrange
+    let walk = TestWalk {
+        files: vec![(
+            path("/work/core/src/lib.rs"),
+            "pub trait T {\n    fn f(&self);\n}\n".to_string(),
+        )],
+    };
+    let config = Config {
+        path: path("/work/core"),
+        json: false,
+        threshold: None,
+        max_avg_braintax: None,
+        top: 10,
+    };
+    let app = App::new(
+        Box::new(walk),
+        Box::new(DefaultScorer::new()),
+        Box::new(StubReportRenderer::new()),
+        config,
+    );
+
+    // Act
+    let outcome = app.run().unwrap();
+
+    // Assert
+    assert_eq!(outcome.output, "core: 0 functions");
+    assert!(outcome.passes);
+    assert_eq!(outcome.report.target, "core");
+    assert!(outcome.report.functions.is_empty());
+    assert!(outcome.report.modules.is_empty());
+    assert_eq!(outcome.report.overall.total_functions, 0);
+    assert_eq!(outcome.report.overall.avg_braintax, 0.0);
+    assert_eq!(outcome.report.overall.max_braintax, 0.0);
+    assert_eq!(outcome.report.overall.total_braintax, 0.0);
+    assert_eq!(outcome.report.overall.max_cyclomatic, 0);
+}
+
 #[test]
 fn run_with_no_files_names_the_root_it_searched() {
     // Arrange

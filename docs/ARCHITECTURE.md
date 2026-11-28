@@ -80,7 +80,9 @@ platform path at the edge, lossily: a scanned file whose name is not UTF-8
 cannot be read back under that name and fails the run naming it. Failures are
 typed: `SourceReadFailure` ("failed to read <path>"), `RenderFailure`, and
 `RunFailure`, which wraps them or says no Rust source was found; cli's
-`EntryFailure` adds a failed write to stdout.
+`EntryFailure` adds a failed write to stdout. Rust files holding no function
+with a body -- a crate of traits alone -- are no failure: `App::run` reports
+no function, every figure 0, and no bound breached.
 
 Core's tests use in-memory fakes from `core/tests/support/`
 (`InMemorySourceTree`, `StubReportRenderer`) and touch no disk. Every fixture
