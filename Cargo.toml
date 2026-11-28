@@ -47,8 +47,8 @@ walkdir = "2"
 tempfile = "3"
 
 # No `unsafe` in the tool's own crates, tests included; core says so at its
-# crate root as well. The fixtures do not opt in: base_hidden_deps weighs an
-# `unsafe` block by construction.
+# crate root as well. The fixtures do not opt in, each with an empty `[lints]`
+# table: base_hidden_deps weighs an `unsafe` block by construction.
 [workspace.lints.rust]
 unsafe_code = "forbid"
 

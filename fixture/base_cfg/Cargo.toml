@@ -11,6 +11,8 @@ autotests = false
 name = "all_tests"
 path = "tests/all_tests.rs"
 
+[lints]
+
 [features]
 complex = []
 

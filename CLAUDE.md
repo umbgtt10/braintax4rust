@@ -246,8 +246,10 @@ A workspace with a virtual root that holds no package:
 
 `core` and `cli` share the workspace's `version`. `[workspace.lints.rust]`
 forbids `unsafe_code` in `core`, `cli`, `xtask` and `validation`, every target;
-`core` says so at its crate root as well. The fixtures do not opt in:
-`base_hidden_deps` weighs an `unsafe` block by construction.
+`core` says so at its crate root as well. The fixtures do not opt in, and
+each says so with an empty `[lints]` table, which is what cargo asks of a
+member that inherits nothing: `base_hidden_deps` weighs an `unsafe` block by
+construction.
 
 ## Technology-free core
 
