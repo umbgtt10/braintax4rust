@@ -61,10 +61,9 @@ just stage1
 just stage2
 ```
 
-Both must be green before a change is complete. Stage 1 moves the lock file to
-every dependency's newest compatible version (`cargo update`, so it needs the
-network), then runs formatting, clippy and tests — cargo built-ins only, so it
-works on a fresh checkout with none of the tools below installed. Stage 2 is `cargo xtask stage2`, which runs, in
+Both must be green before a change is complete. Stage 1 runs formatting, clippy
+and tests — cargo built-ins only, so it works on a fresh checkout with none of
+the tools below installed. Stage 2 is `cargo xtask stage2`, which runs, in
 order: a **technology-free core** check (the analysis crate, `core/`, depends
 on `libm` and `syn` only, is `#![no_std]`, and none of its files reaches the
 file system, a process or stdout), `cargo stern4rust` (house coding rules),
