@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-11-28
+
+A fix: a crate of traits alone, Rust files with no function with a body, is
+measured and scores 0 where the command refused it with an error and exit 2.
+A path holding no Rust file is still refused, as before. No score of a crate
+with functions moves; the flags, the exit codes, the messages and the JSON's
+shape are unchanged.
+
 ### Fixed
 - **A crate of traits alone is measured, not refused.** Rust files holding
   no function with a body -- `pub trait T { fn f(&self); }` and nothing
@@ -35,6 +43,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `cargo update`. `just ripe` plans each compatible move and the round applies
   it under both stages; a blind sync inside them moved more than the upgrade
   being checked.
+
+### Changed
+- README's sample report is the one 0.16.1 prints for its own `core/`: a
+  total of 439.1 where 0.16.0's had 440.5 and a total complexity of 285
+  where it had 286, by the shorter `App::collect_functions`.
+- `binary_prints_version` asserted the literal `0.16.0`, so the bump moved
+  it to `0.16.1`.
 
 ## [0.16.0] - 2026-11-28
 

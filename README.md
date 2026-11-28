@@ -158,26 +158,26 @@ cargo braintax4rust --json --threshold 10 --top 5
 ## Output
 
 ```
-cargo-braintax4rust 0.16.0 -- core
+cargo-braintax4rust 0.16.1 -- core
 ══════════════════════════════════════════════
 
   Overall braintax:            3.1
   Maximum braintax:           15.3
-  Total braintax:             440.5
+  Total braintax:             439.1
   Normalized braintax:        79 / 100
 
 Cyclomatic complexity:
   Total functions:             141
   Average complexity:         2.0
   Maximum complexity:         9
-  Total complexity:           286
+  Total complexity:           285
 
 Per module:
   Module                          Funcs   Avg BT    Max
   ------------------------------  ------  --------  -----
   analysis                        38      3.4       11.7
   counting                        57      3.2       8.7
-  invocation                      8       3.3       6.3
+  invocation                      8       3.1       6.3
   reporting                       38      2.7       15.3
 
 Top 5 most complex functions:
