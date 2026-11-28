@@ -51,3 +51,8 @@ tempfile = "3"
 # `unsafe` block by construction.
 [workspace.lints.rust]
 unsafe_code = "forbid"
+
+# The gates cargo-ripe4rust holds each step of its plan to: both stages, as
+# every change here is held to them.
+[workspace.metadata.ripe4rust]
+gates = ["just stage1", "just stage2"]

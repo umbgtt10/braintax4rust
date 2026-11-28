@@ -219,6 +219,17 @@ manifest, nothing more:
   runs one fixture end to end through `cli`'s `EntryPoint`, and the test file
   is named for that.
 
+### ripe4rust plans what moves
+
+`[workspace.metadata.ripe4rust]` in the root `Cargo.toml` names the gates
+cargo-ripe4rust holds each step of its plan to: `just stage1` and
+`just stage2`, the two every change here is held to. `just ripe` runs
+`cargo ripe4rust plan`, which says what is ripe to move and in what order, and
+applies nothing: the plan is information, and a move it names is still taken
+on its own.
+
+`cargo install cargo-ripe4rust`
+
 ## Layout
 
 A workspace with a virtual root that holds no package:

@@ -46,3 +46,7 @@ stage1: sync
 # exists to report.
 stage2:
     cargo xtask stage2
+
+# cargo-ripe4rust's plan: what to move, in what order, each step held to both stages. It applies nothing.
+ripe:
+    cargo ripe4rust plan
