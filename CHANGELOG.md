@@ -41,8 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gate whose tool could not run says how the run ended -- `could not run,
   exit code 2`, `could not run, terminated by signal`, and a crap report
   never produced `(exit code 101)` -- where it printed the exit code as
-  Rust's `Option`, `Some(2)`. The self-analysis gate's one failure, `avg
-  braintax exceeds the ceiling of 5.0`, never printed an exit code.
+  Rust's `Option`, `Some(2)`.
+- The self-analysis gate says `avg braintax exceeds the ceiling of 5.0`
+  only for exit code 1, the code cargo-braintax4rust documents for a bound
+  not held. Every other end read as that breach too: cargo's 101 for a
+  build that failed or a binary that panicked, and a signal. They now read
+  `could not run, exit code 101` and `could not run, terminated by signal`.
 - `[workspace.metadata.ripe4rust]` names both stages as the gates
   cargo-ripe4rust holds each step of its plan to, and `just ripe` prints
   that plan without applying it. Its `published` names

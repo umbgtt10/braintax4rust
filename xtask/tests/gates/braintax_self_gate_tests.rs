@@ -75,7 +75,37 @@ fn run_passes_the_ceiling_through_to_the_tool() {
 }
 
 #[test]
-fn run_with_a_non_zero_exit_code_names_the_ceiling_it_breached() {
+fn run_with_a_zero_exit_code_returns_ok() {
+    // Arrange
+    let runner = FakeCommandRunner::new();
+
+    // Act
+    let result = gate(&runner).run();
+
+    // Assert
+    assert!(result.is_ok());
+}
+
+// cargo's own exit code for a build that failed or a binary that panicked: the
+// tool never gave a verdict, so no ceiling was breached.
+#[test]
+fn run_with_exit_code_101_says_it_could_not_run() {
+    // Arrange
+    let runner = FakeCommandRunner::new().with_streaming_code(Some(101));
+
+    // Act
+    let result = gate(&runner).run();
+
+    // Assert
+    assert_eq!(
+        result.map_err(|failure| failure.to_string()),
+        Err(String::from("could not run, exit code 101"))
+    );
+}
+
+// 1 is the exit code cargo-braintax4rust documents for a breached bound.
+#[test]
+fn run_with_exit_code_1_names_the_ceiling_it_breached() {
     // Arrange
     let runner = FakeCommandRunner::new().with_streaming_code(Some(1));
 
@@ -87,18 +117,6 @@ fn run_with_a_non_zero_exit_code_names_the_ceiling_it_breached() {
         result.map_err(|failure| failure.to_string()),
         Err(String::from("avg braintax exceeds the ceiling of 5.0"))
     );
-}
-
-#[test]
-fn run_with_a_zero_exit_code_returns_ok() {
-    // Arrange
-    let runner = FakeCommandRunner::new();
-
-    // Act
-    let result = gate(&runner).run();
-
-    // Assert
-    assert!(result.is_ok());
 }
 
 // None means the process was signalled rather than exiting. That is a failure,
@@ -113,4 +131,19 @@ fn run_with_no_exit_code_is_a_failure_rather_than_a_pass() {
 
     // Assert
     assert!(result.is_err());
+}
+
+#[test]
+fn run_with_no_exit_code_says_a_signal_terminated_it() {
+    // Arrange
+    let runner = FakeCommandRunner::new().with_streaming_code(None);
+
+    // Act
+    let result = gate(&runner).run();
+
+    // Assert
+    assert_eq!(
+        result.map_err(|failure| failure.to_string()),
+        Err(String::from("could not run, terminated by signal"))
+    );
 }
