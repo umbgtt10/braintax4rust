@@ -9,11 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-11-28
+
+A fix: a crate of traits alone, Rust files with no function with a body, is
+measured and scores 0 where the command refused it with an error and exit 2.
+A path holding no Rust file is still refused, as before. No score of a crate
+with functions moves; the flags, the exit codes, the messages and the JSON's
+shape are unchanged.
+
+### Fixed
+- **A crate of traits alone is measured, not refused.** Rust files holding
+  no function with a body -- `pub trait T { fn f(&self); }` and nothing
+  else -- failed the run with `error: no Rust source files found in <path>`
+  and exit 2: `App::run` took no function found for no file found, so the
+  message was wrong and the run should not have failed. It now refuses only
+  a path where the walk finds no Rust file, with the same error and exit 2;
+  Rust files with no function in them are a report of 0 functions, every
+  figure 0 and no module or function listed, in text and JSON alike, and
+  exit 0 under `--threshold` and `--max-avg-braintax` too, since nothing
+  breaches either (the owner's decision: such a crate scores 0, as
+  cargo-grip4rust scores it). The scorer's figures for no function are its
+  defaults, `braintax_normalized` included -- it never divides by a count
+  of 0, so no figure is NaN -- and the JSON's `overall.total_braintax` is
+  `0.0`, which serge4rust 0.3.3's commit-score hook reads as a total of 0
+  -- so a library crate of traits alone can join a repository's scored
+  crates. Written test-first: two core tests, a report of no function and
+  both bounds held at 0, and three of the binary over a crate of traits
+  alone, its exact text report, its JSON document and its exit code under
+  both bounds. The tests of the refusal are unchanged.
+
 ### Removed
 - `just sync` and `cargo xtask sync`: stage 1 no longer starts with
   `cargo update`. `just ripe` plans each compatible move and the round applies
   it under both stages; a blind sync inside them moved more than the upgrade
   being checked.
+
+### Changed
+- README's sample report is the one 0.16.1 prints for its own `core/`: a
+  total of 439.1 where 0.16.0's had 440.5 and a total complexity of 285
+  where it had 286, by the shorter `App::collect_functions`.
+- `binary_prints_version` asserted the literal `0.16.0`, so the bump moved
+  it to `0.16.1`.
 
 ## [0.16.0] - 2026-11-28
 

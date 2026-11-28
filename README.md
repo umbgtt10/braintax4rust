@@ -158,26 +158,26 @@ cargo braintax4rust --json --threshold 10 --top 5
 ## Output
 
 ```
-cargo-braintax4rust 0.16.0 -- core
+cargo-braintax4rust 0.16.1 -- core
 ══════════════════════════════════════════════
 
   Overall braintax:            3.1
   Maximum braintax:           15.3
-  Total braintax:             440.5
+  Total braintax:             439.1
   Normalized braintax:        79 / 100
 
 Cyclomatic complexity:
   Total functions:             141
   Average complexity:         2.0
   Maximum complexity:         9
-  Total complexity:           286
+  Total complexity:           285
 
 Per module:
   Module                          Funcs   Avg BT    Max
   ------------------------------  ------  --------  -----
   analysis                        38      3.4       11.7
   counting                        57      3.2       8.7
-  invocation                      8       3.3       6.3
+  invocation                      8       3.1       6.3
   reporting                       38      2.7       15.3
 
 Top 5 most complex functions:
@@ -231,6 +231,13 @@ measured anything:
 | `2` | no verdict: an error of the tool's own, or of its usage |
 
 Up to 0.15.0 an error of the tool's own exited 1, like a breach.
+
+Rust files that hold no function with a body -- a crate of traits alone --
+are measured, not refused: the report has 0 functions and every figure at 0,
+text and JSON alike, and the run exits 0, under any bound, since nothing
+breaches one. Up to 0.16.0 such a crate failed with `error: no Rust source
+files found`, which is still the error, exit 2, for a path holding no Rust file
+at all.
 
 ---
 

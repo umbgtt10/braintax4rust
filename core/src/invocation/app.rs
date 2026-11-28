@@ -7,6 +7,7 @@ use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use crate::analysis::collector::Collector;
+use crate::analysis::source_path::SourcePath;
 use crate::counting::function_complexity::FunctionComplexity;
 use crate::invocation::config::Config;
 use crate::invocation::run_failure::RunFailure;
@@ -43,15 +44,17 @@ impl App {
     }
 
     // The report, the text it renders to and the verdict on it. Printing the
-    // text and turning the verdict into an exit code are the caller's.
+    // text and turning the verdict into an exit code are the caller's. A root
+    // with no Rust file is refused; Rust files with no function with a body,
+    // a crate of traits alone, are a report of no function and no braintax.
     pub fn run(&self) -> Result<RunOutcome, RunFailure> {
-        let functions = self.collect_files()?;
+        let files = self.walker.rust_files()?;
 
-        if functions.is_empty() {
+        if files.is_empty() {
             return Err(RunFailure::NoSourceFiles(self.config.path.clone()));
         }
 
-        let report = self.compute_report(functions);
+        let report = self.compute_report(self.collect_functions(&files));
         let output = self.renderer.render(&report)?;
         let passes = self.gate.passes(&report.overall);
         Ok(RunOutcome {
@@ -61,15 +64,14 @@ impl App {
         })
     }
 
-    fn collect_files(&self) -> Result<Vec<FunctionComplexity>, RunFailure> {
-        let files = self.walker.rust_files()?;
-        let traits = Collector::build_trait_registry(&files);
+    fn collect_functions(&self, files: &[(SourcePath, String)]) -> Vec<FunctionComplexity> {
+        let traits = Collector::build_trait_registry(files);
         let mut all_functions = Vec::new();
-        for (path, source) in &files {
+        for (path, source) in files {
             let functions = Collector::collect(source, path, &self.config.path, &traits);
             all_functions.extend(functions);
         }
-        Ok(all_functions)
+        all_functions
     }
 
     fn compute_report(&self, functions: Vec<FunctionComplexity>) -> BraintaxReport {
