@@ -45,7 +45,7 @@ committed on its own. Breaking versions are a separate decision, not taken here.
 
 Stage 2 is `cargo xtask stage2` -- a real crate under `xtask/`, gated like any
 other code, rather than a script. Its gates come from serge4rust, the house's
-gates as a library, taken from crates.io as `serge4rust = "0.3.2"`: each is a
+gates as a library, taken from crates.io as `serge4rust = "0.3.3"`: each is a
 `Gate` implementation constructed against a `CommandRunner` trait, so the
 argument lists and the failure messages are covered by serge4rust's own
 integration tests. `xtask` keeps `main.rs` -- which gates run, in what order,
@@ -229,6 +229,13 @@ cargo-ripe4rust holds each step of its plan to: `just stage1` and
 `cargo ripe4rust plan`, which says what is ripe to move and in what order, and
 applies nothing: the plan is information, and a move it names is still taken
 on its own.
+
+Its `published` names `braintax4rust-core` alone, the crate others depend on
+as a library: a breaking upgrade of a dependency that reaches its public API
+is a breaking change of ours too, and ripe4rust asks about it (its rule 8).
+syn is one -- the core's public items take syn types. `cargo-braintax4rust` is
+published as well, but its library is the command's, kept for its own tests
+and the fixtures', which is not what `published` means.
 
 `cargo install cargo-ripe4rust`
 

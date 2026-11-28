@@ -29,19 +29,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   implementations -- take syn 3's types now, so a library user on syn 2
   must move with it.
 - Stage 2's gates come from serge4rust, the house's gates as a library,
-  taken from crates.io as `serge4rust = "0.3.2"`: the stage, the command
+  taken from crates.io as `serge4rust = "0.3.3"`: the stage, the command
   runner, every gate but one, the failures, the crap report and the commit
   scoring. `xtask` keeps `main.rs`, which configures them with this
   repository's constants, and the braintax self-analysis, the one gate no
   other repository runs, built on serge4rust's `Gate` and `CommandRunner`
   with its seven tests. Every gate runs as before, in the same order; the
-  streamed output differs only in stern4rust's file count, 245 to 169, the
-  gates' own sources having left the workspace, and in cargo-deny's
-  duplicate-version tree, where xtask now reaches syn 3 through serge4rust.
-  The commit scores are written byte for byte as they were.
+  streamed output differs in stern4rust's file count, 245 to 169, the
+  gates' own sources having left the workspace, and in the failure wording
+  below. The commit scores are written byte for byte as they were. Since 0.3.3 a
+  gate whose tool could not run says how the run ended -- `could not run,
+  exit code 2`, `could not run, terminated by signal`, and a crap report
+  never produced `(exit code 101)` -- where it printed the exit code as
+  Rust's `Option`, `Some(2)`. The self-analysis gate's one failure, `avg
+  braintax exceeds the ceiling of 5.0`, never printed an exit code.
 - `[workspace.metadata.ripe4rust]` names both stages as the gates
   cargo-ripe4rust holds each step of its plan to, and `just ripe` prints
-  that plan without applying it.
+  that plan without applying it. Its `published` names
+  `braintax4rust-core`, so a breaking dependency in the core's public API,
+  as syn is, is asked about.
 
 ## [0.15.0] - 2026-11-25
 
