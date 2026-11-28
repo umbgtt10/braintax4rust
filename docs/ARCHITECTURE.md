@@ -144,10 +144,11 @@ both output modes are projections of. `App::run` returns it in a
 `Config` (`core/src/invocation/config.rs`) is the plain-data record `App`
 actually consumes, built once by `Args::config()`. `main.rs` hands the
 process's arguments to `EntryPoint::run`, which strips the name cargo repeats,
-prints `error: <message>` and fails on an error, and calls
-`EntryPoint::run_from_args`; that parses the arguments, runs the `App`
-`EntryPoint::compose` builds, writes its output and maps its verdict to the
-exit code. They are thin entry points — all real logic lives in `App` and
+calls `EntryPoint::run_from_args`, and on an error prints `error: <message>`
+and exits `2`, clap's code for a usage error; `run_from_args` parses the
+arguments, runs the `App` `EntryPoint::compose` builds, writes its output and
+maps its verdict to the exit code, `0` for a pass and `1` for a bound not
+held. They are thin entry points — all real logic lives in `App` and
 below.
 
 `ThresholdGate` (`threshold_gate.rs`) owns the exit-code decision. It is

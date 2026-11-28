@@ -9,7 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-28
+
+Breaking, for the command and for the library. The command's exit code
+tells a breach from an error: a bound not held still exits 1, and a failure
+of the tool's own now exits 2, where it exited 1. And `braintax4rust-core`
+parses with syn 3, so its public items that take a syn type take syn 3's,
+and a library user on syn 2 must move with it. No score moves -- 0.15.0 and
+0.16.0 score the same code the same, function by function -- and the flags,
+the messages and the JSON's shape are unchanged. The rest is the gates':
+taken from serge4rust, declared to ripe4rust, run on Rust 1.100.1.
+
 ### Changed
+- **The exit code tells a breach from an error -- a change to the
+  command's interface.** `cargo braintax4rust` exited 1 both for a bound not
+  held (`--threshold`, `--max-avg-braintax`) and for a failure of its own:
+  no Rust source files found under the path, a source file it could not
+  read, a report it could not render or write. A failure of its own now
+  exits 2, which is also clap's code for a usage error; a bound not held
+  still exits 1, as documented, and a pass 0. stdout and stderr are
+  unchanged -- the failure still prints `error: <message>`. A script that
+  took any non-zero code for a breach now sees 2 for a run that gave no
+  verdict; one that failed only on 1 now passes over an error, and must
+  test for 2 to catch it. README's CI Gate section and ARCHITECTURE.md
+  state the three codes. Written test-first: an unreadable source file and
+  a missing directory exit 2 in process, the missing directory from the
+  binary too, and a breach still exits 1 and a usage error 2. The
+  self-analysis gate already read 1 alone as a breach and any other end, 2
+  included, as a run that could not run; a test now pins 2 there.
+  `run_against_a_directory_that_does_not_exist_returns_failure` asserted
+  `ExitCode::FAILURE`; it is
+  `run_against_a_directory_that_does_not_exist_returns_exit_code_2` and
+  asserts `ExitCode::from(2)`.
 - **syn 3.** `braintax4rust-core` parses with syn 3.0.10, from 2.0.119, and
   the tree holds one syn where it held two: clap's and serde's derives and
   serge4rust were already on 3. No score moves. Ported by what syn 3 moved:
@@ -52,6 +83,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that plan without applying it. Its `published` names
   `braintax4rust-core`, so a breaking dependency in the core's public API,
   as syn is, is asked about.
+- The gates run on Rust 1.100.1, from 1.99.1, pinned in
+  `rust-toolchain.toml`, and each of the eighteen fixtures carries an empty
+  `[lints]` table, which 1.100.1's cargo asks of a member that inherits none
+  of the workspace's lints. Neither reaches a user: `cargo install` builds
+  with the user's own toolchain.
+- README's sample report is the one 0.16.0 prints for its own `core/`: 141
+  functions where 0.15.0's had 140, and a total of 440.5 where it had
+  438.3, by the code the syn 3 port adds.
+- `binary_prints_version` asserted the literal `0.15.0`, so the bump moved
+  it to `0.16.0`.
 
 ## [0.15.0] - 2026-11-25
 
