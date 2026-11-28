@@ -10,6 +10,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **The exit code tells a breach from an error -- a change to the
+  command's interface.** `cargo braintax4rust` exited 1 both for a bound not
+  held (`--threshold`, `--max-avg-braintax`) and for a failure of its own:
+  no Rust source files found under the path, a source file it could not
+  read, a report it could not render or write. A failure of its own now
+  exits 2, which is also clap's code for a usage error; a bound not held
+  still exits 1, as documented, and a pass 0. stdout and stderr are
+  unchanged -- the failure still prints `error: <message>`. A script that
+  took any non-zero code for a breach now sees 2 for a run that gave no
+  verdict; one that failed only on 1 now passes over an error, and must
+  test for 2 to catch it. README's CI Gate section and ARCHITECTURE.md
+  state the three codes. Written test-first: an unreadable source file and
+  a missing directory exit 2 in process, the missing directory from the
+  binary too, and a breach still exits 1 and a usage error 2. The self-analysis gate already read 1
+  alone as a breach and any other end, 2 included, as a run that could not
+  run; a test now pins 2 there.
+  `run_against_a_directory_that_does_not_exist_returns_failure` asserted
+  `ExitCode::FAILURE`; it is
+  `run_against_a_directory_that_does_not_exist_returns_exit_code_2` and
+  asserts `ExitCode::from(2)`.
 - **syn 3.** `braintax4rust-core` parses with syn 3.0.10, from 2.0.119, and
   the tree holds one syn where it held two: clap's and serde's derives and
   serge4rust were already on 3. No score moves. Ported by what syn 3 moved:

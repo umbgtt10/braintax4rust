@@ -47,9 +47,9 @@ impl Gate for BraintaxSelfGate<'_> {
         // The ceiling travels to the tool rather than being judged here, so
         // there is one implementation of the comparison and it is the tool's.
         // Exit code 1 is that verdict, as cargo-braintax4rust documents it for a
-        // bound not held. Any other end -- cargo's 101 for a build that failed
-        // or a binary that panicked, clap's 2, a signal -- is a run that gave
-        // no verdict.
+        // bound not held. Any other end -- the tool's 2 for an error of its own
+        // or of its usage, cargo's 101 for a build that failed or a binary that
+        // panicked, a signal -- is a run that gave no verdict.
         let args = vec![
             String::from("run"),
             String::from("--quiet"),

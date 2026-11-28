@@ -138,8 +138,8 @@ cargo braintax4rust [OPTIONS] [PATH]
 | Option | Description |
 |---|---|
 | `--json` | Emit structured JSON output |
-| `--threshold N` | Exit non-zero if any function's cyclomatic complexity exceeds N — checks the repo's `max_cyclomatic`, not the composite `braintax` score. Alias: `--max-complexity` |
-| `--max-avg-braintax N` | Exit non-zero if the repo's `avg_braintax` exceeds N. Accepts a decimal. This is the composite score's own gate; combine it with `--threshold` and both must pass |
+| `--threshold N` | Exit 1 if any function's cyclomatic complexity exceeds N — checks the repo's `max_cyclomatic`, not the composite `braintax` score. Alias: `--max-complexity` |
+| `--max-avg-braintax N` | Exit 1 if the repo's `avg_braintax` exceeds N. Accepts a decimal. This is the composite score's own gate; combine it with `--threshold` and both must pass |
 | `--top N` | Show the N most complex functions in the report (default: `10`) |
 | `-h`, `--help` | Print help |
 | `-V`, `--version` | Print version |
@@ -202,7 +202,7 @@ cyclomatic complexity:
 
 ```bash
 cargo braintax4rust --threshold 10
-echo $?  # 0 if pass, 1 if fail
+echo $?  # 0 if pass, 1 if fail, 2 if no verdict
 ```
 
 Use `--max-avg-braintax N` to gate on the composite score instead. It bounds
@@ -212,12 +212,26 @@ of `15.0`, where the normalized score has already saturated to `0`:
 
 ```bash
 cargo braintax4rust --max-avg-braintax 9.5
-echo $?  # 0 if pass, 1 if fail
+echo $?  # 0 if pass, 1 if fail, 2 if no verdict
 ```
 
 Both flags may be combined, in which case both bounds must hold. Either way the
 report is still printed — the exit code is a verdict on the run, not a
 replacement for its output.
+
+A run that gives no verdict exits **2**: an error of the tool's own — no Rust
+source found under the path, a source file it cannot read, a report it cannot
+write — printed as `error: <message>` on stderr, and a usage error, for which
+2 is clap's code. So a gate can tell a bound not held from a run that never
+measured anything:
+
+| Exit code | Meaning |
+|---|---|
+| `0` | every bound given holds, or none was given |
+| `1` | a bound given by `--threshold` or `--max-avg-braintax` is not held |
+| `2` | no verdict: an error of the tool's own, or of its usage |
+
+Up to 0.15.0 an error of the tool's own exited 1, like a breach.
 
 ---
 

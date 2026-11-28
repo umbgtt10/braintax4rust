@@ -55,8 +55,10 @@ fn compose_with_valid_dir_returns_success() {
     assert!(outcome.passes);
 }
 
+// 2 is an error of the tool's own, as it is clap's for a usage error; 1 stays
+// the verdict on a bound not held.
 #[test]
-fn run_against_a_directory_that_does_not_exist_returns_failure() {
+fn run_against_a_directory_that_does_not_exist_returns_exit_code_2() {
     // Arrange
     let dir = TempDir::new().unwrap();
     let missing = dir.path().join("missing");
@@ -69,7 +71,7 @@ fn run_against_a_directory_that_does_not_exist_returns_failure() {
     let exit_code = EntryPoint::run(args);
 
     // Assert
-    assert_eq!(exit_code, ExitCode::FAILURE);
+    assert_eq!(exit_code, ExitCode::from(2));
 }
 
 #[test]
@@ -106,6 +108,51 @@ fn run_from_args_with_threshold_returns_ok() {
 
     // Assert
     assert!(result.is_ok());
+}
+
+#[test]
+fn run_with_a_bound_breached_returns_exit_code_1() {
+    // Arrange
+    let dir = TempDir::new().unwrap();
+    let src = dir.path().join("src");
+    fs::create_dir_all(&src).unwrap();
+    fs::write(
+        src.join("lib.rs"),
+        "pub fn greet() -> &'static str { \"hello\" }\n",
+    )
+    .unwrap();
+    let args = vec![
+        OsString::from("cargo-braintax4rust"),
+        dir.path().as_os_str().to_os_string(),
+        OsString::from("--max-avg-braintax"),
+        OsString::from("0.5"),
+    ];
+
+    // Act
+    let exit_code = EntryPoint::run(args);
+
+    // Assert
+    assert_eq!(exit_code, ExitCode::from(1));
+}
+
+// Not UTF-8, so reading it fails: a failure of the run, not of a bound.
+#[test]
+fn run_with_a_source_file_it_cannot_read_returns_exit_code_2() {
+    // Arrange
+    let dir = TempDir::new().unwrap();
+    let src = dir.path().join("src");
+    fs::create_dir_all(&src).unwrap();
+    fs::write(src.join("lib.rs"), [0xff, 0xfe, 0xfd]).unwrap();
+    let args = vec![
+        OsString::from("cargo-braintax4rust"),
+        dir.path().as_os_str().to_os_string(),
+    ];
+
+    // Act
+    let exit_code = EntryPoint::run(args);
+
+    // Assert
+    assert_eq!(exit_code, ExitCode::from(2));
 }
 
 // Without the strip, `braintax4rust` would be read as the path to analyse,

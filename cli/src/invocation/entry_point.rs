@@ -24,6 +24,10 @@ use crate::system::walkdir_source_tree::WalkdirSourceTree;
 pub struct EntryPoint;
 
 impl EntryPoint {
+    // A run that gave no verdict exits 2, as clap does for a usage error, so a
+    // caller tells it from 1, a bound not held.
+    const OWN_FAILURE: u8 = 2;
+
     #[must_use]
     pub fn compose(config: Config) -> App {
         let renderer: Box<dyn ReportRenderer> = if config.json {
@@ -47,7 +51,7 @@ impl EntryPoint {
             Ok(exit_code) => exit_code,
             Err(error) => {
                 eprintln!("error: {error}");
-                ExitCode::FAILURE
+                ExitCode::from(Self::OWN_FAILURE)
             }
         }
     }
