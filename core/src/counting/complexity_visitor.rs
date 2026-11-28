@@ -16,6 +16,7 @@ use syn::ExprMatch;
 use syn::ExprReturn;
 use syn::ExprTry;
 use syn::ExprWhile;
+use syn::Pat;
 
 use syn::visit::{
     Visit, visit_expr_binary, visit_expr_for_loop, visit_expr_loop, visit_expr_match,
@@ -87,7 +88,7 @@ impl<'ast> Visit<'ast> for ComplexityVisitor {
         self.complexity += 1;
         self.complexity += expr.arms.len().saturating_sub(1) as u32;
         for arm in &expr.arms {
-            if arm.guard.is_some() {
+            if matches!(arm.pat, Pat::Guard(_)) {
                 self.complexity += 1;
             }
         }

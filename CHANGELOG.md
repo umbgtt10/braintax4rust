@@ -10,6 +10,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **syn 3.** `braintax4rust-core` parses with syn 3.0.10, from 2.0.119, and
+  the tree holds one syn where it held two: clap's and serde's derives and
+  serge4rust were already on 3. No score moves. Ported by what syn 3 moved:
+  a match arm's guard is now a `Pat::Guard` around its pattern, counted as
+  the guard was; an impl's `!` left the trait tuple, which braintax never
+  read; and a receiver's `mut` is now either the binding's (`mut self`) or,
+  in `ReceiverKind::Reference`, the reference's (`&mut self`) -- read where
+  syn 2 kept both in one field, so `&mut self` still costs 0.4. 0.15.0's
+  build and this one print byte-identical reports, text and JSON, over the
+  1,361 functions of four codebases: the whole of this repository, fixtures
+  included, and three others. A new test pins `mut self` at 0.4 beside
+  `&mut self`. The core's public items that take a syn type --
+  `SignatureScorer::return_complexity` and `self_ref_cost`,
+  `is_marker_supertrait`, `GenericsCounter::score_generics`,
+  `Collector::trait_info`, `DeriveAttrScorer::score`,
+  `NameOpacityCounter::visit_params` and the four counters' `Visit`
+  implementations -- take syn 3's types now, so a library user on syn 2
+  must move with it.
 - Stage 2's gates come from serge4rust, the house's gates as a library,
   taken from crates.io as `serge4rust = "0.3.2"`: the stage, the command
   runner, every gate but one, the failures, the crap report and the commit

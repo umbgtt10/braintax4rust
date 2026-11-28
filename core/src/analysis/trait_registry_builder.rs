@@ -38,7 +38,7 @@ impl TraitRegistryBuilder {
         let Item::Impl(item_impl) = item else {
             return;
         };
-        let Some((_, path, _)) = &item_impl.trait_ else {
+        let Some((path, _)) = &item_impl.trait_ else {
             return;
         };
         let name = path
