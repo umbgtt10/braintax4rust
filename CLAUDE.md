@@ -44,10 +44,15 @@ published crate's users can still resolve what they could; what it moves is
 committed on its own. Breaking versions are a separate decision, not taken here.
 
 Stage 2 is `cargo xtask stage2` -- a real crate under `xtask/`, gated like any
-other code, rather than a script. Each gate is a `Gate` implementation
-constructed against a `CommandRunner` trait, so the argument lists and the
-failure messages are covered by `xtask`'s own integration tests. It runs nine
-gates, in this order:
+other code, rather than a script. Its gates come from serge4rust, the house's
+gates as a library, taken from crates.io as `serge4rust = "0.3.2"`: each is a
+`Gate` implementation constructed against a `CommandRunner` trait, so the
+argument lists and the failure messages are covered by serge4rust's own
+integration tests. `xtask` keeps `main.rs` -- which gates run, in what order,
+with this repository's constants -- and the one gate that is this tool's alone,
+the braintax self-analysis, built on serge4rust's traits and tested in `xtask`.
+A gate that needs a change is changed in serge4rust and released, never
+patched in place here. It runs nine gates, in this order:
 
 | gate | asks |
 |---|---|
@@ -61,8 +66,9 @@ gates, in this order:
 | `cargo iceberg4rust` | is any file's private implementation risk too high |
 | `cargo deny` | do the dependencies carry an advisory, a refused licence or a foreign source |
 
-The technology-free gate runs **first**. It is the xtask's own -- no tool to
-install -- and asks three things of `core`: that its manifest names only
+The technology-free gate runs **first**. It is serge4rust's, given this
+repository's rule in `main.rs` -- no tool to install -- and asks three things
+of `core`: that its manifest names only
 `libm` and `syn`, in any section (read from `cargo metadata --no-deps`; a
 package missing from the metadata fails); that `core/src/lib.rs` carries
 `#![no_std]` and `#![forbid(unsafe_code)]`, which hand `core/src` to the
@@ -212,6 +218,17 @@ manifest, nothing more:
   has no mirror there. Its own `src/` holds `FixtureAnalyzer`, the harness that
   runs one fixture end to end through `cli`'s `EntryPoint`, and the test file
   is named for that.
+
+### ripe4rust plans what moves
+
+`[workspace.metadata.ripe4rust]` in the root `Cargo.toml` names the gates
+cargo-ripe4rust holds each step of its plan to: `just stage1` and
+`just stage2`, the two every change here is held to. `just ripe` runs
+`cargo ripe4rust plan`, which says what is ripe to move and in what order, and
+applies nothing: the plan is information, and a move it names is still taken
+on its own.
+
+`cargo install cargo-ripe4rust`
 
 ## Layout
 

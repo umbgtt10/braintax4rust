@@ -2,9 +2,9 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
-use crate::process::command_runner_tests::FakeCommandRunner;
+use crate::support::fake_command_runner::FakeCommandRunner;
+use serge4rust::gates::gate::Gate;
 use xtask::gates::braintax_self_gate::BraintaxSelfGate;
-use xtask::gates::gate::Gate;
 
 fn gate(runner: &FakeCommandRunner) -> BraintaxSelfGate<'_> {
     BraintaxSelfGate::new(

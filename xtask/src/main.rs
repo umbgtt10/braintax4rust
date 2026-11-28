@@ -2,37 +2,32 @@
 // Licensed under the MIT License
 // SPDX-License-Identifier: MIT
 
+use serge4rust::crap::crap_report_parser::CrapReportParser;
+use serge4rust::gates::boundary::boundary_rule::BoundaryRule;
+use serge4rust::gates::boundary::crate_root_attributes::CrateRootAttributes;
+use serge4rust::gates::boundary::disk_source_files::DiskSourceFiles;
+use serge4rust::gates::boundary::package_dependencies::PackageDependencies;
+use serge4rust::gates::boundary_gate::BoundaryGate;
+use serge4rust::gates::cargo_update_gate::CargoUpdateGate;
+use serge4rust::gates::crap_gate::CrapGate;
+use serge4rust::gates::deny_gate::DenyGate;
+use serge4rust::gates::dry_gate::DryGate;
+use serge4rust::gates::gate::Gate;
+use serge4rust::gates::iceberg_gate::IcebergGate;
+use serge4rust::gates::shear_gate::ShearGate;
+use serge4rust::gates::stage::Stage;
+use serge4rust::gates::stern_gate::SternGate;
+use serge4rust::gates::twin_gate::TwinGate;
+use serge4rust::process::system_command_runner::SystemCommandRunner;
+use serge4rust::scores::scoring_hook::ScoringHook;
 use std::env::args;
-use std::env::temp_dir;
-use std::fs::read_to_string;
-use std::fs::remove_dir_all;
-use std::fs::write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::ExitCode;
-use std::process::id;
-use xtask::boundary::boundary_rule::BoundaryRule;
-use xtask::boundary::crate_root_attributes::CrateRootAttributes;
-use xtask::boundary::disk_source_files::DiskSourceFiles;
-use xtask::boundary::package_dependencies::PackageDependencies;
-use xtask::gates::boundary_gate::BoundaryGate;
 use xtask::gates::braintax_self_gate::BraintaxSelfGate;
-use xtask::gates::cargo_update_gate::CargoUpdateGate;
-use xtask::gates::crap_gate::CrapGate;
-use xtask::gates::deny_gate::DenyGate;
-use xtask::gates::dry_gate::DryGate;
-use xtask::gates::gate::Gate;
-use xtask::gates::iceberg_gate::IcebergGate;
-use xtask::gates::shear_gate::ShearGate;
-use xtask::gates::stage2::Stage2;
-use xtask::gates::stern_gate::SternGate;
-use xtask::gates::twin_gate::TwinGate;
-use xtask::process::system_command_runner::SystemCommandRunner;
-use xtask::reports::crap_report_parser::CrapReportParser;
-use xtask::reports::scores::core_scorer::CoreScorer;
-use xtask::reports::scores::message_scoring::MessageScoring;
 
 const CLI_PACKAGE: &str = "cargo-braintax4rust";
+const CORE_DIRECTORY: &str = "core";
 const CORE_PACKAGE: &str = "braintax4rust-core";
 const ALLOWED_CRATES: [&str; 2] = ["libm", "syn"];
 const CORE_DIRS: [[&str; 2]; 2] = [["core", "src"], ["core", "tests"]];
@@ -79,6 +74,7 @@ const DRY_EXCLUDES: [&[&str]; 5] = [
 ];
 const DRY_BASELINE: &str = "dry4rust-baseline.json";
 const DRY_MIN_NODES: &str = "25";
+const DENY_FETCH_ATTEMPTS: usize = 3;
 
 // Reading the real process argv and wiring the concrete runner are the two
 // things no test can reach, so they are all this binary does.
@@ -98,7 +94,7 @@ fn main() -> ExitCode {
 fn run_sync() -> ExitCode {
     let runner = SystemCommandRunner::new();
     let update = CargoUpdateGate::new(&runner, workspace_manifest_path());
-    match Stage2::new(vec![&update]).run() {
+    match Stage::new(vec![&update]).run() {
         Ok(()) => {
             println!("\nbraintax4rust sync done");
             ExitCode::SUCCESS
@@ -112,30 +108,17 @@ fn run_sync() -> ExitCode {
 
 // core's grip and braintax as the commit stages it, written into the commit
 // message whose file the commit-msg hook is handed -- or printed, given none.
+// core is the one crate scored, at the workspace's root, so its block holds
+// core's row alone.
 fn run_grip_braintax() -> ExitCode {
-    match grip_braintax() {
+    let runner = SystemCommandRunner::new();
+    match ScoringHook::single_crate(&runner, String::from(CORE_DIRECTORY)).run(args().nth(2)) {
         Ok(()) => ExitCode::SUCCESS,
         Err(reason) => {
             eprintln!("\nFailed: {reason}");
             ExitCode::FAILURE
         }
     }
-}
-
-fn grip_braintax() -> Result<(), String> {
-    let scratch = temp_dir().join(format!("xtask-grip-braintax-{}", id()));
-    let runner = SystemCommandRunner::new();
-    let scored = CoreScorer::new(&runner, scratch.to_string_lossy().into_owned()).score();
-    let _ = remove_dir_all(&scratch);
-    let block = scored.map_err(|failure| failure.to_string())?.render();
-    let Some(path) = args().nth(2) else {
-        println!("{block}");
-        return Ok(());
-    };
-    let message =
-        read_to_string(&path).map_err(|error| format!("could not read {path}: {error}"))?;
-    write(&path, MessageScoring::new(block).applied_to(&message))
-        .map_err(|error| format!("could not write {path}: {error}"))
 }
 
 fn run_stage2() -> ExitCode {
@@ -183,7 +166,7 @@ fn run_stage2() -> ExitCode {
     // measure, and it costs a second.
     let shear = ShearGate::new(&runner, manifest_path.clone());
     // Last in stage 2: its advisories change without the code changing (see DenyGate).
-    let deny = DenyGate::new(&runner, manifest_path.clone());
+    let deny = DenyGate::new(&runner, manifest_path.clone(), DENY_FETCH_ATTEMPTS);
 
     // Fourth, for the same reason stern4rust runs early: removing a duplicate
     // moves code between files and functions, which changes what every gate
@@ -194,7 +177,7 @@ fn run_stage2() -> ExitCode {
     // adds. The floor leaves out the one-call `Visit` overrides and the one-
     // and two-field constructors, whose sameness is the trait's or the
     // struct's rather than a copy.
-    let dry = DryGate::new(
+    let dry = DryGate::excluding(
         &runner,
         root.to_string_lossy().into_owned(),
         DRY_EXCLUDES
@@ -252,7 +235,7 @@ fn run_stage2() -> ExitCode {
         &deny,
     ];
 
-    match Stage2::new(gates).run() {
+    match Stage::new(gates).run() {
         Ok(()) => {
             println!("\nbraintax Stage 2 passed!");
             ExitCode::SUCCESS
