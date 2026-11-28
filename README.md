@@ -61,24 +61,28 @@ just stage1
 just stage2
 ```
 
-Both must be green before a change is complete. Stage 1 is formatting, clippy
-and tests — cargo built-ins only, so it works on a fresh checkout with none of
-the tools below installed. Stage 2 is `cargo xtask stage2`, which runs, in
+Both must be green before a change is complete. Stage 1 moves the lock file to
+every dependency's newest compatible version (`cargo update`, so it needs the
+network), then runs formatting, clippy and tests — cargo built-ins only, so it
+works on a fresh checkout with none of the tools below installed. Stage 2 is `cargo xtask stage2`, which runs, in
 order: a **technology-free core** check (the analysis crate, `core/`, depends
 on `libm` and `syn` only, is `#![no_std]`, and none of its files reaches the
 file system, a process or stdout), `cargo stern4rust` (house coding rules),
 `cargo shear` (every declared dependency used), `cargo dry4rust` (no
 duplication in `core/src` and `cli/src` beyond `dry4rust-baseline.json`),
 **braintax self-analysis**, `cargo crap4rust` (complexity against coverage),
-`cargo twin4rust` (every source file has a mirrored test file) and
-`cargo iceberg4rust` (file risk).
+`cargo twin4rust` (every source file has a mirrored test file),
+`cargo iceberg4rust` (file risk) and `cargo deny` (no dependency carries an
+advisory, a refused licence or a source other than crates.io). Every gate but
+the self-analysis comes from [`serge4rust`](https://crates.io/crates/serge4rust),
+the house's gates as a library.
 
 The self-analysis gate is this repository's own. It builds `cargo-braintax4rust`
 from the working tree, points it at `core/` and then at `cli/`, and hands it a
 ceiling of **5.0** on average brain tax — letting the tool render its own
 verdict rather than re-implementing the comparison in the gate, so a change that
 costs this codebase clarity is caught by the very measure the tool exists to
-report. `core/` scores **3.2** today and `cli/` **3.1**.
+report. `core/` scores **3.1** today and `cli/` **3.1**.
 
 It measures the tool's two crates specifically, not the whole tree. `fixture/`
 holds crates written to score badly, because they are what braintax is
@@ -106,6 +110,7 @@ Everything the two stages need, none of which ships with cargo:
 | `cargo-twin4rust` | `cargo install cargo-twin4rust` | stage 2 |
 | `cargo-iceberg4rust` | `cargo install cargo-iceberg4rust` | stage 2 |
 | [`cargo-shear`](https://github.com/Boshen/cargo-shear) | `cargo install --locked cargo-shear --version 1.14.0` | stage 2 |
+| [`cargo-deny`](https://github.com/EmbarkStudios/cargo-deny) | `cargo install --locked cargo-deny --version 0.20.2` | stage 2 |
 
 `cargo-llvm-cov` and `llvm-tools` are what the CRAP gate needs; without them it
 fails with a bare exit code that says nothing about a missing install.

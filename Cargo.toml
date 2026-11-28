@@ -41,18 +41,21 @@ clap = { version = "4", features = ["derive"] }
 libm = "0.2.16"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-serge4rust = "0.3.2"
-syn = { version = "2", features = ["full", "visit"] }
+serge4rust = "0.3.3"
+syn = { version = "3.0.10", features = ["full", "visit"] }
 walkdir = "2"
 tempfile = "3"
 
 # No `unsafe` in the tool's own crates, tests included; core says so at its
-# crate root as well. The fixtures do not opt in: base_hidden_deps weighs an
-# `unsafe` block by construction.
+# crate root as well. The fixtures do not opt in, each with an empty `[lints]`
+# table: base_hidden_deps weighs an `unsafe` block by construction.
 [workspace.lints.rust]
 unsafe_code = "forbid"
 
 # The gates cargo-ripe4rust holds each step of its plan to: both stages, as
-# every change here is held to them.
+# every change here is held to them. `published` names the crate others depend
+# on as a library, so a breaking dependency in its public API is asked about;
+# cargo-braintax4rust's library is the command's, kept for its tests.
 [workspace.metadata.ripe4rust]
 gates = ["just stage1", "just stage2"]
+published = ["braintax4rust-core"]

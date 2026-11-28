@@ -1,9 +1,9 @@
 # braintax — Roadmap
 
-**Crate:** `braintax`  
+**Crates:** `cargo-braintax4rust` and `braintax4rust-core` (library `braintax`)  
 **License:** MIT  
-**Last updated:** 2026-07-26  
-**Current status:** Phase 9 — ✅ Complete (latest feature phase; shipped in v0.10.0) · **Latest release:** v0.11.0 (marker-trait-aware supertrait counting, no new phase)  
+**Last updated:** 2026-11-28  
+**Current status:** Phase 9 — ✅ Complete (latest feature phase; shipped in v0.10.0) · **Latest release:** v0.15.0 (no new phase since v0.10.0; see `CHANGELOG.md`)  
 
 ---
 

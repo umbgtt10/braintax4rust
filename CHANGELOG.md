@@ -9,6 +9,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **syn 3.** `braintax4rust-core` parses with syn 3.0.10, from 2.0.119, and
+  the tree holds one syn where it held two: clap's and serde's derives and
+  serge4rust were already on 3. No score moves. Ported by what syn 3 moved:
+  a match arm's guard is now a `Pat::Guard` around its pattern, counted as
+  the guard was; an impl's `!` left the trait tuple, which braintax never
+  read; and a receiver's `mut` is now either the binding's (`mut self`) or,
+  in `ReceiverKind::Reference`, the reference's (`&mut self`) -- read where
+  syn 2 kept both in one field, so `&mut self` still costs 0.4. 0.15.0's
+  build and this one print byte-identical reports, text and JSON, over the
+  1,361 functions of four codebases: the whole of this repository, fixtures
+  included, and three others. A new test pins `mut self` at 0.4 beside
+  `&mut self`. The core's public items that take a syn type --
+  `SignatureScorer::return_complexity` and `self_ref_cost`,
+  `is_marker_supertrait`, `GenericsCounter::score_generics`,
+  `Collector::trait_info`, `DeriveAttrScorer::score`,
+  `NameOpacityCounter::visit_params` and the four counters' `Visit`
+  implementations -- take syn 3's types now, so a library user on syn 2
+  must move with it.
+- Stage 2's gates come from serge4rust, the house's gates as a library,
+  taken from crates.io as `serge4rust = "0.3.3"`: the stage, the command
+  runner, every gate but one, the failures, the crap report and the commit
+  scoring. `xtask` keeps `main.rs`, which configures them with this
+  repository's constants, and the braintax self-analysis, the one gate no
+  other repository runs, built on serge4rust's `Gate` and `CommandRunner`
+  with its seven tests. Every gate runs as before, in the same order; the
+  streamed output differs in stern4rust's file count, 245 to 169, the
+  gates' own sources having left the workspace, and in the failure wording
+  below. The commit scores are written byte for byte as they were. Since 0.3.3 a
+  gate whose tool could not run says how the run ended -- `could not run,
+  exit code 2`, `could not run, terminated by signal`, and a crap report
+  never produced `(exit code 101)` -- where it printed the exit code as
+  Rust's `Option`, `Some(2)`.
+- The self-analysis gate says `avg braintax exceeds the ceiling of 5.0`
+  only for exit code 1, the code cargo-braintax4rust documents for a bound
+  not held. Every other end read as that breach too: cargo's 101 for a
+  build that failed or a binary that panicked, and a signal. They now read
+  `could not run, exit code 101` and `could not run, terminated by signal`.
+- `[workspace.metadata.ripe4rust]` names both stages as the gates
+  cargo-ripe4rust holds each step of its plan to, and `just ripe` prints
+  that plan without applying it. Its `published` names
+  `braintax4rust-core`, so a breaking dependency in the core's public API,
+  as syn is, is asked about.
+
 ## [0.15.0] - 2026-11-25
 
 Scoring fixes: the bugs sentinel4rust's mutation round at 61eaa96 pointed

@@ -45,7 +45,7 @@ committed on its own. Breaking versions are a separate decision, not taken here.
 
 Stage 2 is `cargo xtask stage2` -- a real crate under `xtask/`, gated like any
 other code, rather than a script. Its gates come from serge4rust, the house's
-gates as a library, taken from crates.io as `serge4rust = "0.3.2"`: each is a
+gates as a library, taken from crates.io as `serge4rust = "0.3.3"`: each is a
 `Gate` implementation constructed against a `CommandRunner` trait, so the
 argument lists and the failure messages are covered by serge4rust's own
 integration tests. `xtask` keeps `main.rs` -- which gates run, in what order,
@@ -85,8 +85,9 @@ stern4rust runs **second** because its corrections are renames, file moves and
 directory splits: a layout it is about to reject is a layout the others would
 have measured for nothing. Its findings are also the cheapest to act on.
 
-All twenty-four of its rules apply to every member of the workspace, with
-nothing skipped, nothing selected and nothing unconfigured. `docs/header.txt`
+All thirty-nine of its rules (cargo-stern4rust 0.24.0) apply to every member
+of the workspace, with nothing skipped, nothing selected and nothing
+unconfigured. `docs/header.txt`
 holds the three-line header every `.rs` file carries and `stern4rust.toml` names
 it -- in the config rather than the gate script, so a hand-run of
 `cargo stern4rust` checks exactly what the gate checks. Every member's manifest
@@ -197,11 +198,12 @@ being written here changes under them.
 `cargo install cargo-grip4rust`
 `cargo install cargo-braintax4rust`
 
-cargo-braintax4rust is deliberately not in that list. The self-analysis gate
-builds it from this checkout -- `cli`'s binary, pointed at `core/` and then at
-`cli/`, each against the ceiling -- so the number it reports is the number for
-the tree being changed rather than for whatever version happens to be
-installed.
+Those two installs serve the commit hook alone; stage 2 needs neither, which is
+why cargo-braintax4rust is not among the stage 2 installs above, nor in CI's.
+The self-analysis gate never runs the installed copy: it builds `cli`'s binary
+from this checkout, pointed at `core/` and then at `cli/`, each against the
+ceiling, so the number it reports is the number for the tree being changed
+rather than for whatever version happens to be installed.
 
 The measuring stage 2 gates are scoped to the two published crates,
 `braintax4rust-core` and `cargo-braintax4rust` -- the dry gate judges their
@@ -228,6 +230,13 @@ cargo-ripe4rust holds each step of its plan to: `just stage1` and
 applies nothing: the plan is information, and a move it names is still taken
 on its own.
 
+Its `published` names `braintax4rust-core` alone, the crate others depend on
+as a library: a breaking upgrade of a dependency that reaches its public API
+is a breaking change of ours too, and ripe4rust asks about it (its rule 8).
+syn is one -- the core's public items take syn types. `cargo-braintax4rust` is
+published as well, but its library is the command's, kept for its own tests
+and the fixtures', which is not what `published` means.
+
 `cargo install cargo-ripe4rust`
 
 ## Layout
@@ -244,8 +253,10 @@ A workspace with a virtual root that holds no package:
 
 `core` and `cli` share the workspace's `version`. `[workspace.lints.rust]`
 forbids `unsafe_code` in `core`, `cli`, `xtask` and `validation`, every target;
-`core` says so at its crate root as well. The fixtures do not opt in:
-`base_hidden_deps` weighs an `unsafe` block by construction.
+`core` says so at its crate root as well. The fixtures do not opt in, and
+each says so with an empty `[lints]` table, which is what cargo asks of a
+member that inherits nothing: `base_hidden_deps` weighs an `unsafe` block by
+construction.
 
 ## Technology-free core
 

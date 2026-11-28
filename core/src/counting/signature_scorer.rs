@@ -8,6 +8,8 @@ use crate::analysis::trait_info::TraitInfo;
 use syn::FnArg;
 use syn::GenericArgument;
 use syn::PathArguments;
+use syn::Receiver;
+use syn::ReceiverKind;
 use syn::ReturnType;
 use syn::Token;
 use syn::Type;
@@ -69,7 +71,7 @@ impl SignatureScorer {
     pub fn self_ref_cost(inputs: &Punctuated<FnArg, Token![,]>) -> f64 {
         match inputs.first() {
             Some(FnArg::Receiver(receiver)) => {
-                if receiver.mutability.is_some() {
+                if Self::is_mutable_receiver(receiver) {
                     0.4
                 } else {
                     0.2
@@ -108,6 +110,11 @@ impl SignatureScorer {
         let base = ((info.impl_count().saturating_sub(1)) as f64 * 0.06).min(0.18);
         let amplifier = if info.assoc_types() > 0 { 1.5 } else { 1.0 };
         base * amplifier
+    }
+
+    fn is_mutable_receiver(receiver: &Receiver) -> bool {
+        receiver.mutability.is_some()
+            || matches!(receiver.kind, ReceiverKind::Reference(_, _, Some(_)))
     }
 
     fn path_type_complexity(type_path: &TypePath) -> f64 {

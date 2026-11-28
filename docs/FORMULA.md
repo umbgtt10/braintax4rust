@@ -11,8 +11,8 @@ Every number here is read directly from the source that computes it
 counters), not transcribed
 from memory — if this document and the source ever disagree, the source is
 right and this file is stale. Two terms below (`self_ref_cost`,
-`return_complexity`) are not in `README.md` at all today; this is the only
-place they're currently documented.
+`return_complexity`) are named in `README.md`'s formula but defined only
+here.
 
 ---
 
@@ -290,8 +290,10 @@ entirely; `grip_score` separately blends four independently-weighted
 ratios. Dividing two independently-shaped normalizations would compound
 their distortions into `TI`; dividing the two raw sums does not.
 
-Not yet implemented — no released code computes `TI` today. The same
-decision is recorded in `grip`'s own `FORMULA.md`.
+No release of `braintax` computes `TI`. This repository's commit hook does:
+`cargo xtask grip-braintax`, serge4rust's scoring, writes `core`'s
+`grip_absolute_total`, its `total_braintax` and their ratio into every commit
+message. The same decision is recorded in `grip`'s own `FORMULA.md`.
 
 ---
 

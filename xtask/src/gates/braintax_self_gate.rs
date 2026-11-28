@@ -46,7 +46,10 @@ impl Gate for BraintaxSelfGate<'_> {
         //
         // The ceiling travels to the tool rather than being judged here, so
         // there is one implementation of the comparison and it is the tool's.
-        // A non-zero exit is that verdict, not a failure to run.
+        // Exit code 1 is that verdict, as cargo-braintax4rust documents it for a
+        // bound not held. Any other end -- cargo's 101 for a build that failed
+        // or a binary that panicked, clap's 2, a signal -- is a run that gave
+        // no verdict.
         let args = vec![
             String::from("run"),
             String::from("--quiet"),
@@ -60,9 +63,10 @@ impl Gate for BraintaxSelfGate<'_> {
 
         match self.runner.run_streaming("cargo", &args)? {
             Some(0) => Ok(()),
-            _ => Err(GateFailure::Own {
+            Some(1) => Err(GateFailure::Own {
                 reason: format!("avg braintax exceeds the ceiling of {}", self.ceiling),
             }),
+            exit_code => Err(GateFailure::CouldNotRun { exit_code }),
         }
     }
 }

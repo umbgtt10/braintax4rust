@@ -126,7 +126,7 @@ impl<'ast, 'a> Visit<'ast> for Collector<'a> {
                 self.visit_mod(item_mod);
             }
             Item::Impl(item_impl) => {
-                let trait_factor = if let Some((_, path, _)) = &item_impl.trait_ {
+                let trait_factor = if let Some((path, _)) = &item_impl.trait_ {
                     let name = path
                         .segments
                         .last()

@@ -185,6 +185,17 @@ fn self_ref_cost_for_a_mutable_receiver_costs_more_than_a_shared_one() {
 }
 
 #[test]
+fn self_ref_cost_for_a_mutable_value_receiver_costs_as_a_mutable_reference() {
+    // Arrange & Act
+    let value = SignatureScorer::self_ref_cost(&signature("fn f(self) {}").inputs);
+    let mutable = SignatureScorer::self_ref_cost(&signature("fn f(mut self) {}").inputs);
+
+    // Assert
+    assert!((value - 0.2).abs() < f64::EPSILON);
+    assert!((mutable - 0.4).abs() < f64::EPSILON);
+}
+
+#[test]
 fn trait_factor_beyond_three_methods_adds_a_penalty() {
     // Arrange & Act
     let three = SignatureScorer::trait_factor("MyTrait", &info(3, 0, 0, 1));
