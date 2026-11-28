@@ -104,9 +104,9 @@ smaller, single-purpose visitors as it goes:
 | `NameOpacityCounter` | How opaque are this function's parameter/local/loop/match-binding names? |
 | `MacroCounter` (+ `DeriveAttrScorer`) | Which macro invocations, attributes, or `#[derive(...)]` entries are unfamiliar? |
 | `GenericsCounter` | How many generic type/const parameters, and how many trait bounds on them? |
+| `SignatureScorer` | What does the signature cost: the trait factor of the `impl`'s trait, the receiver's `self_ref_cost`, the return type's `return_complexity`? |
 
-Trait-factor lookup, `self_ref_cost`, `return_complexity`, and cfg-gate
-counting are computed directly in `Collector`/`collector.rs`, not
+Cfg-gate counting is computed directly in `Collector` (`collector.rs`), not
 delegated — see `docs/FORMULA.md` for the exact formulas each of these
 terms and helpers feed into.
 

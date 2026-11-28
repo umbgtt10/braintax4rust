@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Stage 2's gates come from serge4rust, the house's gates as a library,
+  taken from crates.io as `serge4rust = "0.3.2"`: the stage, the command
+  runner, every gate but one, the failures, the crap report and the commit
+  scoring. `xtask` keeps `main.rs`, which configures them with this
+  repository's constants, and the braintax self-analysis, the one gate no
+  other repository runs, built on serge4rust's `Gate` and `CommandRunner`
+  with its seven tests. Every gate runs as before, in the same order; the
+  streamed output differs only in stern4rust's file count, 245 to 169, the
+  gates' own sources having left the workspace, and in cargo-deny's
+  duplicate-version tree, where xtask now reaches syn 3 through serge4rust.
+  The commit scores are written byte for byte as they were.
+- `[workspace.metadata.ripe4rust]` names both stages as the gates
+  cargo-ripe4rust holds each step of its plan to, and `just ripe` prints
+  that plan without applying it.
+
 ## [0.15.0] - 2026-11-25
 
 Scoring fixes: the bugs sentinel4rust's mutation round at 61eaa96 pointed

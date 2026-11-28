@@ -85,8 +85,9 @@ stern4rust runs **second** because its corrections are renames, file moves and
 directory splits: a layout it is about to reject is a layout the others would
 have measured for nothing. Its findings are also the cheapest to act on.
 
-All twenty-four of its rules apply to every member of the workspace, with
-nothing skipped, nothing selected and nothing unconfigured. `docs/header.txt`
+All thirty-nine of its rules (cargo-stern4rust 0.24.0) apply to every member
+of the workspace, with nothing skipped, nothing selected and nothing
+unconfigured. `docs/header.txt`
 holds the three-line header every `.rs` file carries and `stern4rust.toml` names
 it -- in the config rather than the gate script, so a hand-run of
 `cargo stern4rust` checks exactly what the gate checks. Every member's manifest
@@ -197,11 +198,12 @@ being written here changes under them.
 `cargo install cargo-grip4rust`
 `cargo install cargo-braintax4rust`
 
-cargo-braintax4rust is deliberately not in that list. The self-analysis gate
-builds it from this checkout -- `cli`'s binary, pointed at `core/` and then at
-`cli/`, each against the ceiling -- so the number it reports is the number for
-the tree being changed rather than for whatever version happens to be
-installed.
+Those two installs serve the commit hook alone; stage 2 needs neither, which is
+why cargo-braintax4rust is not among the stage 2 installs above, nor in CI's.
+The self-analysis gate never runs the installed copy: it builds `cli`'s binary
+from this checkout, pointed at `core/` and then at `cli/`, each against the
+ceiling, so the number it reports is the number for the tree being changed
+rather than for whatever version happens to be installed.
 
 The measuring stage 2 gates are scoped to the two published crates,
 `braintax4rust-core` and `cargo-braintax4rust` -- the dry gate judges their
